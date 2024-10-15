@@ -7,7 +7,10 @@
     "MixinPlayerManager"
   ],
   "client": [
+    "GameRendererAccessor",
     "MixinCamera",
+    "MixinInGameHud",
+    "MixinKeyboardInput",
     "MixinMinecraftClient",
     "MixinMouse"
   ],
