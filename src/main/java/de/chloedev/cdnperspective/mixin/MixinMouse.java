@@ -134,7 +134,7 @@ public class MixinMouse {
                     Vector3d dir = forward.add(right.mul(offsets.x).add(up.mul(offsets.y))).normalize();
                     Vec3d rayDir = new Vec3d(dir.x, dir.y, dir.z);
 
-                    HitResult hitResult = cameraEntity.getWorld().raycast(new RaycastContext(camera.getPos(), rayDir.multiply(renderer.getFarPlaneDistance()), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, cameraEntity));
+                    HitResult hitResult = cameraEntity.getWorld().raycast(new RaycastContext(camera.getPos(), camera.getPos().add(rayDir.multiply(renderer.getFarPlaneDistance()))  , RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, cameraEntity));
                     client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, hitResult.getPos());
                 }
             }
