@@ -12,7 +12,9 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.Window;
 import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.Nullable;
@@ -134,7 +136,14 @@ public class MixinMouse {
                     Vector3d dir = forward.add(right.mul(offsets.x).add(up.mul(offsets.y))).normalize();
                     Vec3d rayDir = new Vec3d(dir.x, dir.y, dir.z);
 
-                    HitResult hitResult = cameraEntity.getWorld().raycast(new RaycastContext(camera.getPos(), camera.getPos().add(rayDir.multiply(renderer.getFarPlaneDistance()))  , RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, cameraEntity));
+                    Vec3d start = camera.getPos();
+                    Vec3d end = start.add(rayDir.multiply(renderer.getFarPlaneDistance()));
+
+                    Box box = cameraEntity.getBoundingBox().stretch(rayDir.multiply(renderer.getFarPlaneDistance())).expand(1.0, 1.0, 1.0);
+                    HitResult hitResult = ProjectileUtil.raycast(cameraEntity, start, end, box, entity -> !entity.isSpectator() && entity.canHit(), renderer.getFarPlaneDistance());
+                    if (hitResult == null) {
+                        hitResult = cameraEntity.getWorld().raycast(new RaycastContext(start, end, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, cameraEntity));
+                    }
                     client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, hitResult.getPos());
                 }
             }
