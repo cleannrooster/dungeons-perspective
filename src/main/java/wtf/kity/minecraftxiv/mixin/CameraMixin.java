@@ -15,8 +15,10 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(Camera.class)
 public class CameraMixin {
+    @SuppressWarnings("unused")
     @Shadow
     private float yaw;
+    @SuppressWarnings("unused")
     @Shadow
     private float pitch;
 

@@ -7,11 +7,12 @@
     "PlayerManagerMixin"
   ],
   "client": [
-    "GameRendererAccessor",
     "CameraMixin",
+    "GameRendererAccessor",
     "InGameHudMixin",
     "KeyboardInputMixin",
     "MinecraftClientMixin",
+    "LivingEntityRendererMixin",
     "MouseMixin"
   ],
   "injectors": {

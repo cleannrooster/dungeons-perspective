@@ -48,6 +48,9 @@ public abstract class MinecraftClientMixin {
                 Util.debug("Enabled Minecraft XIV");
             }
             mod.setEnabled(!mod.isEnabled());
+
+            // Re-lock the cursor so it correctly changes state
+            MinecraftClient.getInstance().mouse.lockCursor();
         }
 
         if (Client.getInstance().getZoomInBinding().wasPressed()) {

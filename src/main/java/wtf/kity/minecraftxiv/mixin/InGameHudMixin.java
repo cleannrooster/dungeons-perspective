@@ -37,13 +37,15 @@ public class InGameHudMixin {
             at = @At("HEAD")
     )
     private void crosshairPre(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        double scaleFactor = client.getWindow().getScaleFactor();
-        Mouse mouse = client.mouse;
+        if (Client.getInstance().getMod().isEnabled()) {
+            double scaleFactor = client.getWindow().getScaleFactor();
+            Mouse mouse = client.mouse;
 
-        //Using RenderSystem on purpose.
-        //The f3 "axes" debug cursor calls RenderSystem directly instead of using matrix stack.
-        context.getMatrices().push();
-        context.getMatrices().translate(-context.getScaledWindowWidth() / 2d + mouse.getX() / scaleFactor, -context.getScaledWindowHeight() / 2f + mouse.getY() / scaleFactor, 0);
+            //Using RenderSystem on purpose.
+            //The f3 "axes" debug cursor calls RenderSystem directly instead of using matrix stack.
+            context.getMatrices().push();
+            context.getMatrices().translate(-context.getScaledWindowWidth() / 2d + mouse.getX() / scaleFactor, -context.getScaledWindowHeight() / 2f + mouse.getY() / scaleFactor, 0);
+        }
     }
 
     @Inject(
@@ -51,6 +53,8 @@ public class InGameHudMixin {
             at = @At("RETURN")
     )
     private void crosshairPost(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        context.getMatrices().pop();
+        if (Client.getInstance().getMod().isEnabled()) {
+            context.getMatrices().pop();
+        }
     }
 }
