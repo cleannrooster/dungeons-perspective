@@ -1,4 +1,4 @@
-package de.chloedev.cdnperspective.mixin;
+package wtf.kity.minecraftxiv.mixin;
 
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;

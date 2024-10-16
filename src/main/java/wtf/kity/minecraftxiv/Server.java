@@ -1,6 +1,6 @@
-package de.chloedev.cdnperspective;
+package wtf.kity.minecraftxiv;
 
-import de.chloedev.cdnperspective.network.ModDisallowedPayload;
+import wtf.kity.minecraftxiv.network.ModDisallowedPayload;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 

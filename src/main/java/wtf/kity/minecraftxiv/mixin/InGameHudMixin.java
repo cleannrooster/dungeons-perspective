@@ -1,11 +1,10 @@
-package de.chloedev.cdnperspective.mixin;
+package wtf.kity.minecraftxiv.mixin;
 
-import de.chloedev.cdnperspective.Client;
+import wtf.kity.minecraftxiv.Client;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.client.render.*;
 import org.spongepowered.asm.mixin.Final;
@@ -17,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(InGameHud.class)
-public class MixinInGameHud {
+public class InGameHudMixin {
     @Shadow
     @Final
     private MinecraftClient client;
@@ -30,7 +29,7 @@ public class MixinInGameHud {
             )
     )
     private boolean isFirstPerson(Perspective perspective) {
-        return perspective.isFirstPerson() || Client.getInstance().getMod().isEnabled() && !Screen.hasAltDown();
+        return perspective.isFirstPerson() || Client.getInstance().getMod().isEnabled() && !Client.getInstance().getMoveCameraBinding().isPressed();
     }
 
     @Inject(

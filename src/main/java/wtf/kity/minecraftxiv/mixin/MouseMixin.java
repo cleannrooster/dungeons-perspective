@@ -1,10 +1,9 @@
-package de.chloedev.cdnperspective.mixin;
+package wtf.kity.minecraftxiv.mixin;
 
-import de.chloedev.cdnperspective.Client;
-import de.chloedev.cdnperspective.mod.Mod;
+import wtf.kity.minecraftxiv.Client;
+import wtf.kity.minecraftxiv.mod.Mod;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
@@ -28,14 +27,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(Mouse.class)
-public class MixinMouse {
+public class MouseMixin {
     @Shadow
     private boolean cursorLocked;
-    @Shadow @Final
+    @Shadow
+    @Final
     private MinecraftClient client;
-    @Shadow private boolean hasResolutionChanged;
-    @Shadow private double x;
-    @Shadow private double y;
+    @Shadow
+    private boolean hasResolutionChanged;
+    @Shadow
+    private double x;
+    @Shadow
+    private double y;
 
     @Unique
     @Nullable
@@ -46,6 +49,7 @@ public class MixinMouse {
 
     /**
      * It doesn't make sense to "lock" the cursor of an absolute pointing device.
+     *
      * @author quaternary
      */
     @Overwrite
@@ -79,6 +83,7 @@ public class MixinMouse {
 
     /**
      * It doesn't make sense to "unlock" the cursor of an absolute pointing device.
+     *
      * @author quaternary
      */
     @Overwrite
@@ -96,7 +101,7 @@ public class MixinMouse {
     private void updateMouseA(double timeDelta, CallbackInfo ci, double i, double j, double d, double e, double f, int k) {
         Mod mod = Client.getInstance().getMod();
         if (mod.isEnabled()) {
-            if (Screen.hasAltDown()) {
+            if (Client.getInstance().getMoveCameraBinding().isPressed()) {
                 if (lastX == null || lastY == null) {
                     InputUtil.setCursorParameters(client.getWindow().getHandle(), InputUtil.GLFW_CURSOR_DISABLED, x, y);
                     lastX = x;

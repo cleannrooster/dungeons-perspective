@@ -1,4 +1,4 @@
-package de.chloedev.cdnperspective.util;
+package wtf.kity.minecraftxiv.util;
 
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.logging.log4j.LogManager;
@@ -10,7 +10,7 @@ public class Util {
 
     public static void debug(String s) {
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            LogManager.getLogger("CDN-Perspective").info(s);
+            LogManager.getLogger("Minecraft XIV").info(s);
         }
     }
 }

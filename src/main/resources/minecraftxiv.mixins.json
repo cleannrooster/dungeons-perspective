@@ -1,18 +1,18 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "de.chloedev.cdnperspective.mixin",
+  "package": "wtf.kity.minecraftxiv.mixin",
   "compatibilityLevel": "JAVA_17",
   "server": [
-    "MixinPlayerManager"
+    "PlayerManagerMixin"
   ],
   "client": [
     "GameRendererAccessor",
-    "MixinCamera",
-    "MixinInGameHud",
-    "MixinKeyboardInput",
-    "MixinMinecraftClient",
-    "MixinMouse"
+    "CameraMixin",
+    "InGameHudMixin",
+    "KeyboardInputMixin",
+    "MinecraftClientMixin",
+    "MouseMixin"
   ],
   "injectors": {
     "defaultRequire": 1

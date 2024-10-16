@@ -1,28 +1,28 @@
 {
   "schemaVersion": 1,
-  "id": "cdnperspective",
+  "id": "minecraftxiv",
   "version": "${version}",
-  "name": "CDN Perspective 3D",
-  "description": "Allows for moving the camera 360 Degrees without changing movement-direction.",
+  "name": "Minecraft XIV",
+  "description": "Changes Minecraft's third-person controls to be more like FFXIV.",
   "authors": [
-    "ChloeCDN"
+    "ashkitten"
   ],
   "contact": {
-    "website": "https://donate.chloedev.de"
+    "email": "example@thisismyactual.email"
   },
   "license": "MIT",
-  "icon": "assets/cdnperspective/icon.png",
+  "icon": "assets/minecraftxiv/icon.png",
   "environment": "*",
   "entrypoints": {
     "client": [
-      "de.chloedev.cdnperspective.Client"
+      "wtf.kity.minecraftxiv.Client"
     ],
     "server": [
-      "de.chloedev.cdnperspective.Server"
+      "wtf.kity.minecraftxiv.Server"
     ]
   },
   "mixins": [
-    "cdnperspective.mixins.json"
+    "minecraftxiv.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.14.14",

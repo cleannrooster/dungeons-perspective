@@ -1,7 +1,7 @@
-package de.chloedev.cdnperspective.mixin;
+package wtf.kity.minecraftxiv.mixin;
 
-import de.chloedev.cdnperspective.Client;
-import de.chloedev.cdnperspective.mod.Mod;
+import wtf.kity.minecraftxiv.Client;
+import wtf.kity.minecraftxiv.mod.Mod;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.input.KeyboardInput;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(KeyboardInput.class)
-public abstract class MixinKeyboardInput extends Input {
+public abstract class KeyboardInputMixin extends Input {
     @Inject(
             method = "tick",
             at = @At("TAIL")
