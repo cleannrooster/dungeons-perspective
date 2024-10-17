@@ -1,14 +1,16 @@
 package wtf.kity.minecraftxiv.mod;
 
 import net.minecraft.client.option.Perspective;
+import net.minecraft.util.hit.HitResult;
+import wtf.kity.minecraftxiv.network.Capabilities;
 
 public class Mod {
-
     private float yaw;
     private float pitch;
     private float zoom;
     private boolean enabled;
     private Perspective lastPerspective;
+    private HitResult crosshairTarget;
 
     public Mod(float yaw, float pitch, float zoom, boolean enabled) {
         this.yaw = yaw;
@@ -53,5 +55,13 @@ public class Mod {
 
     public void setLastPerspective(Perspective lastPerspective) {
         this.lastPerspective = lastPerspective;
+    }
+
+    public HitResult getCrosshairTarget() {
+        return crosshairTarget;
+    }
+
+    public void setCrosshairTarget(HitResult crosshairTarget) {
+        this.crosshairTarget = crosshairTarget;
     }
 }

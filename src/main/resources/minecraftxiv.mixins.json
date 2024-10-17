@@ -9,10 +9,11 @@
   "client": [
     "CameraMixin",
     "GameRendererAccessor",
+    "GameRendererMixin",
     "InGameHudMixin",
     "KeyboardInputMixin",
-    "MinecraftClientMixin",
     "LivingEntityRendererMixin",
+    "MinecraftClientMixin",
     "MouseMixin"
   ],
   "injectors": {

@@ -1,6 +1,6 @@
 package wtf.kity.minecraftxiv.mixin;
 
-import wtf.kity.minecraftxiv.Client;
+import wtf.kity.minecraftxiv.ClientInit;
 import wtf.kity.minecraftxiv.mod.Mod;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
@@ -24,7 +24,7 @@ public class CameraMixin {
 
     @ModifyArgs(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setRotation(FF)V", ordinal = 0))
     public void a(Args args) {
-        Mod mod = Client.getInstance().getMod();
+        Mod mod = ClientInit.mod;
         if (mod.isEnabled()) {
             args.setAll(mod.getYaw(), mod.getPitch());
         }
@@ -32,7 +32,7 @@ public class CameraMixin {
 
     @ModifyArgs(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;clipToSpace(F)F", ordinal = 0))
     public void b(Args args) {
-        Mod mod = Client.getInstance().getMod();
+        Mod mod = ClientInit.mod;
         if (mod.isEnabled()) {
             args.set(0, (float) args.get(0) * mod.getZoom());
         }
@@ -40,7 +40,7 @@ public class CameraMixin {
 
     @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;moveBy(FFF)V", ordinal = 0))
     public void c(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
-        Mod mod = Client.getInstance().getMod();
+        Mod mod = ClientInit.mod;
         if (mod.isEnabled()) {
             this.yaw = mod.getYaw();
             this.pitch = mod.getPitch();

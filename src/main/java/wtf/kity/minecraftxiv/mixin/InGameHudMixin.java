@@ -1,6 +1,6 @@
 package wtf.kity.minecraftxiv.mixin;
 
-import wtf.kity.minecraftxiv.Client;
+import wtf.kity.minecraftxiv.ClientInit;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.DrawContext;
@@ -29,7 +29,9 @@ public class InGameHudMixin {
             )
     )
     private boolean isFirstPerson(Perspective perspective) {
-        return perspective.isFirstPerson() || Client.getInstance().getMod().isEnabled() && !Client.getInstance().getMoveCameraBinding().isPressed();
+        if (perspective.isFirstPerson()) return true;
+        if (!ClientInit.mod.isEnabled()) return false;
+        return !ClientInit.moveCameraBinding.isPressed();
     }
 
     @Inject(
@@ -37,7 +39,7 @@ public class InGameHudMixin {
             at = @At("HEAD")
     )
     private void crosshairPre(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        if (Client.getInstance().getMod().isEnabled()) {
+        if (ClientInit.mod.isEnabled()) {
             double scaleFactor = client.getWindow().getScaleFactor();
             Mouse mouse = client.mouse;
 
@@ -53,7 +55,7 @@ public class InGameHudMixin {
             at = @At("RETURN")
     )
     private void crosshairPost(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        if (Client.getInstance().getMod().isEnabled()) {
+        if (ClientInit.mod.isEnabled()) {
             context.getMatrices().pop();
         }
     }

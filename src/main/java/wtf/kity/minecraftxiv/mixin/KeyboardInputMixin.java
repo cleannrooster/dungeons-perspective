@@ -1,6 +1,6 @@
 package wtf.kity.minecraftxiv.mixin;
 
-import wtf.kity.minecraftxiv.Client;
+import wtf.kity.minecraftxiv.ClientInit;
 import wtf.kity.minecraftxiv.mod.Mod;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.Input;
@@ -19,7 +19,7 @@ public abstract class KeyboardInputMixin extends Input {
             at = @At("TAIL")
     )
     private void movement(boolean slowDown, float slowDownFactor, CallbackInfo ci) {
-        Mod mod = Client.getInstance().getMod();
+        Mod mod = ClientInit.mod;
         if (mod.isEnabled()) {
             MinecraftClient client = MinecraftClient.getInstance();
             assert client.player != null;

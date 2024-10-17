@@ -1,7 +1,18 @@
 {
   "key.categories.minecraftxiv": "Minecraft XIV",
+
   "key.minecraftxiv.toggle": "Toggle Perspective",
   "key.minecraftxiv.moveCamera": "Move Camera",
   "key.minecraftxiv.zoomIn": "Zoom In",
-  "key.minecraftxiv.zoomOut": "Zoom Out"
+  "key.minecraftxiv.zoomOut": "Zoom Out",
+
+  "minecraftxiv.midnightconfig.title": "Minecraft XIV",
+
+  "minecraftxiv.midnightconfig.category.options": "Options",
+  "minecraftxiv.midnightconfig.scrollWheelZoom": "Zoom with scroll wheel (override hotbar scrolling)",
+
+  "minecraftxiv.midnightconfig.category.capabilities": "Capabilities",
+
+  "minecraftxiv.midnightconfig.capabilities": "Additional capabilities that aren't vanilla server friendly. These must be enabled on the server.",
+  "minecraftxiv.midnightconfig.targetFromCamera": "Pick target from cursor position instead of player line of sight."
 }

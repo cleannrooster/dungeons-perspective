@@ -3,7 +3,8 @@ package wtf.kity.minecraftxiv.mixin;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.entity.player.PlayerInventory;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import wtf.kity.minecraftxiv.Client;
+import wtf.kity.minecraftxiv.ClientInit;
+import wtf.kity.minecraftxiv.Config;
 import wtf.kity.minecraftxiv.mod.Mod;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
@@ -68,7 +69,7 @@ public class MouseMixin {
 
                 cursorLocked = true;
 
-                if (Client.getInstance().getMod().isEnabled()) {
+                if (ClientInit.mod.isEnabled()) {
                     // Merely hide the cursor instead of "disabling" it
                     InputUtil.setCursorParameters(client.getWindow().getHandle(), GLFW.GLFW_CURSOR_HIDDEN, x, y);
                 } else {
@@ -97,7 +98,7 @@ public class MouseMixin {
     public void unlockCursor() {
         if (cursorLocked) {
             cursorLocked = false;
-            if (!Client.getInstance().getMod().isEnabled()) {
+            if (!ClientInit.mod.isEnabled()) {
                 x = client.getWindow().getWidth() / 2.0;
                 y = client.getWindow().getHeight() / 2.0;
             }
@@ -107,7 +108,7 @@ public class MouseMixin {
 
     @Inject(method = "updateMouse", at = @At(value = "INVOKE", target = "net/minecraft/client/tutorial/TutorialManager.onUpdateMouse(DD)V"))
     private void updateMouseA(double timeDelta, CallbackInfo ci, @Local(ordinal = 1) double i, @Local(ordinal = 2) double j, @Local int k) {
-        Mod mod = Client.getInstance().getMod();
+        Mod mod = ClientInit.mod;
 
         GameRenderer renderer = client.gameRenderer;
         Window window = client.getWindow();
@@ -117,7 +118,7 @@ public class MouseMixin {
         Entity cameraEntity = client.cameraEntity;
 
         if (mod.isEnabled() && cameraEntity != null && client.player != null) {
-            if (Client.getInstance().getMoveCameraBinding().isPressed()) {
+            if (ClientInit.moveCameraBinding.isPressed()) {
                 if (lastX == null || lastY == null) {
                     InputUtil.setCursorParameters(client.getWindow().getHandle(), InputUtil.GLFW_CURSOR_DISABLED, x, y);
                     lastX = x;
@@ -159,6 +160,7 @@ public class MouseMixin {
                 if (hitResult == null) {
                     hitResult = cameraEntity.getWorld().raycast(new RaycastContext(start, end, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, cameraEntity));
                 }
+                mod.setCrosshairTarget(hitResult);
                 client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, hitResult.getPos());
             }
         }
@@ -166,15 +168,15 @@ public class MouseMixin {
 
     @Inject(method = {"updateMouse"}, at = {@At(value = "INVOKE", target = "net/minecraft/client/network/ClientPlayerEntity.changeLookDirection(DD)V")}, cancellable = true)
     private void updateMouseB(CallbackInfo info) {
-        if (Client.getInstance().getMod().isEnabled()) {
+        if (ClientInit.mod.isEnabled()) {
             info.cancel();
         }
     }
 
     @Redirect(method = "onMouseScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;scrollInHotbar(D)V"))
     private void scrollInHotbar(PlayerInventory instance, double scrollAmount) {
-        Mod mod = Client.getInstance().getMod();
-        if (mod.isEnabled()) {
+        Mod mod = ClientInit.mod;
+        if (mod.isEnabled() && Config.scrollWheelZoom) {
             mod.setZoom(Math.max(0.0f, mod.getZoom() - (float) scrollAmount * 0.2f));
         } else {
             instance.scrollInHotbar(scrollAmount);
