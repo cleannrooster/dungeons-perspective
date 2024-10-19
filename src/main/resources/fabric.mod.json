@@ -22,6 +22,9 @@
     ],
     "server": [
       "wtf.kity.minecraftxiv.ServerInit"
+    ],
+    "modmenu": [
+      "wtf.kity.minecraftxiv.config.Gui"
     ]
   },
   "mixins": [
@@ -31,6 +34,6 @@
     "fabricloader": ">=0.14.14",
     "minecraft": ">=1.20.1",
     "fabric-api": "*",
-    "midnightlib": ">=1.6.3"
+    "yet_another_config_lib_v3": ">=3.5.0"
   }
 }

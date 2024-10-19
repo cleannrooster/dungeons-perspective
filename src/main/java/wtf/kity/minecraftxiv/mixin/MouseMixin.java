@@ -1,11 +1,6 @@
 package wtf.kity.minecraftxiv.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import net.minecraft.entity.player.PlayerInventory;
-import org.spongepowered.asm.mixin.injection.Redirect;
-import wtf.kity.minecraftxiv.ClientInit;
-import wtf.kity.minecraftxiv.Config;
-import wtf.kity.minecraftxiv.mod.Mod;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.option.KeyBinding;
@@ -15,6 +10,7 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.Window;
 import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
@@ -27,7 +23,11 @@ import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import wtf.kity.minecraftxiv.ClientInit;
+import wtf.kity.minecraftxiv.config.Config;
+import wtf.kity.minecraftxiv.mod.Mod;
 
 @Mixin(Mouse.class)
 public class MouseMixin {
@@ -176,7 +176,7 @@ public class MouseMixin {
     @Redirect(method = "onMouseScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;scrollInHotbar(D)V"))
     private void scrollInHotbar(PlayerInventory instance, double scrollAmount) {
         Mod mod = ClientInit.mod;
-        if (mod.isEnabled() && Config.scrollWheelZoom) {
+        if (mod.isEnabled() && Config.GSON.instance().scrollWheelZoom) {
             mod.setZoom(Math.max(0.0f, mod.getZoom() - (float) scrollAmount * 0.2f));
         } else {
             instance.scrollInHotbar(scrollAmount);

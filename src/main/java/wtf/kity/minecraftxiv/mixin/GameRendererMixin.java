@@ -8,13 +8,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import wtf.kity.minecraftxiv.ClientInit;
-import wtf.kity.minecraftxiv.Config;
+import wtf.kity.minecraftxiv.config.Config;
 
 @Mixin(GameRenderer.class)
 public class GameRendererMixin {
     @Inject(method = "findCrosshairTarget", at = @At("HEAD"), cancellable = true)
     public void findCrosshairTarget(Entity camera, double blockInteractionRange, double entityInteractionRange, float tickDelta, CallbackInfoReturnable<HitResult> cir) {
-        if (Config.targetFromCamera && ClientInit.capabilities.targetFromCamera()) {
+        if (Config.GSON.instance().targetFromCamera && ClientInit.getCapabilities().targetFromCamera()) {
                 cir.setReturnValue(ClientInit.mod.getCrosshairTarget());
                 cir.cancel();
         }

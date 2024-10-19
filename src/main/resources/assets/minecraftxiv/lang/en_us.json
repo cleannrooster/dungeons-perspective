@@ -1,18 +1,15 @@
 {
-  "key.categories.minecraftxiv": "Minecraft XIV",
-
-  "key.minecraftxiv.toggle": "Toggle Perspective",
-  "key.minecraftxiv.moveCamera": "Move Camera",
-  "key.minecraftxiv.zoomIn": "Zoom In",
-  "key.minecraftxiv.zoomOut": "Zoom Out",
-
-  "minecraftxiv.midnightconfig.title": "Minecraft XIV",
-
-  "minecraftxiv.midnightconfig.category.options": "Options",
-  "minecraftxiv.midnightconfig.scrollWheelZoom": "Zoom with scroll wheel (override hotbar scrolling)",
-
-  "minecraftxiv.midnightconfig.category.capabilities": "Capabilities",
-
-  "minecraftxiv.midnightconfig.capabilities": "Additional capabilities that aren't vanilla server friendly. These must be enabled on the server.",
-  "minecraftxiv.midnightconfig.targetFromCamera": "Pick target from cursor position instead of player line of sight."
+  "minecraftxiv.binds.category": "Minecraft XIV",
+  "minecraftxiv.binds.toggle": "Toggle Perspective",
+  "minecraftxiv.binds.moveCamera": "Move Camera",
+  "minecraftxiv.binds.zoomIn": "Zoom In",
+  "minecraftxiv.binds.zoomOut": "Zoom Out",
+  "minecraftxiv.config.title": "Minecraft XIV",
+  "minecraftxiv.config.category.options": "Options",
+  "minecraftxiv.config.scrollWheelZoom.name": "Scroll wheel zoom",
+  "minecraftxiv.config.scrollWheelZoom.description": "Zoom with scroll wheel (override hotbar scrolling)",
+  "minecraftxiv.config.category.capabilities": "Extras",
+  "minecraftxiv.config.capabilities": "§eAdditional features that aren't vanilla server friendly. These must be enabled on the server.",
+  "minecraftxiv.config.targetFromCamera.name": "Direct targeting",
+  "minecraftxiv.config.targetFromCamera.description": "Pick target from cursor position, bypassing player line of sight."
 }

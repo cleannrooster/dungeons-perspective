@@ -5,7 +5,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.Perspective;
-import net.minecraft.entity.Entity;
 import net.minecraft.resource.ResourcePackManager;
 import net.minecraft.server.SaveLoader;
 import net.minecraft.world.level.storage.LevelStorage;
@@ -23,9 +22,6 @@ import wtf.kity.minecraftxiv.util.Util;
 
 @Mixin(MinecraftClient.class)
 public abstract class MinecraftClientMixin {
-    @Shadow
-    public Entity targetedEntity;
-
     @Shadow
     @Nullable
     public ClientPlayerEntity player;
@@ -76,11 +72,11 @@ public abstract class MinecraftClientMixin {
 
     @Inject(method = "startIntegratedServer", at = @At("HEAD"))
     public void startIntegratedServerPre(LevelStorage.Session session, ResourcePackManager dataPackManager, SaveLoader saveLoader, boolean newWorld, CallbackInfo ci) {
-        ClientInit.capabilities = Capabilities.all();
+        ClientInit.setCapabilities(Capabilities.all());
     }
 
     @Inject(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V", at = @At("HEAD"))
     public void disconnectPre(Screen screen, CallbackInfo ci) {
-        ClientInit.capabilities = Capabilities.none();
+        ClientInit.setCapabilities(Capabilities.none());
     }
 }
