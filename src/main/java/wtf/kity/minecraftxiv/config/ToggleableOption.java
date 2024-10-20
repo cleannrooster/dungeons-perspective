@@ -56,10 +56,11 @@ public class ToggleableOption<T> implements Option<Pair<Boolean, T>> {
                 )
                 .controller(innerControlGetter)
                 .flags(flags)
-                .listener((opt, val) -> this.triggerListeners(false))
+                .listener((opt, val) -> this.triggerListeners(true))
                 .build();
         this.enabled = Option.<Boolean>createBuilder()
                 .name(Text.empty())
+                // TODO: investigate how a tooltip can be had
                 .description(OptionDescription.of(Text.literal("Allow players on this server to use this feature")))
                 .binding(
                         this.binding.getValue().getLeft(),
@@ -68,7 +69,7 @@ public class ToggleableOption<T> implements Option<Pair<Boolean, T>> {
                 )
                 .available(available)
                 .listener((opt, val) -> this.inner.setAvailable(val))
-                .listener((opt, val) -> this.triggerListeners(false))
+                .listener((opt, val) -> this.triggerListeners(true))
                 .controller(TickBoxControllerBuilder::create)
                 .build();
         this.controller = controlGetter.apply(this);
@@ -119,7 +120,7 @@ public class ToggleableOption<T> implements Option<Pair<Boolean, T>> {
 
     @Override
     public boolean changed() {
-        return !binding().getValue().equals(this.pendingValue());
+        return this.enabled.changed() || this.inner.changed();
     }
 
     @Override
@@ -158,7 +159,7 @@ public class ToggleableOption<T> implements Option<Pair<Boolean, T>> {
 
     @Override
     public boolean isPendingValueDefault() {
-        return binding().defaultValue().equals(pendingValue());
+        return this.enabled.isPendingValueDefault() && this.inner.isPendingValueDefault();
     }
 
     @Override

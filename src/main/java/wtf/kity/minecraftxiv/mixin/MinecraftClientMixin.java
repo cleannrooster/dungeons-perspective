@@ -16,8 +16,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import wtf.kity.minecraftxiv.ClientInit;
+import wtf.kity.minecraftxiv.MainInit;
 import wtf.kity.minecraftxiv.mod.Mod;
-import wtf.kity.minecraftxiv.network.Capabilities;
 import wtf.kity.minecraftxiv.util.Util;
 
 @Mixin(MinecraftClient.class)
@@ -70,13 +70,13 @@ public abstract class MinecraftClientMixin {
         }
     }
 
-    @Inject(method = "startIntegratedServer", at = @At("HEAD"))
-    public void startIntegratedServerPre(LevelStorage.Session session, ResourcePackManager dataPackManager, SaveLoader saveLoader, boolean newWorld, CallbackInfo ci) {
-        ClientInit.setCapabilities(Capabilities.all());
+    @Inject(method = "startIntegratedServer", at = @At("TAIL"))
+    public void startIntegratedServerPost(LevelStorage.Session session, ResourcePackManager dataPackManager, SaveLoader saveLoader, boolean newWorld, CallbackInfo ci) {
+        ClientInit.capabilities = MainInit.capabilities;
     }
 
     @Inject(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V", at = @At("HEAD"))
     public void disconnectPre(Screen screen, CallbackInfo ci) {
-        ClientInit.setCapabilities(Capabilities.none());
+        ClientInit.capabilities = null;
     }
 }

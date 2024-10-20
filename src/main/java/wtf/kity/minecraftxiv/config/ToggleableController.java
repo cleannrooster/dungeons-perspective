@@ -9,6 +9,7 @@ import dev.isxander.yacl3.gui.controllers.TickBoxController;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.ParentElement;
+import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -35,19 +36,6 @@ public class ToggleableController<T> implements Controller<Pair<Boolean, T>> {
     @Override
     public AbstractWidget provideWidget(YACLScreen screen, Dimension<Integer> widgetDimension) {
         return new ToggleableControllerWidget<>(this, screen, widgetDimension);
-//        DirectionalLayoutWidget layout = new DirectionalLayoutWidget(widgetDimension.x(), widgetDimension.y(), DirectionalLayoutWidget.DisplayAxis.HORIZONTAL);
-//        this.tickBox = (TickBoxController.TickBoxControllerElement) control.tickBox.controller().provideWidget(screen, Dimension.ofInt(
-//                dim.x(),
-//                dim.y(),
-//                dim.height(),
-//                dim.height()
-//        ));
-//        this.inner = control.inner.controller().provideWidget(screen, Dimension.ofInt(
-//                dim.x() + dim.height(),
-//                dim.y(),
-//                dim.width() - dim.height(),
-//                dim.height()
-//        ));
     }
 
     public static class ToggleableControllerWidget<T> extends AbstractWidget implements ParentElement {
@@ -116,5 +104,28 @@ public class ToggleableController<T> implements Controller<Pair<Boolean, T>> {
                     dim.height()
             ));
         }
+
+        @Override
+        public void unfocus() {
+            this.tickBox.unfocus();
+            this.inner.unfocus();
+        }
+
+        @Override
+        public boolean matchesSearch(String query) {
+            return this.inner.matchesSearch(query);
+        }
+
+        @Override
+        public void appendNarrations(NarrationMessageBuilder builder) {
+            this.tickBox.appendNarrations(builder);
+            this.inner.appendNarrations(builder);
+        }
+
+        @Override
+        public boolean canReset() {
+            return this.tickBox.canReset() || this.inner.canReset();
+        }
+
     }
 }

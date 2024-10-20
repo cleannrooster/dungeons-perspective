@@ -6,7 +6,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -18,7 +17,8 @@ import org.lwjgl.glfw.GLFW;
 import wtf.kity.minecraftxiv.mod.Mod;
 import wtf.kity.minecraftxiv.network.Capabilities;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.function.Consumer;
 
 @Environment(EnvType.CLIENT)
 public class ClientInit implements ClientModInitializer {
@@ -29,7 +29,8 @@ public class ClientInit implements ClientModInitializer {
     public static KeyBinding zoomOutBinding;
     public static Mod mod;
     @Nullable
-    private static Capabilities capabilities = null;
+    public static Capabilities capabilities = null;
+    private static final ArrayList<Consumer<Capabilities>> capabilityListeners = new ArrayList<>();
 
     public static boolean isConnectedToServer() {
         ClientPlayNetworkHandler clientPlayNetworkHandler = MinecraftClient.getInstance().getNetworkHandler();
@@ -51,26 +52,29 @@ public class ClientInit implements ClientModInitializer {
         return capabilities;
     }
 
-    public static void setCapabilities(Capabilities capabilities) {
-        if (!capabilities.equals(ClientInit.capabilities)) {
-            if (isConnectedToServer()) {
-                ClientPlayNetworking.send(capabilities);
-            } else {
-                ClientInit.capabilities = capabilities;
-                try {
-                    Capabilities.save(capabilities);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+    public static void submitCapabilities(Capabilities capabilities) {
+        ClientPlayNetworking.send(capabilities);
+    }
+
+    public static void listenCapabilities(Consumer<Capabilities> listener) {
+        capabilityListeners.add(listener);
+    }
+
+    public static void unlistenCapabilities(Consumer<Capabilities> listener) {
+        capabilityListeners.removeIf(l -> l == listener);
+    }
+
+    public static void notifyCapabilityListeners() {
+        // Iterate backwards in case it decides to remove itself during execution
+        // Rust wouldn't have let me make this mistake >:c
+        for (int i = capabilityListeners.size() - 1; i >= 0; i--) {
+            capabilityListeners.get(i).accept(getCapabilities());
         }
     }
 
-    @SuppressWarnings("resource")
     @Override
     public void onInitializeClient() {
         instance = this;
-        capabilities = Capabilities.load();
 
         KeyBindingHelper.registerKeyBinding(toggleBinding = new KeyBinding("minecraftxiv.binds.toggle", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F4, "minecraftxiv.binds.category"));
         KeyBindingHelper.registerKeyBinding(moveCameraBinding = new KeyBinding("minecraftxiv.binds.moveCamera", InputUtil.Type.MOUSE, GLFW.GLFW_MOUSE_BUTTON_3, "minecraftxiv.binds.category"));
@@ -78,17 +82,18 @@ public class ClientInit implements ClientModInitializer {
         KeyBindingHelper.registerKeyBinding(zoomOutBinding = new KeyBinding("minecraftxiv.binds.zoomOut", InputUtil.Type.MOUSE, GLFW.GLFW_MOUSE_BUTTON_7, "minecraftxiv.binds.category"));
 
         mod = new Mod(0, 0, 1.0f, false);
-        PayloadTypeRegistry.playS2C().register(Capabilities.ID, Capabilities.CODEC);
-        PayloadTypeRegistry.playC2S().register(Capabilities.ID, Capabilities.CODEC);
+
+        listenCapabilities(capabilities -> {
+            ClientPlayerEntity player = MinecraftClient.getInstance().player;
+            if (player != null) {
+                player.sendMessage(Text.literal("§7[§5MinecraftXIV§7] §rAllowed features:"));
+                player.sendMessage(Text.literal(String.format("%sCamera targeting", capabilities.targetFromCamera() ? "§2" : "§4")));
+            }
+        });
 
         ClientPlayNetworking.registerGlobalReceiver(Capabilities.ID, (payload, context) -> {
             capabilities = payload;
-
-            ClientPlayerEntity player = context.client().player;
-            if (player != null) {
-                player.sendMessage(Text.literal("§7[§uMinecraftXIV§7] §rServer capabilities:"));
-                player.sendMessage(Text.literal(String.format("%sCamera targeting", payload.targetFromCamera() ? "§2" : "§4")));
-            }
+            notifyCapabilityListeners();
         });
     }
 }

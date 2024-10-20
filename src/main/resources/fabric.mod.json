@@ -20,9 +20,6 @@
     "client": [
       "wtf.kity.minecraftxiv.ClientInit"
     ],
-    "server": [
-      "wtf.kity.minecraftxiv.ServerInit"
-    ],
     "modmenu": [
       "wtf.kity.minecraftxiv.config.Gui"
     ]
