@@ -5,6 +5,7 @@ import com.terraformersmc.modmenu.api.ModMenuApi;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
 import dev.isxander.yacl3.gui.YACLScreen;
+import dev.isxander.yacl3.gui.controllers.LabelController;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
@@ -39,9 +40,13 @@ public class Gui implements ModMenuApi {
                                     .build())
                             .category(ConfigCategory.createBuilder()
                                     .name(Text.translatable("minecraftxiv.config.category.capabilities"))
-                                    .option(LabelOption.create(Text.translatable("minecraftxiv.config.capabilities")))
+                                    .option(Option.<Text>createBuilder()
+                                            .name(Text.empty())
+                                            .binding(Binding.immutable(Text.translatable("minecraftxiv.config.capabilities")))
+                                            .customController(LabelController::new)
+                                            .build())
                                     .option(Util.make(() -> {
-                                        targetFromCameraOption.set((ToggleableOption<Boolean>) new ToggleableOption.ToggleableOptionBuilder<Boolean>()
+                                        targetFromCameraOption.set(new ToggleableOption.ToggleableOptionBuilder<Boolean>()
                                                 .innerControl(BooleanControllerBuilder::create)
                                                 .name(Text.translatable("minecraftxiv.config.targetFromCamera.name"))
                                                 .description(OptionDescription.of(Text.translatable("minecraftxiv.config.targetFromCamera.description")))

@@ -10,6 +10,8 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.ParentElement;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
+import net.minecraft.client.gui.tooltip.Tooltip;
+import net.minecraft.client.gui.tooltip.TooltipState;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -41,9 +43,11 @@ public class ToggleableController<T> implements Controller<Pair<Boolean, T>> {
     public static class ToggleableControllerWidget<T> extends AbstractWidget implements ParentElement {
         private final TickBoxController.TickBoxControllerElement tickBox;
         private final AbstractWidget inner;
+        private final TooltipState tooltip = new TooltipState();
 
         public ToggleableControllerWidget(ToggleableController<T> control, YACLScreen screen, Dimension<Integer> dim) {
             super(dim);
+            this.tooltip.setTooltip(Tooltip.of(control.option.enabled.description().text()));
             this.tickBox = (TickBoxController.TickBoxControllerElement) control.option.enabled.controller().provideWidget(screen, dim);
             this.inner = control.option.inner.controller().provideWidget(screen, dim);
             this.setDimension(dim);
@@ -53,6 +57,7 @@ public class ToggleableController<T> implements Controller<Pair<Boolean, T>> {
         public void render(DrawContext graphics, int mouseX, int mouseY, float delta) {
             this.tickBox.render(graphics, mouseX, mouseY, delta);
             this.inner.render(graphics, mouseX, mouseY, delta);
+            this.tooltip.render(this.tickBox.isMouseOver(mouseX, mouseY), this.tickBox.isFocused(), this.tickBox.getNavigationFocus());
         }
 
         @Override

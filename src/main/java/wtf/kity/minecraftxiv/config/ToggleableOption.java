@@ -60,8 +60,7 @@ public class ToggleableOption<T> implements Option<Pair<Boolean, T>> {
                 .build();
         this.enabled = Option.<Boolean>createBuilder()
                 .name(Text.empty())
-                // TODO: investigate how a tooltip can be had
-                .description(OptionDescription.of(Text.literal("Allow players on this server to use this feature")))
+                .description(OptionDescription.of(Text.translatable("minecraftxiv.config.ToggleableOption.tooltip")))
                 .binding(
                         this.binding.getValue().getLeft(),
                         () -> this.binding.getValue().getLeft(),
@@ -187,7 +186,7 @@ public class ToggleableOption<T> implements Option<Pair<Boolean, T>> {
         }
     }
 
-    public static class ToggleableOptionBuilder<T> implements Builder<Pair<Boolean, T>> {
+    public static class ToggleableOptionBuilder<T> {
         private Text name = Text.literal("Name not specified!").formatted(Formatting.RED);
 
         private Function<Pair<Boolean, T>, OptionDescription> descriptionFunction = pending -> OptionDescription.EMPTY;
@@ -206,50 +205,43 @@ public class ToggleableOption<T> implements Option<Pair<Boolean, T>> {
 
         private Function<Option<T>, ControllerBuilder<T>> innerControlGetter;
 
-        @Override
-        public Builder<Pair<Boolean, T>> name(@NotNull Text name) {
+        public ToggleableOptionBuilder<T> name(@NotNull Text name) {
             Validate.notNull(name, "`name` cannot be null");
 
             this.name = name;
             return this;
         }
 
-        @Override
-        public Builder<Pair<Boolean, T>> description(@NotNull OptionDescription description) {
+        public ToggleableOptionBuilder<T> description(@NotNull OptionDescription description) {
             return description(opt -> description);
         }
 
-        @Override
-        public Builder<Pair<Boolean, T>> description(@NotNull Function<Pair<Boolean, T>, OptionDescription> descriptionFunction) {
+        public ToggleableOptionBuilder<T> description(@NotNull Function<Pair<Boolean, T>, OptionDescription> descriptionFunction) {
             this.descriptionFunction = descriptionFunction;
             return this;
         }
 
-        @Override
-        public Builder<Pair<Boolean, T>> controller(@NotNull Function<Option<Pair<Boolean, T>>, ControllerBuilder<Pair<Boolean, T>>> controllerBuilder) {
+        public ToggleableOptionBuilder<T> controller(@NotNull Function<Option<Pair<Boolean, T>>, ControllerBuilder<Pair<Boolean, T>>> controllerBuilder) {
             Validate.notNull(controllerBuilder, "`controllerBuilder` cannot be null");
 
             return customController(opt -> controllerBuilder.apply(opt).build());
         }
 
-        @Override
-        public Builder<Pair<Boolean, T>> customController(@NotNull Function<Option<Pair<Boolean, T>>, Controller<Pair<Boolean, T>>> control) {
+        public ToggleableOptionBuilder<T> customController(@NotNull Function<Option<Pair<Boolean, T>>, Controller<Pair<Boolean, T>>> control) {
             Validate.notNull(control, "`control` cannot be null");
 
             this.controlGetter = control;
             return this;
         }
 
-        @Override
-        public Builder<Pair<Boolean, T>> binding(@NotNull Binding<Pair<Boolean, T>> binding) {
+        public ToggleableOptionBuilder<T> binding(@NotNull Binding<Pair<Boolean, T>> binding) {
             Validate.notNull(binding, "`binding` cannot be null");
 
             this.binding = binding;
             return this;
         }
 
-        @Override
-        public Builder<Pair<Boolean, T>> binding(@NotNull Pair<Boolean, T> def, @NotNull Supplier<@NotNull Pair<Boolean, T>> getter, @NotNull Consumer<@NotNull Pair<Boolean, T>> setter) {
+        public ToggleableOptionBuilder<T> binding(@NotNull Pair<Boolean, T> def, @NotNull Supplier<@NotNull Pair<Boolean, T>> getter, @NotNull Consumer<@NotNull Pair<Boolean, T>> setter) {
             Validate.notNull(def, "`def` must not be null");
             Validate.notNull(getter, "`getter` must not be null");
             Validate.notNull(setter, "`setter` must not be null");
@@ -258,42 +250,36 @@ public class ToggleableOption<T> implements Option<Pair<Boolean, T>> {
             return this;
         }
 
-        @Override
-        public Builder<Pair<Boolean, T>> available(boolean available) {
+        public ToggleableOptionBuilder<T> available(boolean available) {
             this.available = available;
             return this;
         }
 
-        @Override
-        public Builder<Pair<Boolean, T>> flag(@NotNull OptionFlag... flag) {
+        public ToggleableOptionBuilder<T> flag(@NotNull OptionFlag... flag) {
             Validate.notNull(flag, "`flag` must not be null");
 
             this.flags.addAll(Arrays.asList(flag));
             return this;
         }
 
-        @Override
-        public Builder<Pair<Boolean, T>> flags(@NotNull Collection<? extends OptionFlag> flags) {
+        public ToggleableOptionBuilder<T> flags(@NotNull Collection<? extends OptionFlag> flags) {
             Validate.notNull(flags, "`flags` must not be null");
 
             this.flags.addAll(flags);
             return this;
         }
 
-        @Override
-        public Builder<Pair<Boolean, T>> instant(boolean instant) {
+        public ToggleableOptionBuilder<T> instant(boolean instant) {
             this.instant = instant;
             return this;
         }
 
-        @Override
-        public Builder<Pair<Boolean, T>> listener(@NotNull BiConsumer<Option<Pair<Boolean, T>>, Pair<Boolean, T>> listener) {
+        public ToggleableOptionBuilder<T> listener(@NotNull BiConsumer<Option<Pair<Boolean, T>>, Pair<Boolean, T>> listener) {
             this.listeners.add(listener);
             return this;
         }
 
-        @Override
-        public Builder<Pair<Boolean, T>> listeners(@NotNull Collection<BiConsumer<Option<Pair<Boolean, T>>, Pair<Boolean, T>>> listeners) {
+        public ToggleableOptionBuilder<T> listeners(@NotNull Collection<BiConsumer<Option<Pair<Boolean, T>>, Pair<Boolean, T>>> listeners) {
             this.listeners.addAll(listeners);
             return this;
         }
@@ -303,8 +289,7 @@ public class ToggleableOption<T> implements Option<Pair<Boolean, T>> {
             return this;
         }
 
-        @Override
-        public Option<Pair<Boolean, T>> build() {
+        public ToggleableOption<T> build() {
             Validate.notNull(controlGetter, "`control` must not be null when building `Option`");
             Validate.notNull(binding, "`binding` must not be null when building `Option`");
             Validate.isTrue(!instant || flags.isEmpty(), "instant application does not support option flags");
