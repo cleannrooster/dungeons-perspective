@@ -1,7 +1,28 @@
-# minecraft-xiv
-WIP WIP WIP
+# Minecraft XIV
 
-A mod to make minecraft control more like FFXIV (third person free camera, mouse aim, zoom in and out, etc.)  
-I basically smashed together [cdn-perspective-3d](https://github.com/lunatic-gh/cdn-perspective-3d) and [absolution](https://github.com/quat1024/absolution)
+Adds an upgraded third-person perspective inspired by Final Fantasy XIV.
 
-![2024-10-15_19.31.48.png](2024-10-15_19.31.48.png)
+## Vanilla-friendly features
+
+- Free camera rotation
+- Zoom in and out with scroll wheel or keybinds
+- Make player transparent when camera is too close
+- Choose between camera-relative or player-relative movement
+- Pick blocks with the mouse cursor
+
+## Extra stuff
+
+Minecraft XIV also includes some additional features that only be enabled on servers with the mod installed, such as:
+
+- Directly target blocks with the mouse cursor, bypassing player line-of-sight checks
+- Target any block you can see, ignoring player reach
+    
+## Screenshots
+
+![](https://cdn.modrinth.com/data/fNaJhObx/images/b468d090a988c83afd9affefc75d202f60059d2d.png)
+![](https://cdn.modrinth.com/data/fNaJhObx/images/b540f527842487a0dc484b5cfcdc647369f1d958.png)
+
+## Acknowledgements
+
+Based on code from [cdn-perspective-3d](https://github.com/lunatic-gh/cdn-perspective-3d)
+and [absolution](https://github.com/quat1024/absolution).
