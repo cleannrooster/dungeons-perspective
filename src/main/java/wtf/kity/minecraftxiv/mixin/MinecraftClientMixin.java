@@ -5,9 +5,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.Perspective;
-import net.minecraft.resource.ResourcePackManager;
-import net.minecraft.server.SaveLoader;
-import net.minecraft.world.level.storage.LevelStorage;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import wtf.kity.minecraftxiv.ClientInit;
-import wtf.kity.minecraftxiv.MainInit;
 import wtf.kity.minecraftxiv.mod.Mod;
 import wtf.kity.minecraftxiv.util.Util;
 
@@ -68,11 +64,6 @@ public abstract class MinecraftClientMixin {
                 mod.setZoom(Math.min(mod.getZoom() + 0.1f, 2.0f));
             }
         }
-    }
-
-    @Inject(method = "startIntegratedServer", at = @At("TAIL"))
-    public void startIntegratedServerPost(LevelStorage.Session session, ResourcePackManager dataPackManager, SaveLoader saveLoader, boolean newWorld, CallbackInfo ci) {
-        ClientInit.capabilities = MainInit.capabilities;
     }
 
     @Inject(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V", at = @At("HEAD"))

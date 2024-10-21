@@ -41,13 +41,14 @@ public class ToggleableController<T> implements Controller<Pair<Boolean, T>> {
     }
 
     public static class ToggleableControllerWidget<T> extends AbstractWidget implements ParentElement {
+        private final ToggleableController<T> control;
         private final TickBoxController.TickBoxControllerElement tickBox;
         private final AbstractWidget inner;
         private final TooltipState tooltip = new TooltipState();
 
         public ToggleableControllerWidget(ToggleableController<T> control, YACLScreen screen, Dimension<Integer> dim) {
             super(dim);
-            this.tooltip.setTooltip(Tooltip.of(control.option.enabled.description().text()));
+            this.control = control;
             this.tickBox = (TickBoxController.TickBoxControllerElement) control.option.enabled.controller().provideWidget(screen, dim);
             this.inner = control.option.inner.controller().provideWidget(screen, dim);
             this.setDimension(dim);
@@ -57,6 +58,7 @@ public class ToggleableController<T> implements Controller<Pair<Boolean, T>> {
         public void render(DrawContext graphics, int mouseX, int mouseY, float delta) {
             this.tickBox.render(graphics, mouseX, mouseY, delta);
             this.inner.render(graphics, mouseX, mouseY, delta);
+            this.tooltip.setTooltip(Tooltip.of(this.control.option.tickBoxTooltipFunction.get()));
             this.tooltip.render(this.tickBox.isMouseOver(mouseX, mouseY), this.tickBox.isFocused(), this.tickBox.getNavigationFocus());
         }
 

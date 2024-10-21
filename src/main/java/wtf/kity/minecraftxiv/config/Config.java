@@ -11,10 +11,16 @@ public class Config {
                     .setPath(YACLPlatform.getConfigDir().resolve("minecraftxiv.json"))
                     .build())
             .build();
-
-    @SerialEntry(comment = "Zoom with scroll wheel (override hotbar scrolling)")
+    
+    @SerialEntry
     public boolean scrollWheelZoom = true;
 
-    @SerialEntry(comment = "Pick target from cursor position instead of player line of sight")
+    @SerialEntry
+    public boolean movementCameraRelative = true;
+
+    @SerialEntry
     public boolean targetFromCamera = false;
+
+    @SerialEntry
+    public boolean unlimitedReach = false;
 }

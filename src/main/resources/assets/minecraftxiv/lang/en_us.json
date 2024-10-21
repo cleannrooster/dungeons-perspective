@@ -7,10 +7,17 @@
   "minecraftxiv.config.title": "Minecraft XIV",
   "minecraftxiv.config.category.options": "Options",
   "minecraftxiv.config.scrollWheelZoom.name": "Scroll wheel zoom",
-  "minecraftxiv.config.scrollWheelZoom.description": "Zoom with scroll wheel (override hotbar scrolling)",
+  "minecraftxiv.config.scrollWheelZoom.description": "Zoom with scroll wheel (overrides hotbar scrolling).",
+  "minecraftxiv.config.movementCameraRelative.name": "Camera-relative movement",
+  "minecraftxiv.config.movementCameraRelative.description": "Make movement work relative to the camera instead of the player.",
   "minecraftxiv.config.category.capabilities": "Extras",
-  "minecraftxiv.config.ToggleableOption.tooltip": "Allow on this server.",
-  "minecraftxiv.config.capabilities": "§eAdditional features that aren't vanilla server friendly. These must be allowed by the server operator.",
+  "minecraftxiv.config.capabilities.toggle.tooltip": "Toggles if this feature is allowed on the server.",
+  "minecraftxiv.config.capabilities.toggle.tooltip.nopermissions": " (No permissions)",
+  "minecraftxiv.config.capabilities.toggle.tooltip.notconnected": " (Not connected to a server)",
+  "minecraftxiv.config.capabilities.toggle.tooltip.notsupported": " (Not supported on this server)",
+  "minecraftxiv.config.capabilities": "Additional features that aren't vanilla server friendly.\n§eThese must be allowed by the server operator. On local worlds, commands must be enabled.",
   "minecraftxiv.config.targetFromCamera.name": "Direct targeting",
-  "minecraftxiv.config.targetFromCamera.description": "Pick target from cursor position, bypassing player line of sight."
+  "minecraftxiv.config.targetFromCamera.description": "Pick target from cursor position, bypassing player line of sight.",
+  "minecraftxiv.config.unlimitedReach.name": "Unlimited reach",
+  "minecraftxiv.config.unlimitedReach.description": "Allow interaction with blocks no matter how far from the player they are."
 }

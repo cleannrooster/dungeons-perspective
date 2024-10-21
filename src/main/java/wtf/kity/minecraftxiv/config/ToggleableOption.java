@@ -26,11 +26,13 @@ public class ToggleableOption<T> implements Option<Pair<Boolean, T>> {
 
     private final ImmutableSet<OptionFlag> flags;
 
+    private final List<BiConsumer<Option<Pair<Boolean, T>>, Pair<Boolean, T>>> listeners;
+    private int listenerTriggerDepth = 0;
+
     public Option<Boolean> enabled;
     public Option<T> inner;
 
-    private final List<BiConsumer<Option<Pair<Boolean, T>>, Pair<Boolean, T>>> listeners;
-    private int listenerTriggerDepth = 0;
+    public Supplier<Text> tickBoxTooltipFunction;
 
     public ToggleableOption(
             @NotNull Text name,
@@ -40,12 +42,15 @@ public class ToggleableOption<T> implements Option<Pair<Boolean, T>> {
             boolean available,
             ImmutableSet<OptionFlag> flags,
             @NotNull Collection<BiConsumer<Option<Pair<Boolean, T>>, Pair<Boolean, T>>> listeners,
-            @NotNull Function<Option<T>, ControllerBuilder<T>> innerControlGetter
+            @NotNull Function<Option<T>, ControllerBuilder<T>> innerControlGetter,
+            @NotNull Supplier<Text> tickBoxTooltipFunction
     ) {
         this.name = name;
         this.binding = new SafeBinding<>(binding);
         this.flags = flags;
         this.listeners = new ArrayList<>(listeners);
+        this.tickBoxTooltipFunction = tickBoxTooltipFunction;
+        this.controller = controlGetter.apply(this);
 
         this.inner = Option.<T>createBuilder()
                 .name(name)
@@ -56,24 +61,29 @@ public class ToggleableOption<T> implements Option<Pair<Boolean, T>> {
                 )
                 .controller(innerControlGetter)
                 .flags(flags)
-                .listener((opt, val) -> this.triggerListeners(true))
                 .build();
         this.enabled = Option.<Boolean>createBuilder()
                 .name(Text.empty())
-                .description(OptionDescription.of(Text.translatable("minecraftxiv.config.ToggleableOption.tooltip")))
                 .binding(
                         this.binding.getValue().getLeft(),
                         () -> this.binding.getValue().getLeft(),
                         (val) -> this.binding.setValue(new Pair<>(val, this.binding.getValue().getRight()))
                 )
                 .available(available)
-                .listener((opt, val) -> this.inner.setAvailable(val))
-                .listener((opt, val) -> this.triggerListeners(true))
+                .instant(true)
+                .listener((opt, val) -> {
+                    opt.applyValue();
+                    this.inner.setAvailable(val);
+                })
                 .controller(TickBoxControllerBuilder::create)
                 .build();
-        this.controller = controlGetter.apply(this);
 
         addListener((opt, pending) -> description = descriptionFunction.apply(pending));
+
+        // Add these after everything so they don't somehow trigger before they're both constructed.
+        this.enabled.addListener((opt, val) -> this.triggerListeners(true));
+        this.inner.addListener((opt, val) -> this.triggerListeners(true));
+
         triggerListeners(true);
     }
 
@@ -205,6 +215,8 @@ public class ToggleableOption<T> implements Option<Pair<Boolean, T>> {
 
         private Function<Option<T>, ControllerBuilder<T>> innerControlGetter;
 
+        private Supplier<Text> tickBoxTooltipFunction;
+
         public ToggleableOptionBuilder<T> name(@NotNull Text name) {
             Validate.notNull(name, "`name` cannot be null");
 
@@ -289,6 +301,11 @@ public class ToggleableOption<T> implements Option<Pair<Boolean, T>> {
             return this;
         }
 
+        public ToggleableOptionBuilder<T> tickBoxTooltip(@NotNull Supplier<Text> tickBoxTooltipFunction) {
+            this.tickBoxTooltipFunction = tickBoxTooltipFunction;
+            return this;
+        }
+
         public ToggleableOption<T> build() {
             Validate.notNull(controlGetter, "`control` must not be null when building `Option`");
             Validate.notNull(binding, "`binding` must not be null when building `Option`");
@@ -298,7 +315,7 @@ public class ToggleableOption<T> implements Option<Pair<Boolean, T>> {
                 listeners.add((opt, pendingValue) -> opt.applyValue());
             }
 
-            return new ToggleableOption<>(name, descriptionFunction, controlGetter, binding, available, ImmutableSet.copyOf(flags), listeners, innerControlGetter);
+            return new ToggleableOption<>(name, descriptionFunction, controlGetter, binding, available, ImmutableSet.copyOf(flags), listeners, innerControlGetter, tickBoxTooltipFunction);
         }
     }
 }

@@ -3,9 +3,6 @@
   "minVersion": "0.8",
   "package": "wtf.kity.minecraftxiv.mixin",
   "compatibilityLevel": "JAVA_17",
-  "server": [
-    "PlayerManagerMixin"
-  ],
   "client": [
     "CameraMixin",
     "GameRendererAccessor",
@@ -14,7 +11,11 @@
     "KeyboardInputMixin",
     "LivingEntityRendererMixin",
     "MinecraftClientMixin",
-    "MouseMixin"
+    "MouseMixin",
+    "client.PlayerEntityMixin"
+  ],
+  "server": [
+    "server.PlayerEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

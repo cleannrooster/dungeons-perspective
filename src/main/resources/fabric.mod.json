@@ -14,11 +14,11 @@
   "icon": "assets/minecraftxiv/icon.png",
   "environment": "*",
   "entrypoints": {
-    "main": [
-      "wtf.kity.minecraftxiv.MainInit"
-    ],
     "client": [
       "wtf.kity.minecraftxiv.ClientInit"
+    ],
+    "server": [
+      "wtf.kity.minecraftxiv.ServerInit"
     ],
     "modmenu": [
       "wtf.kity.minecraftxiv.config.Gui"
