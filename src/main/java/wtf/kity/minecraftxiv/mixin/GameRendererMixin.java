@@ -14,12 +14,21 @@ import wtf.kity.minecraftxiv.config.Config;
 @Mixin(GameRenderer.class)
 public abstract class GameRendererMixin {
     @Inject(method = "findCrosshairTarget", at = @At("HEAD"), cancellable = true)
-    public void findCrosshairTarget(Entity camera, double blockInteractionRange, double entityInteractionRange, float tickDelta, CallbackInfoReturnable<HitResult> cir) {
+    public void findCrosshairTarget(
+            Entity camera,
+            double blockInteractionRange,
+            double entityInteractionRange,
+            float tickDelta,
+            CallbackInfoReturnable<HitResult> cir
+    ) {
         if (Config.GSON.instance().targetFromCamera && ClientInit.getCapabilities().targetFromCamera()) {
             HitResult target = ClientInit.mod.getCrosshairTarget();
             if (target != null && !Config.GSON.instance().unlimitedReach) {
-                target = ((GameRendererAccessor) MinecraftClient.getInstance().gameRenderer)
-                        .callEnsureTargetInRange(target, camera.getCameraPosVec(tickDelta), blockInteractionRange);
+                target = ((GameRendererAccessor) MinecraftClient.getInstance().gameRenderer).callEnsureTargetInRange(
+                        target,
+                        camera.getCameraPosVec(tickDelta),
+                        blockInteractionRange
+                );
             }
             cir.setReturnValue(target);
             cir.cancel();

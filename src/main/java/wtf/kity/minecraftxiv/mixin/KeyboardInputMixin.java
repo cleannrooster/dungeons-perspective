@@ -15,8 +15,7 @@ import wtf.kity.minecraftxiv.config.Config;
 @Mixin(KeyboardInput.class)
 public abstract class KeyboardInputMixin extends Input {
     @Inject(
-            method = "tick",
-            at = @At("TAIL")
+            method = "tick", at = @At("TAIL")
     )
     private void movement(boolean slowDown, float slowDownFactor, CallbackInfo ci) {
         if (ClientInit.mod.isEnabled() && Config.GSON.instance().movementCameraRelative) {

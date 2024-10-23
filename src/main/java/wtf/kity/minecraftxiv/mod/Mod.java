@@ -2,7 +2,6 @@ package wtf.kity.minecraftxiv.mod;
 
 import net.minecraft.client.option.Perspective;
 import net.minecraft.util.hit.HitResult;
-import wtf.kity.minecraftxiv.network.Capabilities;
 
 public class Mod {
     private float yaw;

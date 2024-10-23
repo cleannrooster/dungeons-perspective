@@ -3,6 +3,7 @@ package wtf.kity.minecraftxiv.mixin;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
+import net.minecraft.client.input.Scroller;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
@@ -10,7 +11,6 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.Window;
 import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
@@ -106,8 +106,13 @@ public class MouseMixin {
         }
     }
 
-    @Inject(method = "updateMouse", at = @At(value = "INVOKE", target = "net/minecraft/client/tutorial/TutorialManager.onUpdateMouse(DD)V"))
-    private void updateMouseA(double timeDelta, CallbackInfo ci, @Local(ordinal = 1) double i, @Local(ordinal = 2) double j, @Local int k) {
+    @Inject(
+            method = "updateMouse",
+            at = @At(value = "INVOKE", target = "net/minecraft/client/tutorial/TutorialManager.onUpdateMouse(DD)V")
+    )
+    private void updateMouseA(
+            double timeDelta, CallbackInfo ci, @Local(ordinal = 1) double i, @Local(ordinal = 2) double j, @Local int k
+    ) {
         Mod mod = ClientInit.mod;
 
         GameRenderer renderer = client.gameRenderer;
@@ -125,14 +130,20 @@ public class MouseMixin {
                     lastY = y;
                 }
                 mod.setYawAndPitch((float) (mod.getYaw() + i / 8.0D), (float) (mod.getPitch() + j * k / 8.0D));
-                if (Math.abs(mod.getPitch()) > 90.0F)
+                if (Math.abs(mod.getPitch()) > 90.0F) {
                     mod.setYawAndPitch(mod.getYaw(), (mod.getPitch() > 0.0F) ? 90.0F : -90.0F);
+                }
 
                 this.client.player.setYaw(mod.getYaw());
                 this.client.player.setPitch(mod.getPitch());
             } else {
                 if (lastX != null && lastY != null) {
-                    InputUtil.setCursorParameters(client.getWindow().getHandle(), GLFW.GLFW_CURSOR_HIDDEN, lastX, lastY);
+                    InputUtil.setCursorParameters(
+                            client.getWindow().getHandle(),
+                            GLFW.GLFW_CURSOR_HIDDEN,
+                            lastX,
+                            lastY
+                    );
                     x = lastX;
                     y = lastY;
                     lastX = null;
@@ -142,7 +153,8 @@ public class MouseMixin {
                 Vector2d res = new Vector2d(window.getFramebufferWidth(), window.getFramebufferHeight());
                 double aspect = res.x / res.y;
                 Vector2d coords = new Vector2d(mouse.getX(), mouse.getY()).div(res).mul(2.0).sub(new Vector2d(1.0));
-                double fov2 = Math.toRadians(((GameRendererAccessor) renderer).callGetFov(camera, tickDelta, true)) / 2.0;
+                double fov2 =
+                        Math.toRadians(((GameRendererAccessor) renderer).callGetFov(camera, tickDelta, true)) / 2.0;
                 coords.x *= aspect;
                 coords.y = -coords.y;
                 Vector2d offsets = coords.mul(Math.tan(fov2));
@@ -155,10 +167,26 @@ public class MouseMixin {
                 Vec3d start = camera.getPos();
                 Vec3d end = start.add(rayDir.multiply(renderer.getFarPlaneDistance()));
 
-                Box box = cameraEntity.getBoundingBox().stretch(rayDir.multiply(renderer.getFarPlaneDistance())).expand(1.0, 1.0, 1.0);
-                HitResult hitResult = ProjectileUtil.raycast(cameraEntity, start, end, box, entity -> !entity.isSpectator() && entity.canHit(), renderer.getFarPlaneDistance());
+                Box box = cameraEntity
+                        .getBoundingBox()
+                        .stretch(rayDir.multiply(renderer.getFarPlaneDistance()))
+                        .expand(1.0, 1.0, 1.0);
+                HitResult hitResult = ProjectileUtil.raycast(
+                        cameraEntity,
+                        start,
+                        end,
+                        box,
+                        entity -> !entity.isSpectator() && entity.canHit(),
+                        renderer.getFarPlaneDistance()
+                );
                 if (hitResult == null) {
-                    hitResult = cameraEntity.getWorld().raycast(new RaycastContext(start, end, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, cameraEntity));
+                    hitResult = cameraEntity.getWorld().raycast(new RaycastContext(
+                            start,
+                            end,
+                            RaycastContext.ShapeType.OUTLINE,
+                            RaycastContext.FluidHandling.NONE,
+                            cameraEntity
+                    ));
                 }
                 mod.setCrosshairTarget(hitResult);
                 client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, hitResult.getPos());
@@ -166,20 +194,30 @@ public class MouseMixin {
         }
     }
 
-    @Inject(method = {"updateMouse"}, at = {@At(value = "INVOKE", target = "net/minecraft/client/network/ClientPlayerEntity.changeLookDirection(DD)V")}, cancellable = true)
+    @Inject(
+            method = { "updateMouse" }, at = {
+            @At(
+                    value = "INVOKE",
+                    target = "net/minecraft/client/network/ClientPlayerEntity.changeLookDirection(DD)V"
+            )
+    }, cancellable = true
+    )
     private void updateMouseB(CallbackInfo info) {
         if (ClientInit.mod.isEnabled()) {
             info.cancel();
         }
     }
 
-    @Redirect(method = "onMouseScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;scrollInHotbar(D)V"))
-    private void scrollInHotbar(PlayerInventory instance, double scrollAmount) {
+    @Redirect(
+            method = "onMouseScroll",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/input/Scroller;scrollCycling(DII)I")
+    )
+    private int scrollCycling(double amount, int selectedIndex, int total) {
         Mod mod = ClientInit.mod;
         if (mod.isEnabled() && Config.GSON.instance().scrollWheelZoom) {
-            mod.setZoom(Math.max(0.0f, mod.getZoom() - (float) scrollAmount * 0.2f));
-        } else {
-            instance.scrollInHotbar(scrollAmount);
+            mod.setZoom(Math.max(0.0f, mod.getZoom() - (float) amount * 0.2f));
+            return selectedIndex;
         }
+        return Scroller.scrollCycling(amount, selectedIndex, total);
     }
 }

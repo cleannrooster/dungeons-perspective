@@ -1,7 +1,11 @@
 package wtf.kity.minecraftxiv.config;
 
+import dev.isxander.yacl3.api.Binding;
 import dev.isxander.yacl3.api.Controller;
 import dev.isxander.yacl3.api.Option;
+import dev.isxander.yacl3.api.StateManager;
+import dev.isxander.yacl3.api.controller.ControllerBuilder;
+import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
 import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.gui.AbstractWidget;
 import dev.isxander.yacl3.gui.YACLScreen;
@@ -13,20 +17,39 @@ import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.tooltip.TooltipState;
 import net.minecraft.text.Text;
-import net.minecraft.util.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
-public class ToggleableController<T> implements Controller<Pair<Boolean, T>> {
-    private final ToggleableOption<T> option;
+public class ToggleableController<T> implements Controller<T> {
+    public final Option<Boolean> enabled;
+    public final Controller<T> inner;
+    private final Option<T> option;
+    private final Supplier<Text> tickBoxTooltipFunction;
 
-    public ToggleableController(ToggleableOption<T> option) {
+    public ToggleableController(
+            Option<T> option,
+            Function<Option<T>, ControllerBuilder<T>> inner,
+            Binding<Boolean> availableBinding,
+            Supplier<Text> tickBoxTooltipFunction
+    ) {
         this.option = option;
+        this.inner = inner.apply(option).build();
+        this.tickBoxTooltipFunction = tickBoxTooltipFunction;
+
+        this.enabled = Option
+                .<Boolean>createBuilder()
+                .name(Text.empty())
+                .stateManager(StateManager.createInstant(availableBinding))
+                .controller(TickBoxControllerBuilder::create)
+                .addListener((opt, event) -> this.option.setAvailable(opt.pendingValue()))
+                .build();
     }
 
     @Override
-    public Option<Pair<Boolean, T>> option() {
+    public Option<T> option() {
         return this.option;
     }
 
@@ -49,8 +72,10 @@ public class ToggleableController<T> implements Controller<Pair<Boolean, T>> {
         public ToggleableControllerWidget(ToggleableController<T> control, YACLScreen screen, Dimension<Integer> dim) {
             super(dim);
             this.control = control;
-            this.tickBox = (TickBoxController.TickBoxControllerElement) control.option.enabled.controller().provideWidget(screen, dim);
-            this.inner = control.option.inner.controller().provideWidget(screen, dim);
+            this.tickBox = (TickBoxController.TickBoxControllerElement) control.enabled
+                    .controller()
+                    .provideWidget(screen, dim);
+            this.inner = control.inner.provideWidget(screen, dim);
             this.setDimension(dim);
         }
 
@@ -58,8 +83,12 @@ public class ToggleableController<T> implements Controller<Pair<Boolean, T>> {
         public void render(DrawContext graphics, int mouseX, int mouseY, float delta) {
             this.tickBox.render(graphics, mouseX, mouseY, delta);
             this.inner.render(graphics, mouseX, mouseY, delta);
-            this.tooltip.setTooltip(Tooltip.of(this.control.option.tickBoxTooltipFunction.get()));
-            this.tooltip.render(this.tickBox.isMouseOver(mouseX, mouseY), this.tickBox.isFocused(), this.tickBox.getNavigationFocus());
+            this.tooltip.setTooltip(Tooltip.of(this.control.tickBoxTooltipFunction.get()));
+            this.tooltip.render(
+                    this.tickBox.isMouseOver(mouseX, mouseY),
+                    this.tickBox.isFocused(),
+                    this.tickBox.getNavigationFocus()
+            );
         }
 
         @Override
@@ -95,14 +124,16 @@ public class ToggleableController<T> implements Controller<Pair<Boolean, T>> {
         }
 
         @Override
+        public boolean canReset() {
+            return this.tickBox.canReset() || this.inner.canReset();
+        }
+
+        @Override
         public void setDimension(Dimension<Integer> dim) {
             super.setDimension(dim);
-            this.tickBox.setDimension(Dimension.ofInt(
-                    dim.x(),
-                    dim.y(),
+            this.tickBox.setDimension(Dimension.ofInt(dim.x(), dim.y(),
                     // Square
-                    dim.height(),
-                    dim.height()
+                    dim.height(), dim.height()
             ));
             this.inner.setDimension(Dimension.ofInt(
                     dim.x() + dim.height(),
@@ -127,11 +158,6 @@ public class ToggleableController<T> implements Controller<Pair<Boolean, T>> {
         public void appendNarrations(NarrationMessageBuilder builder) {
             this.tickBox.appendNarrations(builder);
             this.inner.appendNarrations(builder);
-        }
-
-        @Override
-        public boolean canReset() {
-            return this.tickBox.canReset() || this.inner.canReset();
         }
 
     }

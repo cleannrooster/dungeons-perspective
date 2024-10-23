@@ -30,6 +30,7 @@ import java.util.function.Consumer;
 
 @Environment(EnvType.CLIENT)
 public class ClientInit implements ClientModInitializer {
+    private static final ArrayList<Consumer<Capabilities>> capabilityListeners = new ArrayList<>();
     public static ClientInit instance;
     public static KeyBinding toggleBinding;
     public static KeyBinding moveCameraBinding;
@@ -38,7 +39,6 @@ public class ClientInit implements ClientModInitializer {
     public static Mod mod;
     @Nullable
     public static Capabilities capabilities;
-    private static final ArrayList<Consumer<Capabilities>> capabilityListeners = new ArrayList<>();
 
     public static boolean serverSupportsCapabilities() {
         return capabilities != null;
@@ -88,19 +88,43 @@ public class ClientInit implements ClientModInitializer {
     public void onInitializeClient() {
         instance = this;
 
-        KeyBindingHelper.registerKeyBinding(toggleBinding = new KeyBinding("minecraftxiv.binds.toggle", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F4, "minecraftxiv.binds.category"));
-        KeyBindingHelper.registerKeyBinding(moveCameraBinding = new KeyBinding("minecraftxiv.binds.moveCamera", InputUtil.Type.MOUSE, GLFW.GLFW_MOUSE_BUTTON_3, "minecraftxiv.binds.category"));
-        KeyBindingHelper.registerKeyBinding(zoomInBinding = new KeyBinding("minecraftxiv.binds.zoomIn", InputUtil.Type.MOUSE, GLFW.GLFW_MOUSE_BUTTON_6, "minecraftxiv.binds.category"));
-        KeyBindingHelper.registerKeyBinding(zoomOutBinding = new KeyBinding("minecraftxiv.binds.zoomOut", InputUtil.Type.MOUSE, GLFW.GLFW_MOUSE_BUTTON_7, "minecraftxiv.binds.category"));
+        KeyBindingHelper.registerKeyBinding(toggleBinding = new KeyBinding(
+                "minecraftxiv.binds.toggle",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_F4,
+                "minecraftxiv.binds.category"
+        ));
+        KeyBindingHelper.registerKeyBinding(moveCameraBinding = new KeyBinding(
+                "minecraftxiv.binds.moveCamera",
+                InputUtil.Type.MOUSE,
+                GLFW.GLFW_MOUSE_BUTTON_3,
+                "minecraftxiv.binds.category"
+        ));
+        KeyBindingHelper.registerKeyBinding(zoomInBinding = new KeyBinding(
+                "minecraftxiv.binds.zoomIn",
+                InputUtil.Type.MOUSE,
+                GLFW.GLFW_MOUSE_BUTTON_6,
+                "minecraftxiv.binds.category"
+        ));
+        KeyBindingHelper.registerKeyBinding(zoomOutBinding = new KeyBinding(
+                "minecraftxiv.binds.zoomOut",
+                InputUtil.Type.MOUSE,
+                GLFW.GLFW_MOUSE_BUTTON_7,
+                "minecraftxiv.binds.category"
+        ));
 
         mod = new Mod(0, 0, 1.0f, false);
 
         listenCapabilities(capabilities -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             if (player != null) {
-                player.sendMessage(Text.literal("§7[§5MinecraftXIV§7] §rAllowed features:"));
-                player.sendMessage(Text.translatable("minecraftxiv.config.targetFromCamera.name").formatted(capabilities.targetFromCamera() ? Formatting.GREEN : Formatting.RED));
-                player.sendMessage(Text.translatable("minecraftxiv.config.unlimitedReach.name").formatted(capabilities.unlimitedReach() ? Formatting.GREEN : Formatting.RED));
+                player.sendMessage(Text.literal("§7[§5MinecraftXIV§7] §rAllowed features:"), false);
+                player.sendMessage(Text
+                        .translatable("minecraftxiv.config.targetFromCamera.name")
+                        .formatted(capabilities.targetFromCamera() ? Formatting.GREEN : Formatting.RED), false);
+                player.sendMessage(Text
+                        .translatable("minecraftxiv.config.unlimitedReach.name")
+                        .formatted(capabilities.unlimitedReach() ? Formatting.GREEN : Formatting.RED), false);
             }
         });
 
@@ -114,15 +138,11 @@ public class ClientInit implements ClientModInitializer {
             notifyCapabilityListeners();
         });
 
-        ClientPlayConnectionEvents.DISCONNECT.register((networkHandler, minecraftClient) -> {
-            capabilities = null;
-        });
+        ClientPlayConnectionEvents.DISCONNECT.register((networkHandler, minecraftClient) -> capabilities = null);
 
         // Server side stuff
 
-        ServerLifecycleEvents.SERVER_STARTED.register((minecraftServer) -> {
-            capabilities = Capabilities.none();
-        });
+        ServerLifecycleEvents.SERVER_STARTED.register((minecraftServer) -> capabilities = Capabilities.none());
 
         ServerPlayConnectionEvents.JOIN.register((networkHandler, packetSender, minecraftServer) -> {
             if (networkHandler.player.hasPermissionLevel(2)) {

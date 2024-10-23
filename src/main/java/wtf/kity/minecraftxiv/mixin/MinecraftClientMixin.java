@@ -28,12 +28,18 @@ public abstract class MinecraftClientMixin {
 
     @Inject(method = "tick", at = @At("TAIL"))
     public void tick(CallbackInfo ci) {
-        if (this.player == null) return;
+        if (this.player == null) {
+            return;
+        }
         Mod mod = ClientInit.mod;
 
-        // For some reason, KeyBinding#wasPressed doesn't work here, so I'm using KeyBinding#isPressed, which doesn't seem to break anything.
-        //if (ClientInit.getInstance().getKeyBinding().wasPressed() || (this.options.togglePerspectiveKey.wasPressed() && mod.isEnabled())) {
-        if (ClientInit.toggleBinding.wasPressed() || (this.options.togglePerspectiveKey.isPressed() && mod.isEnabled())) {
+        // For some reason, KeyBinding#wasPressed doesn't work here, so I'm using KeyBinding#isPressed, which doesn't
+        // seem to break anything.
+        //if (ClientInit.getInstance().getKeyBinding().wasPressed() || (this.options.togglePerspectiveKey.wasPressed
+        // () && mod.isEnabled())) {
+        if (ClientInit.toggleBinding.wasPressed() || (
+                this.options.togglePerspectiveKey.isPressed() && mod.isEnabled()
+        )) {
             if (mod.isEnabled()) {
                 options.setPerspective(mod.getLastPerspective());
                 Util.debug("Disabled Minecraft XIV");
