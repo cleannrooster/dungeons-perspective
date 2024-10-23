@@ -47,7 +47,7 @@ public record Capabilities(boolean targetFromCamera, boolean unlimitedReach) imp
             FileReader reader = new FileReader(FabricLoader.getInstance().getConfigDir().resolve("minecraftxiv.capabilities.json").toFile());
             return new GsonBuilder().registerTypeAdapter(Capabilities.class, new CapabilitiesDeserializer()).create().fromJson(reader, Capabilities.class);
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+            return Capabilities.none();
         }
     }
 
