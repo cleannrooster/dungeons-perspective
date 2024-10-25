@@ -9,6 +9,7 @@ Adds an upgraded third-person perspective inspired by Final Fantasy XIV.
 - Make player transparent when camera is too close
 - Choose between camera-relative or player-relative movement
 - Pick blocks with the mouse cursor
+- Lock-on targeting
 
 ## Extra stuff
 
@@ -22,6 +23,7 @@ Minecraft XIV also includes some additional features that only be enabled on ser
 ![](https://cdn.modrinth.com/data/fNaJhObx/images/b468d090a988c83afd9affefc75d202f60059d2d.png)
 ![](https://cdn.modrinth.com/data/fNaJhObx/images/b540f527842487a0dc484b5cfcdc647369f1d958.png)
 ![](https://cdn.modrinth.com/data/fNaJhObx/images/7a7d4551755ce4524c78e60854622fab05167b38.png)
+![](https://cdn.modrinth.com/data/fNaJhObx/images/cea2ef3cd62ae3247f1177e90d6da84fcc21be0c.png)
 
 ## Acknowledgements
 
