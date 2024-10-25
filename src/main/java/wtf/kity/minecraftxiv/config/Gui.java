@@ -73,6 +73,18 @@ public class Gui implements ModMenuApi {
                                             )
                                             .controller(BooleanControllerBuilder::create)
                                             .build())
+                                    .option(Option
+                                            .<Boolean>createBuilder()
+                                            .name(Text.translatable("minecraftxiv.config.lockOnTargeting.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "minecraftxiv.config.lockOnTargeting.description")))
+                                            .binding(
+                                                    defaults.lockOnTargeting,
+                                                    () -> config.lockOnTargeting,
+                                                    (value) -> config.lockOnTargeting = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
                                     .build())
                             .category(ConfigCategory
                                     .createBuilder()

@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import wtf.kity.minecraftxiv.ClientInit;
+import wtf.kity.minecraftxiv.mod.Mod;
 
 @Mixin(InGameHud.class)
 public class InGameHudMixin {
@@ -30,7 +31,7 @@ public class InGameHudMixin {
         if (perspective.isFirstPerson()) {
             return true;
         }
-        if (!ClientInit.mod.isEnabled()) {
+        if (!Mod.enabled) {
             return false;
         }
         return !ClientInit.moveCameraBinding.isPressed();
@@ -40,7 +41,7 @@ public class InGameHudMixin {
             method = "renderCrosshair", at = @At("HEAD")
     )
     private void crosshairPre(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        if (ClientInit.mod.isEnabled()) {
+        if (Mod.enabled) {
             double scaleFactor = client.getWindow().getScaleFactor();
             Mouse mouse = client.mouse;
 
@@ -59,7 +60,7 @@ public class InGameHudMixin {
             method = "renderCrosshair", at = @At("RETURN")
     )
     private void crosshairPost(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        if (ClientInit.mod.isEnabled()) {
+        if (Mod.enabled) {
             context.getMatrices().pop();
         }
     }

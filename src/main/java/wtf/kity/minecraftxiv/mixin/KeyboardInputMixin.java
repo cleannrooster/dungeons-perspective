@@ -9,8 +9,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import wtf.kity.minecraftxiv.ClientInit;
 import wtf.kity.minecraftxiv.config.Config;
+import wtf.kity.minecraftxiv.mod.Mod;
 
 @Mixin(KeyboardInput.class)
 public abstract class KeyboardInputMixin extends Input {
@@ -18,7 +18,7 @@ public abstract class KeyboardInputMixin extends Input {
             method = "tick", at = @At("TAIL")
     )
     private void movement(boolean slowDown, float slowDownFactor, CallbackInfo ci) {
-        if (ClientInit.mod.isEnabled() && Config.GSON.instance().movementCameraRelative) {
+        if (Mod.enabled && Config.GSON.instance().movementCameraRelative) {
             MinecraftClient client = MinecraftClient.getInstance();
             assert client.player != null;
             Vector2f movement = new Vector2f(this.movementForward, this.movementSideways);

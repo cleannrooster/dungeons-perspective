@@ -21,7 +21,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
-import wtf.kity.minecraftxiv.mod.Mod;
+import wtf.kity.minecraftxiv.config.Config;
 import wtf.kity.minecraftxiv.network.Capabilities;
 
 import java.io.IOException;
@@ -30,13 +30,14 @@ import java.util.function.Consumer;
 
 @Environment(EnvType.CLIENT)
 public class ClientInit implements ClientModInitializer {
-    private static final ArrayList<Consumer<Capabilities>> capabilityListeners = new ArrayList<>();
     public static ClientInit instance;
+    private static final ArrayList<Consumer<Capabilities>> capabilityListeners = new ArrayList<>();
     public static KeyBinding toggleBinding;
     public static KeyBinding moveCameraBinding;
     public static KeyBinding zoomInBinding;
     public static KeyBinding zoomOutBinding;
-    public static Mod mod;
+    public static KeyBinding cycleTargetBinding;
+
     @Nullable
     public static Capabilities capabilities;
 
@@ -87,6 +88,7 @@ public class ClientInit implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         instance = this;
+        Config.GSON.load();
 
         KeyBindingHelper.registerKeyBinding(toggleBinding = new KeyBinding(
                 "minecraftxiv.binds.toggle",
@@ -112,8 +114,12 @@ public class ClientInit implements ClientModInitializer {
                 GLFW.GLFW_MOUSE_BUTTON_7,
                 "minecraftxiv.binds.category"
         ));
-
-        mod = new Mod(0, 0, 1.0f, false);
+        KeyBindingHelper.registerKeyBinding(cycleTargetBinding = new KeyBinding(
+                "minecraftxiv.binds.cycleTarget",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_TAB,
+                "minecraftxiv.binds.category"
+        ));
 
         listenCapabilities(capabilities -> {
             ClientPlayerEntity player = MinecraftClient.getInstance().player;

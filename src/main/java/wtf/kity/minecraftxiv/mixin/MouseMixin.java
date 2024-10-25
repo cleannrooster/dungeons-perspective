@@ -69,7 +69,7 @@ public class MouseMixin {
 
                 cursorLocked = true;
 
-                if (ClientInit.mod.isEnabled()) {
+                if (Mod.enabled) {
                     // Merely hide the cursor instead of "disabling" it
                     InputUtil.setCursorParameters(client.getWindow().getHandle(), GLFW.GLFW_CURSOR_HIDDEN, x, y);
                 } else {
@@ -98,7 +98,7 @@ public class MouseMixin {
     public void unlockCursor() {
         if (cursorLocked) {
             cursorLocked = false;
-            if (!ClientInit.mod.isEnabled()) {
+            if (!Mod.enabled) {
                 x = client.getWindow().getWidth() / 2.0;
                 y = client.getWindow().getHeight() / 2.0;
             }
@@ -113,8 +113,6 @@ public class MouseMixin {
     private void updateMouseA(
             double timeDelta, CallbackInfo ci, @Local(ordinal = 1) double i, @Local(ordinal = 2) double j, @Local int k
     ) {
-        Mod mod = ClientInit.mod;
-
         GameRenderer renderer = client.gameRenderer;
         Window window = client.getWindow();
         Mouse mouse = client.mouse;
@@ -122,20 +120,30 @@ public class MouseMixin {
         float tickDelta = camera.getLastTickDelta();
         Entity cameraEntity = client.cameraEntity;
 
-        if (mod.isEnabled() && cameraEntity != null && client.player != null) {
+        if (Mod.enabled && cameraEntity != null && client.player != null) {
             if (ClientInit.moveCameraBinding.isPressed()) {
                 if (lastX == null || lastY == null) {
-                    InputUtil.setCursorParameters(client.getWindow().getHandle(), InputUtil.GLFW_CURSOR_DISABLED, x, y);
+                    InputUtil.setCursorParameters(client.getWindow().getHandle(), InputUtil.GLFW_CURSOR_DISABLED,
+                            window.getFramebufferWidth() / 2.0, window.getFramebufferHeight() / 2.0
+                    );
                     lastX = x;
                     lastY = y;
                 }
-                mod.setYawAndPitch((float) (mod.getYaw() + i / 8.0D), (float) (mod.getPitch() + j * k / 8.0D));
-                if (Math.abs(mod.getPitch()) > 90.0F) {
-                    mod.setYawAndPitch(mod.getYaw(), (mod.getPitch() > 0.0F) ? 90.0F : -90.0F);
+                float yaw1 = (float) (Mod.yaw + i / 8.0D);
+                float pitch1 = (float) (Mod.pitch + j * k / 8.0D);
+                Mod.yaw = yaw1;
+                Mod.pitch = pitch1;
+                if (Math.abs(Mod.pitch) > 90.0F) {
+                    float yaw = Mod.yaw;
+                    float pitch = (Mod.pitch > 0.0F) ? 90.0F : -90.0F;
+                    Mod.yaw = yaw;
+                    Mod.pitch = pitch;
                 }
 
-                this.client.player.setYaw(mod.getYaw());
-                this.client.player.setPitch(mod.getPitch());
+                this.client.player.setYaw(Mod.yaw);
+                this.client.player.setPitch(Mod.pitch);
+
+                Mod.crosshairTarget = null;
             } else {
                 if (lastX != null && lastY != null) {
                     InputUtil.setCursorParameters(
@@ -188,7 +196,7 @@ public class MouseMixin {
                             cameraEntity
                     ));
                 }
-                mod.setCrosshairTarget(hitResult);
+                Mod.crosshairTarget = hitResult;
                 client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, hitResult.getPos());
             }
         }
@@ -203,7 +211,7 @@ public class MouseMixin {
     }, cancellable = true
     )
     private void updateMouseB(CallbackInfo info) {
-        if (ClientInit.mod.isEnabled()) {
+        if (Mod.enabled) {
             info.cancel();
         }
     }
@@ -213,9 +221,8 @@ public class MouseMixin {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/input/Scroller;scrollCycling(DII)I")
     )
     private int scrollCycling(double amount, int selectedIndex, int total) {
-        Mod mod = ClientInit.mod;
-        if (mod.isEnabled() && Config.GSON.instance().scrollWheelZoom) {
-            mod.setZoom(Math.max(0.0f, mod.getZoom() - (float) amount * 0.2f));
+        if (Mod.enabled && Config.GSON.instance().scrollWheelZoom) {
+            Mod.zoom = Math.max(0.0f, Mod.zoom - (float) amount * 0.2f);
             return selectedIndex;
         }
         return Scroller.scrollCycling(amount, selectedIndex, total);

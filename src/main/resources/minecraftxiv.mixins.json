@@ -9,9 +9,11 @@
     "GameRendererMixin",
     "InGameHudMixin",
     "KeyboardInputMixin",
+    "KeyboardMixin",
     "LivingEntityRendererMixin",
     "MinecraftClientMixin",
     "MouseMixin",
+    "WorldRendererMixin",
     "client.PlayerEntityMixin"
   ],
   "server": [

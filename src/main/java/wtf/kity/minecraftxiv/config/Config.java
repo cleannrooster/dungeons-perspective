@@ -21,6 +21,9 @@ public class Config {
     public boolean movementCameraRelative = true;
 
     @SerialEntry
+    public boolean lockOnTargeting = false;
+
+    @SerialEntry
     public boolean targetFromCamera = false;
 
     @SerialEntry
