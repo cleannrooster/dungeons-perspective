@@ -1,31 +1,31 @@
 {
   "schemaVersion": 1,
-  "id": "minecraftxiv",
+  "id": "dungeons_iso",
   "version": "${version}",
-  "name": "Minecraft XIV",
-  "description": "Changes Minecraft's third-person controls to be more like FFXIV.",
+  "name": "Dungeons Perspective",
+  "description": "Changes Minecraft's perspective to be more like Minecraft Dungeons.",
   "authors": [
-    "ashkitten"
+    "cleannrooster/Forg"
   ],
   "contact": {
-    "email": "example@thisismyactual.email"
+    "email": ""
   },
   "license": "MIT",
-  "icon": "assets/minecraftxiv/icon.png",
+  "icon": "assets/dungeons_iso/icon.png",
   "environment": "*",
   "entrypoints": {
     "client": [
-      "wtf.kity.minecraftxiv.ClientInit"
+      "com.cleannrooster.dungeons_iso.ClientInit"
     ],
     "server": [
-      "wtf.kity.minecraftxiv.ServerInit"
+      "com.cleannrooster.dungeons_iso.ServerInit"
     ],
     "modmenu": [
-      "wtf.kity.minecraftxiv.config.Gui"
+      "com.cleannrooster.dungeons_iso.config.Gui"
     ]
   },
   "mixins": [
-    "minecraftxiv.mixins.json"
+    "dungeons_iso.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.14.14",

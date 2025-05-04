@@ -1,0 +1,28 @@
+{
+  "dungeons_iso.binds.category": "Minecraft XIV",
+  "dungeons_iso.binds.toggle": "Toggle perspective",
+  "dungeons_iso.binds.moveCamera": "Move camera",
+  "dungeons_iso.binds.zoomIn": "Zoom in",
+  "dungeons_iso.binds.zoomOut": "Zoom out",
+  "dungeons_iso.binds.cycleTarget": "Cycle target",
+  "dungeons_iso.binds.iso": "Snap to Isometric",
+
+  "dungeons_iso.config.title": "Isometric Dungeons",
+  "dungeons_iso.config.category.options": "Options",
+  "dungeons_iso.config.scrollWheelZoom.name": "Scroll wheel zoom",
+  "dungeons_iso.config.scrollWheelZoom.description": "Zoom with scroll wheel (overrides hotbar scrolling).",
+  "dungeons_iso.config.movementCameraRelative.name": "Camera-relative movement",
+  "dungeons_iso.config.movementCameraRelative.description": "Make movement work relative to the camera instead of the player.",
+  "dungeons_iso.config.lockOnTargeting.name": "Lock-on targeting",
+  "dungeons_iso.config.lockOnTargeting.description": "Cycle through mobs with a keybind. Locked-on mobs override cursor targeting.",
+  "dungeons_iso.config.category.capabilities": "Extras",
+  "dungeons_iso.config.capabilities.toggle.tooltip": "Toggles if this feature is allowed on the server.",
+  "dungeons_iso.config.capabilities.toggle.tooltip.nopermissions": " (No permissions)",
+  "dungeons_iso.config.capabilities.toggle.tooltip.notconnected": " (Not connected to a server)",
+  "dungeons_iso.config.capabilities.toggle.tooltip.notsupported": " (Not supported on this server)",
+  "dungeons_iso.config.capabilities": "Additional features that aren't vanilla server friendly.\n§eThese must be allowed by the server operator. On local worlds, commands must be enabled.",
+  "dungeons_iso.config.targetFromCamera.name": "Direct targeting",
+  "dungeons_iso.config.targetFromCamera.description": "Pick target from cursor position, bypassing player line of sight.",
+  "dungeons_iso.config.unlimitedReach.name": "Unlimited reach",
+  "dungeons_iso.config.unlimitedReach.description": "Allow interaction with blocks no matter how far from the player they are."
+}
