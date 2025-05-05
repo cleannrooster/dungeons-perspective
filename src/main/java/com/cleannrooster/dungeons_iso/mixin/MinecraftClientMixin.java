@@ -1,5 +1,8 @@
 package com.cleannrooster.dungeons_iso.mixin;
 
+import com.cleannrooster.dungeons_iso.api.ChunkDataAccessor;
+import com.cleannrooster.dungeons_iso.api.WorldRendererAccessor;
+import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
@@ -11,13 +14,17 @@ import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.Window;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.AbstractHorseEntity;
+import net.minecraft.server.command.DebugCommand;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
+import net.minecraft.world.gen.chunk.DebugChunkGenerator;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
@@ -35,6 +42,12 @@ import com.cleannrooster.dungeons_iso.util.Util;
 
 @Mixin(MinecraftClient.class)
 public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
+    public boolean shouldRebuild;
+    @Override
+    public boolean shouldRebuild() {
+        return shouldRebuild;
+    }
+
     @Shadow
     @Nullable
     public ClientPlayerEntity player;
@@ -42,6 +55,8 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
     @Shadow
     @Final
     public GameOptions options;
+    public boolean   isIndoors;
+
     private static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
         double d = movementInput.lengthSquared();
         if (d < 1.0E-7) {
@@ -63,7 +78,14 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
             spell = SpellEngineCompat.isCasting();
         }
         if (Mod.enabled && client.cameraEntity != null && client.player != null) {
-
+            HitResult hitResultOrigin = client.cameraEntity.getWorld().raycast(new RaycastContext(
+                    client.player.getEyePos(),
+                    client.gameRenderer.getCamera().getPos(),
+                    RaycastContext.ShapeType.OUTLINE,
+                    RaycastContext.FluidHandling.NONE,
+                    client.cameraEntity
+            ));
+            this.shouldRebuild = hitResultOrigin.getType().equals(HitResult.Type.BLOCK);
             if(mouseCooldown <= 0 && client.player.getVehicle() != null && client.player.input.getMovementInput().length() > 0.1){
                 Vec3d vec3d = movementInputToVelocity(new Vec3d(client.player.input.movementSideways,0,client.player.input.movementForward),1.0F,client.player.getVehicle().getYaw());
                 client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES,client.player.getEyePos().add(vec3d.normalize()));
@@ -124,6 +146,12 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
         // seem to break anything.
         //if (ClientInit.getInstance().getKeyBinding().wasPressed() || (this.options.togglePerspectiveKey.wasPressed
         // () && mod.isEnabled())) {
+        if(Mod.enabled && client.worldRenderer != null ){
+            ((WorldRendererAccessor)client.worldRenderer).chunks().forEach(builtChunk -> {{
+                builtChunk.scheduleRebuild(true);
+            }});
+        }
+
         if (ClientInit.toggleBinding.wasPressed() || (
                 this.options.togglePerspectiveKey.isPressed() && Mod.enabled
         )) {
@@ -136,6 +164,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                     InputUtil.setCursorParameters(client.getWindow().getHandle(), GLFW.GLFW_CURSOR_DISABLED,client.mouse.getX(), client.mouse.getY());
 
                 }
+
             } else {
                 Mod.enabled = true;
 
@@ -183,16 +212,27 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
             cir.setReturnValue(true);
             cir.cancel();
         }
-        if(Mod.enabled && player != null && entity == player &&  player.getWorld().raycast(new RaycastContext(
-                MinecraftClient.getInstance().gameRenderer.getCamera().getPos(),
-                entity.getEyePos(),
-                RaycastContext.ShapeType.VISUAL,
-                RaycastContext.FluidHandling.NONE,
-                player
-        )).getType() == HitResult.Type.BLOCK){
-            cir.setReturnValue(true);
-            cir.cancel();
+        if(Mod.enabled && player != null && entity == player ){
+            if(Mod.enabled){
+                if(FabricLoader.getInstance().isModLoaded("sodium")){
+                    SodiumCompat.run();
+                }
+            }
+            if(  player.getWorld().raycast(new RaycastContext(
+                    MinecraftClient.getInstance().gameRenderer.getCamera().getPos(),
+                    entity.getEyePos(),
+                    RaycastContext.ShapeType.VISUAL,
+                    RaycastContext.FluidHandling.NONE,
+                    player
+            )).getType() == HitResult.Type.BLOCK) {
+
+            }
+            else{
+
+            }
+
         }
+
     }
     private int mouseCooldown = 40;
 

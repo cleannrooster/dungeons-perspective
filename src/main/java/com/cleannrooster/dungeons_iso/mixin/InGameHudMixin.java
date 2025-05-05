@@ -6,6 +6,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.client.render.WorldRenderer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,20 +23,6 @@ public class InGameHudMixin {
     @Final
     private MinecraftClient client;
 
-    @Redirect(
-            method = "renderCrosshair", at = @At(
-            value = "INVOKE", target = "Lnet/minecraft/client/option/Perspective;isFirstPerson()Z"
-    )
-    )
-    private boolean isFirstPersonXIV(Perspective perspective) {
-        if (perspective.isFirstPerson()) {
-            return true;
-        }
-        if (!Mod.enabled) {
-            return false;
-        }
-        return !(client.options.pickItemKey.isPressed()||ClientInit.moveCameraBinding.isPressed());
-    }
 
     @Inject(
             method = "renderCrosshair", at = @At("HEAD"), cancellable = true
@@ -43,6 +30,7 @@ public class InGameHudMixin {
     private void crosshairPreXIV(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if (Mod.enabled) {
             ci.cancel();
+
         }
     }
 

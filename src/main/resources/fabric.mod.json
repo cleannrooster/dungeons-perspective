@@ -22,6 +22,9 @@
     ],
     "modmenu": [
       "com.cleannrooster.dungeons_iso.config.Gui"
+    ],
+    "mixinsquared-adjuster": [
+      "com.cleannrooster.dungeons_iso.mixin.CleannMixinAdjuster"
     ]
   },
   "mixins": [

@@ -20,6 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AbstractHorseEntity.class)
 public abstract class AbstractHorseEntityMixin {
+
     @Shadow
     protected abstract Vec2f getControlledRotation(LivingEntity controllingPassenger);
 

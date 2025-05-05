@@ -16,7 +16,14 @@
     "client.PlayerEntityMixin",
     "GameOptionsMixin",
     "AbstractSoundInstanceMixin",
-    "AbstractHorseEntityMixin"
+    "AbstractHorseEntityMixin",
+    "WorldRendererMixin",
+    "WorldMixin",
+    "ClientWorldMixin",
+    "ChunkDataMixin",
+    "BlockMixin",
+    "compat.sodium.MixinBlockRenderer",
+    "compat.sodium.SodiumWorldRendererMixin"
 
   ],
   "server": [

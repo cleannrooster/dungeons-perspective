@@ -12,6 +12,7 @@ import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.projectile.ProjectileUtil;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -173,14 +174,30 @@ public class MouseMixin {
                     Vector3d up = camera.getRotation().transform(new Vector3d(0.0, 1.0, 0.0));
                     Vector3d dir = forward.add(right.mul(offsets.x).add(up.mul(offsets.y))).normalize();
                     Vec3d rayDir = new Vec3d(dir.x, dir.y, dir.z);
-
-                    Vec3d start = camera.getPos();
-                    Vec3d end = start.add(rayDir.multiply(renderer.getFarPlaneDistance()));
-
                     Box box = cameraEntity
                             .getBoundingBox()
                             .stretch(rayDir.multiply(renderer.getFarPlaneDistance()))
                             .expand(1.0, 1.0, 1.0);
+                    Vec3d start = camera.getPos().add(rayDir.multiply(camera.getPos().distanceTo(client.player.getEyePos())-0));
+
+                    HitResult hitResult0 = cameraEntity.getWorld().raycast(new RaycastContext(
+                            start,
+                            camera.getPos(),
+                            RaycastContext.ShapeType.OUTLINE,
+                            RaycastContext.FluidHandling.NONE,
+                            cameraEntity
+                    ));
+                    if(!hitResult0.getType().equals(HitResult.Type.MISS)){
+                        start = start.add(rayDir.multiply(-1).multiply(0.9*hitResult0.getPos().distanceTo(start)));
+                    }
+                    else{
+                        start = camera.getPos();
+                    }
+                    Vec3d start2 = client.player.getEyePos();
+
+                    Vec3d end = start.add(rayDir.multiply(renderer.getFarPlaneDistance()));
+
+
                     HitResult hitResult = ProjectileUtil.raycast(
                             cameraEntity,
                             start,
