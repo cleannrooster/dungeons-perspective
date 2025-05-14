@@ -10,6 +10,7 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.Window;
 import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.util.hit.BlockHitResult;
@@ -182,9 +183,8 @@ public class MouseMixin {
                     Vector3d up = camera.getRotation().transform(new Vector3d(0.0, 1.0, 0.0));
                     Vector3d dir = forward.add(right.mul(offsets.x).add(up.mul(offsets.y))).normalize();
                     Vec3d rayDir = new Vec3d(dir.x, dir.y, dir.z);
-                    Box box = cameraEntity
-                            .getBoundingBox()
-                            .stretch(rayDir.multiply(renderer.getFarPlaneDistance()))
+                    Box box = Box.of(camera.getPos(),2,2,2)
+                            .stretch(rayDir.multiply(renderer.getFarPlaneDistance()*2))
                             .expand(1.0, 1.0, 1.0);
                     Vec3d start = camera.getPos().add(rayDir.multiply(camera.getPos().distanceTo(client.player.getEyePos())-0));
 
@@ -212,7 +212,7 @@ public class MouseMixin {
                             end,
                             box,
                             entity -> !entity.isSpectator() && entity.canHit(),
-                            renderer.getFarPlaneDistance()
+                            renderer.getFarPlaneDistance()*2
                     ,0.5F);
                     if (hitResult == null) {
                         hitResult = cameraEntity.getWorld().raycast(new RaycastContext(
@@ -270,11 +270,11 @@ public class MouseMixin {
                 }
             }
 
-            if (entity2 == null) {
+            if (entity2 == null || (entity instanceof LivingEntity living && !living.canSee(entity2))) {
                 return null;
             }
 
-            return new EntityHitResult(entity2, vec3d);
+            return new EntityHitResult(entity2, entity2.getEyePos());
         }
     }
     @Inject(

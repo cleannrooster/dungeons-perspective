@@ -34,41 +34,39 @@ public abstract class MixinBlockRenderer  {
 
     @Inject(at = @At("HEAD"), method = "isFaceCulled", cancellable = true)
     protected final void isFaceCulledDungeons(@Nullable Direction direction, CallbackInfoReturnable<Boolean> ci) {
-        if(MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player instanceof ClientPlayerEntity player && Mod.enabled && ((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild()) {
-            Box box = new Box(player.getEyePos(),MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
+        if (MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player instanceof ClientPlayerEntity player && Mod.enabled && ((MinecraftClientAccessor) MinecraftClient.getInstance()).shouldRebuild()) {
+            Box box = new Box(player.getEyePos(), MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
 
             /*if((pos.getX() < box.maxX && pos.getX() > box.minX-1)
                     && (pos.getY() < box.maxY && pos.getY() > box.minY)
                     && (pos.getZ() < box.maxZ && pos.getZ() > box.minZ-1)
             ){*/
-            if(MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera  &&(
-                     (((
-                             ((MinecraftClient.getInstance().cameraEntity.getEyePos().subtract((pos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getEyePos()).subtract(camera.getPos()).normalize()) > 0.7071 || camera.getPos().distanceTo(pos.toCenterPos()) < 3) &&
+            if (MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera ) {
+                //if block is within 150 degree cone above player
+                boolean bl1 = (MinecraftClient.getInstance().cameraEntity.getPos().subtract(pos.toCenterPos()).normalize().dotProduct(new Vec3d(0, -1, 0)) > 0.2899);
+                //if player is within 30 degrees of block and camera
+                boolean bl2 = (Math.abs(MinecraftClient.getInstance().cameraEntity.getEyePos().subtract(camera.getPos()).normalize().dotProduct(pos.toCenterPos().subtract(camera.getPos()).normalize())) > 0.90 || camera.getPos().distanceTo(pos.toCenterPos()) < 3);
+                //if block is within 90 degrees of player and camera
+                boolean bl3 = ((MinecraftClient.getInstance().cameraEntity.getBoundingBox().getCenter().subtract((pos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getBoundingBox().getCenter())
+                        .subtract(camera.getPos()).normalize()) > 0.7071 || camera.getPos().distanceTo(pos.toCenterPos()) < 3));
 
-                             (Math.abs(MinecraftClient.getInstance().cameraEntity.getEyePos().subtract(camera.getPos()).normalize().dotProduct(pos.toCenterPos().subtract( camera.getPos()).normalize())) > 0.90 || camera.getPos().distanceTo(pos.toCenterPos()) < 3)) &&
-                             (MinecraftClient.getInstance().cameraEntity.getPos().subtract(pos.toCenterPos()).normalize().dotProduct(new Vec3d(0,-1,0)) > 0.2899)))  ||
-
-                            Objects.equals(pos, BlockPos.ofFloored(player.getX(), (int) player.getBoundingBox().getMax(Direction.Axis.Y), player.getZ())) || Objects.equals(pos, BlockPos.ofFloored(player.getX(), (int) player.getBoundingBox().getMax(Direction.Axis.Y)+1, player.getZ()))
+                boolean bl4 = MinecraftClient.getInstance().cameraEntity.squaredDistanceTo(pos.toCenterPos()) < 16;
                 //(MinecraftClient.getInstance().cameraEntity.getEyePos().subtract((blockInfo.blockPos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getEyePos()).subtract(camera.getPos()).normalize()) > 0.7071 || camera.getPos().distanceTo(blockInfo.blockPos.toCenterPos()) < 3)
-
-
-
-                    /*&& (blockInfo.blockPos.getX()<=(int)box.maxX-1 && blockInfo.blockPos.getX() >=(int) box.minX-1)
-                    && (blockInfo.blockPos.getY() <= (int)box.maxY && blockInfo.blockPos.getY() >=(int) box.minY)
-                    && (blockInfo.blockPos.getZ() <= (int)box.maxZ && blockInfo.blockPos.getZ() >=(int) box.minZ)*/
-            ))){
-                ci.setReturnValue(true);
-                return;
-            }
-            else{
-                if(direction != Direction.DOWN) {
+                //clears blocks in front of the player towards the camera in a 90 degree cone of length 4
+                boolean bl5 = bl3 && bl4;
+                if (bl5 || (bl1 && bl2 && bl3) || pos.isWithinDistance(camera.getPos(),4)) {
+                    ci.setReturnValue(true);
+                    return;
+                }
+                if (direction != Direction.DOWN) {
                     ci.setReturnValue(false);
                 }
-            }
+
 
           /*  if().getType().equals(HitResult.Type.MISS)) {
                 ci.cancel();
             }*/
+            }
         }
     }
 }

@@ -25,6 +25,7 @@ import net.minecraft.item.ProjectileItem;
 import net.minecraft.item.ThrowablePotionItem;
 import net.minecraft.server.command.DebugCommand;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -271,15 +272,18 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
     @Inject(method = "hasOutline", at = @At("HEAD"), cancellable = true)
     public void hasOutlineXIV(Entity entity, CallbackInfoReturnable<Boolean> cir) {
-        if (entity == Mod.lockOnTarget) {
-            cir.setReturnValue(true);
-            cir.cancel();
+        if(Mod.enabled &&Mod.crosshairTarget instanceof EntityHitResult hitResult){
+            if(entity.equals(hitResult.getEntity()) && player != null && player.canSee(entity)){
+                cir.setReturnValue(true);
+            }
         }
         if(Mod.enabled && player != null && entity == player ){
+
             if(Mod.enabled){
                 if(FabricLoader.getInstance().isModLoaded("sodium")){
                     SodiumCompat.run();
                 }
+
             }
             if(  player.getWorld().raycast(new RaycastContext(
                     MinecraftClient.getInstance().gameRenderer.getCamera().getPos(),
