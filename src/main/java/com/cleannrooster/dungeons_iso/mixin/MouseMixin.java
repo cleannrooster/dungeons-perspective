@@ -234,7 +234,7 @@ public class MouseMixin {
     }
 
     @Nullable
-    public static EntityHitResult raycastExpanded(Entity entity, Vec3d min, Vec3d max, Box box, Predicate<Entity> predicate, double maxDistance, float margin) {
+     private static EntityHitResult raycastExpanded(Entity entity, Vec3d min, Vec3d max, Box box, Predicate<Entity> predicate, double maxDistance, float margin) {
         World world = entity.getWorld();
         double d = maxDistance;
         Entity entity2 = null;
