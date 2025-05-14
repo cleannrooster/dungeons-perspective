@@ -24,7 +24,8 @@
     "ChunkDataMixin",
     "BlockMixin",
     "compat.sodium.MixinBlockRenderer",
-    "compat.sodium.SodiumWorldRendererMixin"
+    "compat.sodium.SodiumWorldRendererMixin",
+    "compat.sodium.AbstractRenderContextMixin"
 
   ],
   "server": [

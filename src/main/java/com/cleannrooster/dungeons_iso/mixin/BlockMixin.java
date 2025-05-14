@@ -49,6 +49,7 @@ public abstract class BlockMixin  {
                     && (blockInfo.blockPos.getY() < box.maxY && blockInfo.blockPos.getY() > box.minY)
                     && (blockInfo.blockPos.getZ() < box.maxZ && blockInfo.blockPos.getZ() > box.minZ -1)
                 ){*/
+
             if(MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera  &&
                     ((((Math.abs(MinecraftClient.getInstance().cameraEntity.getEyePos().subtract(camera.getPos()).normalize().dotProduct(blockInfo.blockPos.toCenterPos().subtract( camera.getPos()).normalize())) > 0.90 || camera.getPos().distanceTo(blockInfo.blockPos.toCenterPos()) < 3) ||
                     (MinecraftClient.getInstance().cameraEntity.getEyePos().subtract((blockInfo.blockPos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getEyePos()).subtract(camera.getPos()).normalize()) > 0.7071 || camera.getPos().distanceTo(blockInfo.blockPos.toCenterPos()) < 3)) &&
@@ -63,13 +64,18 @@ public abstract class BlockMixin  {
                     && (blockInfo.blockPos.getZ() <= (int)box.maxZ && blockInfo.blockPos.getZ() >=(int) box.minZ)*/
             ){
                 callbackInfo.cancel();
-            } else
-
-            if(Mod.enabled){
-                if(!player.getWorld().isSkyVisible(blockInfo.blockPos)) {
-                    callbackInfo.cancel();
-                }
+                return;
             }
+            if(!(player.getWorld().raycast(new RaycastContext(
+                    MinecraftClient.getInstance().gameRenderer.getCamera().getPos(),
+                    blockInfo.blockPos.toCenterPos(),
+                    RaycastContext.ShapeType.OUTLINE,
+                    RaycastContext.FluidHandling.NONE,
+                    player
+            ))).getType().equals(HitResult.Type.MISS)) {
+                callbackInfo.cancel();
+            }
+
         }
     }
 /*    @Inject(
