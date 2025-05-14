@@ -187,7 +187,7 @@ public class MouseMixin {
                             RaycastContext.FluidHandling.NONE,
                             cameraEntity
                     ));
-                    if(!hitResult0.getType().equals(HitResult.Type.MISS)){
+                    if(!hitResult0.getType().equals(HitResult.Type.MISS) && hitResult0.getPos().getY() > client.player.getPos().getY()+0.5){
                         start = start.add(rayDir.multiply(-1).multiply(0.9*hitResult0.getPos().distanceTo(start)));
                     }
                     else{
@@ -220,11 +220,7 @@ public class MouseMixin {
 
                 }
 
-            if (((MinecraftClientAccessor) this.client).getMouseCooldown() <= 0 && this.client.player.getMovement().length() > 0.1) {
 
-                this.client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, this.client.player.getEyePos().add(this.client.player.getMovement().subtract(
-                        0, this.client.player.getMovement().getY(), 0).normalize()));
-            }
 
         }
     }

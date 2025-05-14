@@ -16,7 +16,12 @@ public class Config {
 
     @SerialEntry
     public boolean scrollWheelZoom = true;
+    @SerialEntry
+    public boolean dynamicCamera = true;
+    @SerialEntry
 
-
+    public float moveFactor = 2.0F;
+    @SerialEntry
+    public float fov = 70.0F;
 
 }

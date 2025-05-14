@@ -22,21 +22,21 @@ public abstract class MixinBlockRenderer extends AbstractBlockRenderContext {
     @Inject(at = @At("HEAD"), method = "renderModel", cancellable = true)
     public void cleann$cancelRendering(BakedModel model, BlockState state, BlockPos pos, BlockPos origin, CallbackInfo ci) {
         if(MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player instanceof ClientPlayerEntity player && Mod.enabled && ((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild()) {
-            Box box = new Box(player.getEyePos(),MinecraftClient.getInstance().gameRenderer.getCamera().getPos()).expand(1,0,1);
+            Box box = new Box(player.getEyePos(),MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
 
             /*if((pos.getX() < box.maxX && pos.getX() > box.minX-1)
                     && (pos.getY() < box.maxY && pos.getY() > box.minY)
                     && (pos.getZ() < box.maxZ && pos.getZ() > box.minZ-1)
             ){*/
-                if(MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera &&pos.toCenterPos().y > player.getEyePos().y &&
+            if(MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera &&pos.toCenterPos().y > player.getEyePos().y &&
+                    (Math.abs(MinecraftClient.getInstance().cameraEntity.getEyePos().subtract(camera.getPos()).normalize().dotProduct(pos.toCenterPos().subtract( camera.getPos()).normalize())) > 0.90 || camera.getPos().distanceTo(pos.toCenterPos()) < 3) &&
+                    (MinecraftClient.getInstance().cameraEntity.getEyePos().subtract((pos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getEyePos()).subtract(camera.getPos()).normalize()) > 0.7071 || camera.getPos().distanceTo(pos.toCenterPos()) < 3)
+/*
+                    && (pos.getX()<= (int)box.maxX-1 && pos.getX() >= (int)box.minX-1)
+                        && (pos.getY()<= (int)box.maxY && pos.getY() >= (int)box.minY)
+                        && (pos.getZ()<= (int)box.maxZ&& pos.getZ() >= (int)box.minZ)
 
-                        (Math.abs(Vec3d.fromPolar(camera.getPitch(),camera.getYaw()).normalize().dotProduct(pos.toCenterPos().subtract( camera.getPos()).normalize())) > 0.90
-                                 || camera.getPos().distanceTo(pos.toCenterPos()) < 3)
-                        && (pos.getX() < box.maxX && pos.getX() > box.minX-1)
-                        && (pos.getY() < box.maxY && pos.getY() > box.minY)
-                        && (pos.getZ() < box.maxZ && pos.getZ() > box.minZ-1)
-
-                 ){
+                 */){
 
                     ci.cancel();
             }

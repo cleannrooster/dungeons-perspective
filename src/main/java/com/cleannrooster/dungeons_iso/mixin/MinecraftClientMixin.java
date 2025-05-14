@@ -17,7 +17,12 @@ import net.minecraft.client.util.Window;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.passive.AbstractHorseEntity;
+import net.minecraft.item.BowItem;
+import net.minecraft.item.CrossbowItem;
+import net.minecraft.item.ProjectileItem;
+import net.minecraft.item.ThrowablePotionItem;
 import net.minecraft.server.command.DebugCommand;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.hit.HitResult;
@@ -69,11 +74,10 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
         }
     }
     @Inject(method = "tick", at = @At("HEAD"))
-    public void tickXIVHead(CallbackInfo ci) {
-        mouseCooldown--;
+    public void tickXIVHEAD(CallbackInfo ci) {
         MinecraftClient client = (MinecraftClient) (Object) this;
-       boolean spell = false;
-        if(FabricLoader.getInstance().isModLoaded("spell_engine")){
+        boolean spell = false;
+        if (FabricLoader.getInstance().isModLoaded("spell_engine")) {
 
             spell = SpellEngineCompat.isCasting();
         }
@@ -86,32 +90,42 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                     client.cameraEntity
             ));
             this.shouldRebuild = hitResultOrigin.getType().equals(HitResult.Type.BLOCK);
-            if(mouseCooldown <= 0 && client.player.getVehicle() != null && client.player.input.getMovementInput().length() > 0.1){
-                Vec3d vec3d = movementInputToVelocity(new Vec3d(client.player.input.movementSideways,0,client.player.input.movementForward),1.0F,client.player.getVehicle().getYaw());
-                client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES,client.player.getEyePos().add(vec3d.normalize()));
+            boolean bool = false;
+            if(this.options.attackKey.isPressed()){
+                mouseCooldown =  40+(int)(20/client.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED));
+            }
+            if (client.player.getMainHandStack().getItem() instanceof ProjectileItem || client.player.getMainHandStack().getItem() instanceof BowItem || client.player.getMainHandStack().getItem() instanceof CrossbowItem || client.player.isUsingItem() || ( this.options.useKey.isPressed()) || spell ) {
+                mouseCooldown = 40;
+                bool = true;
+            }
+            if (!bool && (mouseCooldown <= 0 && client.player.input.getMovementInput().length() > 0.1)) {
+                if (client.player.getVehicle() != null) {
+                    Vec3d vec3d = movementInputToVelocity(new Vec3d(client.player.input.movementSideways, 0, client.player.input.movementForward), 1.0F, client.player.getVehicle().getYaw());
+                    client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(vec3d.normalize()));
+                } else {
+                    client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(client.player.getMovement().subtract(
+                            0, client.player.getMovement().getY(), 0).normalize()));
+
+                }
                 //client.player.getVehicle().lookAt(EntityAnchorArgumentType.EntityAnchor.EYES,client.player.getVehicle().getEyePos().add(vec3d.normalize()));
             }
-        }
-        if (( this.options.useKey.isPressed()) || spell ||  this.options.attackKey.isPressed()) {
+            else {
 
-            if (Mod.enabled && client.cameraEntity != null && client.player != null) {
                 GameRenderer renderer = client.gameRenderer;
-                Window window = client.getWindow();
-                Mouse mouse = client.mouse;
                 Camera camera = renderer.getCamera();
                 float tickDelta = camera.getLastTickDelta();
-                Entity cameraEntity = client.cameraEntity;
-                client.player.setYaw(Mod.yaw);
-                client.player.setPitch(Mod.pitch);
 
-                mouseCooldown = 40;
-                if(Mod.crosshairTarget != null) {
+                if (Mod.crosshairTarget != null) {
                     if (Mod.prevCrosshairTarget == null) {
                         Mod.prevCrosshairTarget = Mod.crosshairTarget;
                     }
+
                     client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, Mod.crosshairTarget.getPos());
                     Mod.prevCrosshairTarget = Mod.crosshairTarget;
                 }
+            }
+
+
                 /*
 
                 double d = Mod.crosshairTarget.getPos().x - vec3d.x;
@@ -127,17 +141,18 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                 client.player.setHeadYaw(MathHelper.lerp(tickDelta,MathHelper.wrapDegrees((float)(MathHelper.atan2(f2, d2) * 57.2957763671875) - 90.0F) ,MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F) ));
 */
 
-            }
 
         }
         else{
+
             Mod.crosshairTarget = null;
+            Mod.prevCrosshairTarget = null;
+
         }
     }
 
     @Inject(method = "tick", at = @At("TAIL"))
     public void tickXIV(CallbackInfo ci) {
-        mouseCooldown--;
         MinecraftClient client =  (MinecraftClient)  (Object) this;
         if (this.player == null) {
             return;
@@ -203,6 +218,54 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
         if (Mod.lockOnTarget != null && !Mod.lockOnTarget.isAlive()) {
             Mod.lockOnTarget = null;
         }
+        boolean bool = false;
+        boolean spell = false;
+        if (FabricLoader.getInstance().isModLoaded("spell_engine")) {
+
+            spell = SpellEngineCompat.isCasting();
+        }
+        if(client.player != null && Mod.enabled) {
+            if (this.options.attackKey.isPressed()) {
+                mouseCooldown = 40 + (int) (20 / client.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED));
+            }
+            if (client.player.isUsingItem() || (this.options.useKey.isPressed()) || spell) {
+                mouseCooldown = 40;
+                bool = true;
+            }
+            if (!bool && (mouseCooldown <= 0 && client.player.input.getMovementInput().length() > 0.1)) {
+                if (client.player.getVehicle() != null) {
+                    Vec3d vec3d = movementInputToVelocity(new Vec3d(client.player.input.movementSideways, 0, client.player.input.movementForward), 1.0F, client.player.getVehicle().getYaw());
+                    client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(vec3d.normalize()));
+                } else {
+                    client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(client.player.getMovement().subtract(
+                            0, client.player.getMovement().getY(), 0).normalize()));
+
+                }
+                //client.player.getVehicle().lookAt(EntityAnchorArgumentType.EntityAnchor.EYES,client.player.getVehicle().getEyePos().add(vec3d.normalize()));
+            } else {
+
+                GameRenderer renderer = client.gameRenderer;
+                Camera camera = renderer.getCamera();
+                float tickDelta = camera.getLastTickDelta();
+
+                if (Mod.crosshairTarget != null) {
+                    if (Mod.prevCrosshairTarget == null) {
+                        Mod.prevCrosshairTarget = Mod.crosshairTarget;
+                    }
+                    Vec3d vec3d = new Vec3d(
+                            MathHelper.lerp(tickDelta, Mod.prevCrosshairTarget.getPos().getX(), Mod.crosshairTarget.getPos().getX()),
+                            MathHelper.lerp(tickDelta, Mod.prevCrosshairTarget.getPos().getY(), Mod.crosshairTarget.getPos().getY()),
+                            MathHelper.lerp(tickDelta, Mod.prevCrosshairTarget.getPos().getZ(), Mod.crosshairTarget.getPos().getZ()));
+                    Vec3d vec3d2 = new Vec3d(
+                            MathHelper.lerp(tickDelta, client.player.getEyePos().add(client.player.getRotationVec(tickDelta)).getX(), vec3d.getX()),
+                            MathHelper.lerp(tickDelta, client.player.getEyePos().add(client.player.getRotationVec(tickDelta)).getY(), vec3d.getY()),
+                            MathHelper.lerp(tickDelta, client.player.getEyePos().add(client.player.getRotationVec(tickDelta)).getZ(), vec3d.getZ()));
+                    client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, vec3d2);
+                    Mod.prevCrosshairTarget = Mod.crosshairTarget;
+                }
+            }
+        }
+        mouseCooldown--;
 
     }
 

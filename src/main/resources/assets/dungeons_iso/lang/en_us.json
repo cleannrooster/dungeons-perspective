@@ -24,5 +24,12 @@
   "dungeons_iso.config.targetFromCamera.name": "Direct targeting",
   "dungeons_iso.config.targetFromCamera.description": "Pick target from cursor position, bypassing player line of sight.",
   "dungeons_iso.config.unlimitedReach.name": "Unlimited reach",
-  "dungeons_iso.config.unlimitedReach.description": "Allow interaction with blocks no matter how far from the player they are."
+  "dungeons_iso.config.unlimitedReach.description": "Allow interaction with blocks no matter how far from the player they are.",
+  "dungeons_iso.config.dynamic_camera.name": "Context Based Smooth Camera",
+  "dungeons_iso.config.dynamic_camera.description":"Offsets the camera based on your current speed vector.",
+  "dungeons_iso.config.movefactor.name": "Smooth Camera Move Factor",
+  "dungeons_iso.config.movefactor.description":"Subtly changes motion of smooth camera.",
+  "dungeons_iso.config.fov.name": "Default FOV",
+  "dungeons_iso.config.fov.description":"FOV that the game starts in."
+
 }

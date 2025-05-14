@@ -4,6 +4,7 @@ import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import net.fabricmc.fabric.api.block.v1.FabricBlock;
 import net.fabricmc.fabric.api.block.v1.FabricBlockState;
+import net.fabricmc.fabric.api.renderer.v1.mesh.MutableQuadView;
 import net.fabricmc.fabric.impl.client.indigo.renderer.mesh.MutableQuadViewImpl;
 import net.fabricmc.fabric.impl.client.indigo.renderer.render.AbstractBlockRenderContext;
 import net.fabricmc.fabric.impl.client.indigo.renderer.render.BlockRenderInfo;
@@ -43,22 +44,42 @@ public abstract class BlockMixin  {
 
         AbstractBlockRenderContext info = (AbstractBlockRenderContext)(Object) this;
         if(MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player instanceof ClientPlayerEntity player &&Mod.enabled  && ((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild()) {
-            Box box = new Box(player.getEyePos(),MinecraftClient.getInstance().gameRenderer.getCamera().getPos()).expand(1,0,1);
+            Box box = new Box(player.getEyePos(),MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
            /* if((blockInfo.blockPos.getX() < box.maxX && blockInfo.blockPos.getX() > box.minX - 1)
                     && (blockInfo.blockPos.getY() < box.maxY && blockInfo.blockPos.getY() > box.minY)
                     && (blockInfo.blockPos.getZ() < box.maxZ && blockInfo.blockPos.getZ() > box.minZ -1)
                 ){*/
-            if(MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera &&blockInfo.blockPos.toCenterPos().y > player.getEyePos().y &&
-                    (Math.abs(Vec3d.fromPolar(camera.getPitch(),camera.getYaw()).normalize().dotProduct(blockInfo.blockPos.toCenterPos().subtract( camera.getPos()).normalize())) > 0.90 || camera.getPos().distanceTo(blockInfo.blockPos.toCenterPos()) < 3)
+            if(MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera  &&
+                    ((((Math.abs(MinecraftClient.getInstance().cameraEntity.getEyePos().subtract(camera.getPos()).normalize().dotProduct(blockInfo.blockPos.toCenterPos().subtract( camera.getPos()).normalize())) > 0.90 || camera.getPos().distanceTo(blockInfo.blockPos.toCenterPos()) < 3) ||
+                    (MinecraftClient.getInstance().cameraEntity.getEyePos().subtract((blockInfo.blockPos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getEyePos()).subtract(camera.getPos()).normalize()) > 0.7071 || camera.getPos().distanceTo(blockInfo.blockPos.toCenterPos()) < 3)) &&
+                    ((Math.abs(new Vec3d(0,1,0).dotProduct(blockInfo.blockPos.toCenterPos().subtract(player.getPos()).normalize())) > 0.5 || camera.getPos().distanceTo(blockInfo.blockPos.toCenterPos()) < 3))) ||
+                    (blockInfo.blockPos.toCenterPos().y > player.getPos().y+8))
+                    //(MinecraftClient.getInstance().cameraEntity.getEyePos().subtract((blockInfo.blockPos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getEyePos()).subtract(camera.getPos()).normalize()) > 0.7071 || camera.getPos().distanceTo(blockInfo.blockPos.toCenterPos()) < 3)
 
-                     && (blockInfo.blockPos.getX() < box.maxX && blockInfo.blockPos.getX() > box.minX-1)
-                    && (blockInfo.blockPos.getY() < box.maxY && blockInfo.blockPos.getY() > box.minY)
-                    && (blockInfo.blockPos.getZ() < box.maxZ && blockInfo.blockPos.getZ() > box.minZ-1))
-            {
+
+
+                    /*&& (blockInfo.blockPos.getX()<=(int)box.maxX-1 && blockInfo.blockPos.getX() >=(int) box.minX-1)
+                    && (blockInfo.blockPos.getY() <= (int)box.maxY && blockInfo.blockPos.getY() >=(int) box.minY)
+                    && (blockInfo.blockPos.getZ() <= (int)box.maxZ && blockInfo.blockPos.getZ() >=(int) box.minZ)*/
+            ){
                 callbackInfo.cancel();
+            } else
+
+            if(Mod.enabled){
+                if(!player.getWorld().isSkyVisible(blockInfo.blockPos)) {
+                    callbackInfo.cancel();
+                }
             }
         }
     }
+/*    @Inject(
+            method = "transform", at = @At("HEAD"),cancellable = true,remap = false
+    )
+    protected void transformDungeons(MutableQuadView q, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
+        if(MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player instanceof ClientPlayerEntity player &&Mod.enabled  && ((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild()) {
 
+            callbackInfoReturnable.setReturnValue(false);
+        }
+    }*/
 
 }

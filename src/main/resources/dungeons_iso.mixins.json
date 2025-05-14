@@ -18,6 +18,7 @@
     "AbstractSoundInstanceMixin",
     "AbstractHorseEntityMixin",
     "WorldRendererMixin",
+    "WorldRendererMixin",
     "WorldMixin",
     "ClientWorldMixin",
     "ChunkDataMixin",

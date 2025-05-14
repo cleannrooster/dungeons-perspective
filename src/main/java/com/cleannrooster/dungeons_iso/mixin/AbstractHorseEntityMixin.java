@@ -63,7 +63,7 @@ public abstract class AbstractHorseEntityMixin {
         if (Mod.enabled && controllingPassenger instanceof ClientPlayerEntity player) {
 
             if (((MinecraftClientAccessor)MinecraftClient.getInstance()).getMouseCooldown() > 0 && player.getVehicle() != null && player.input.getMovementInput().length() > 0.1) {
-                Vec3d vec3d = movementInputToVelocityCleann(new Vec3d(player.input.movementSideways, 0, player.input.movementForward), 1.0F, player.getYaw());
+                Vec3d vec3d = player.getVelocity();
                 double d = vec3d.x;
                 double e = vec3d.y;
                 double f = vec3d.z;
@@ -71,7 +71,7 @@ public abstract class AbstractHorseEntityMixin {
                 float pitch = (MathHelper.wrapDegrees((float)(-(MathHelper.atan2(e, g) * 57.2957763671875)))  );
                 float yaw =  (MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F)  );
 
-                vec2fCallbackInfo.setReturnValue( new Vec2f(pitch, yaw));
+                vec2fCallbackInfo.setReturnValue( new Vec2f(0, yaw));
             }
         }
     }

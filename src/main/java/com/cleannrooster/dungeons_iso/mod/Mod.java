@@ -7,6 +7,8 @@ import net.minecraft.util.hit.HitResult;
 public class Mod {
     public static float yaw;
     public static float pitch;
+    public static double x;
+    public static double z;
     public static float zoom = 1.0f;
     public static boolean enabled = false;
     public static Perspective lastPerspective;

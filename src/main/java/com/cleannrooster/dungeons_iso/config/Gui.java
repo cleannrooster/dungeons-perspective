@@ -4,13 +4,12 @@ import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
+import dev.isxander.yacl3.api.controller.FloatFieldControllerBuilder;
 import dev.isxander.yacl3.gui.YACLScreen;
-import dev.isxander.yacl3.gui.controllers.LabelController;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Util;
 import com.cleannrooster.dungeons_iso.ClientInit;
 import com.cleannrooster.dungeons_iso.network.Capabilities;
 
@@ -61,8 +60,49 @@ public class Gui implements ModMenuApi {
                                             )
                                             .controller(BooleanControllerBuilder::create)
                                             .build())
+                                    .option(Option
+                                            .<Boolean>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.dynamic_camera.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.dynamic_camera.description")))
+                                            .binding(
+                                                    defaults.dynamicCamera,
+                                                    () -> config.dynamicCamera,
+                                                    (value) -> config.dynamicCamera = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
+                                    .option(Option
+                                            .<Float>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.movefactor.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.movefactor.description")))
+                                            .binding(
+                                                    defaults.moveFactor,
+                                                    () -> config.moveFactor,
+                                                    (value) -> config.moveFactor = value
+                                            )
+                                            .controller(FloatFieldControllerBuilder::create)
+                                            .build())
+                                    .option(Option
+                                            .<Float>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.fov.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.fov.description")))
+                                            .binding(
+                                                    defaults.fov,
+                                                    () -> config.fov,
+                                                    (value) -> config.fov = value
+                                            )
+                                            .controller(FloatFieldControllerBuilder::create)
+                                            .build())
+
+
+
 
                                     .build())
+
+
             ).generateScreen(parent);
 
             ClientInit.listenCapabilities(new Consumer<>() {
