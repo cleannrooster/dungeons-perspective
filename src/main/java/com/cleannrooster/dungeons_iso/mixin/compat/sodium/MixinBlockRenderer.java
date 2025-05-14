@@ -45,16 +45,16 @@ public abstract class MixinBlockRenderer  {
                 //if block is within 150 degree cone above player
                 boolean bl1 = (MinecraftClient.getInstance().cameraEntity.getPos().subtract(pos.toCenterPos()).normalize().dotProduct(new Vec3d(0, -1, 0)) > 0.2899);
                 //if player is within 30 degrees of block and camera
-                boolean bl2 = (Math.abs(MinecraftClient.getInstance().cameraEntity.getEyePos().subtract(camera.getPos()).normalize().dotProduct(pos.toCenterPos().subtract(camera.getPos()).normalize())) > 0.90 || camera.getPos().distanceTo(pos.toCenterPos()) < 3);
+                boolean bl2 = (Math.abs(MinecraftClient.getInstance().cameraEntity.getEyePos().subtract(camera.getPos()).normalize().dotProduct(pos.toCenterPos().subtract(camera.getPos()).normalize())) > 0.90 );
                 //if block is within 90 degrees of player and camera
                 boolean bl3 = ((MinecraftClient.getInstance().cameraEntity.getBoundingBox().getCenter().subtract((pos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getBoundingBox().getCenter())
-                        .subtract(camera.getPos()).normalize()) > 0.7071 || camera.getPos().distanceTo(pos.toCenterPos()) < 3));
+                        .subtract(camera.getPos()).normalize()) > 0.7071 ));
 
-                boolean bl4 = MinecraftClient.getInstance().cameraEntity.squaredDistanceTo(pos.toCenterPos()) < 16;
+                boolean bl4 = MinecraftClient.getInstance().cameraEntity.squaredDistanceTo(pos.toCenterPos()) < 16F;
                 //(MinecraftClient.getInstance().cameraEntity.getEyePos().subtract((blockInfo.blockPos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getEyePos()).subtract(camera.getPos()).normalize()) > 0.7071 || camera.getPos().distanceTo(blockInfo.blockPos.toCenterPos()) < 3)
                 //clears blocks in front of the player towards the camera in a 90 degree cone of length 4
                 boolean bl5 = bl3 && bl4;
-                if (bl5 || (bl1 && bl2 && bl3) || pos.isWithinDistance(camera.getPos(),4)) {
+                if (bl5 || (bl1 && bl2 && bl3) || pos.isWithinDistance(camera.getPos(),4F)) {
                     ci.setReturnValue(true);
                     return;
                 }
