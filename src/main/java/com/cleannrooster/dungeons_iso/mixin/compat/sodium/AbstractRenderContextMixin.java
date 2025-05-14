@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class AbstractRenderContextMixin  {
 
 
-    @Inject(at = @At("HEAD"), method = "transform", cancellable = true, remap = false)
+/*    @Inject(at = @At("HEAD"), method = "transform", cancellable = true, remap = false)
     protected final void transformDungeons(MutableQuadView q, CallbackInfoReturnable<Boolean> info) {
         if(MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player instanceof ClientPlayerEntity player && Mod.enabled && ((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild()) {
 
@@ -36,6 +36,6 @@ public abstract class AbstractRenderContextMixin  {
                 info.setReturnValue(true);
             }
         }
-    }
+    }*/
 
 }

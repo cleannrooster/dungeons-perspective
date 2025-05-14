@@ -20,6 +20,8 @@ import static net.minecraft.client.option.GameOptions.getGenericValueText;
 public class GameOptionsMixin {
     private static SimpleOption<Integer> fov30;
     private static SimpleOption<Double> fovscale;
+    private static SimpleOption<Boolean> bobbing;
+
     private static Text getPercentValueTextCleann(Text prefix, double value) {
         return Text.translatable("options.percent_value", new Object[]{prefix, (int)(value * 100.0)});
     }
@@ -29,6 +31,8 @@ public class GameOptionsMixin {
 
 
     static{
+        bobbing = SimpleOption.ofBoolean("options.viewBobbing", true);
+
         fov30 = new SimpleOption<Integer>("options.fov", SimpleOption.emptyTooltip(), (optionText, value) -> {
             Text var10000;
             switch (value) {
@@ -53,7 +57,8 @@ public class GameOptionsMixin {
         fov30.setValue((int) Config.GSON.instance().fov);
         fovscale = new SimpleOption("options.fovEffectScale", SimpleOption.constantTooltip(Text.translatable("options.fovEffectScale.tooltip")), ((optionText, value) -> getPercentValueOrOffTextCleann(optionText,(double)value)), SimpleOption.DoubleSliderCallbacks.INSTANCE.withModifier(MathHelper::square, Math::sqrt), Codec.doubleRange(0.0, 1.0), 1.0, (value) -> {
         });
-            fovscale.setValue(0D);
+        fovscale.setValue(0D);
+        bobbing.setValue(false);
     }
     @Inject(
             method = "getFov",
@@ -77,6 +82,16 @@ public class GameOptionsMixin {
             option.setReturnValue(fovscale);
         }
     }
+    @Inject(
+            method = "getBobView",
+            at = @At(value = "HEAD"),
+            cancellable = true
+    )
+    public void bobViewCleann(CallbackInfoReturnable<SimpleOption<Boolean>> option) {
+        if(Mod.enabled) {
 
+            option.setReturnValue(bobbing);
+        }
+    }
 
 }

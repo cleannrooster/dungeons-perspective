@@ -13,10 +13,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
+import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2d;
 import org.joml.Vector3d;
@@ -30,6 +32,12 @@ import com.cleannrooster.dungeons_iso.ClientInit;
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
+
+import java.util.Iterator;
+import java.util.Optional;
+import java.util.function.Predicate;
+
+import static net.minecraft.entity.projectile.ProjectileUtil.raycast;
 
 @Mixin(Mouse.class)
 public class MouseMixin {
@@ -187,7 +195,7 @@ public class MouseMixin {
                             RaycastContext.FluidHandling.NONE,
                             cameraEntity
                     ));
-                    if(!hitResult0.getType().equals(HitResult.Type.MISS) && hitResult0.getPos().getY() > client.player.getPos().getY()+0.5){
+                    if(hitResult0.getType().equals(HitResult.Type.BLOCK) && hitResult0.getPos().getY() > client.player.getPos().getY()+0.5){
                         start = start.add(rayDir.multiply(-1).multiply(0.9*hitResult0.getPos().distanceTo(start)));
                     }
                     else{
@@ -198,14 +206,14 @@ public class MouseMixin {
                     Vec3d end = start.add(rayDir.multiply(renderer.getFarPlaneDistance()));
 
 
-                    HitResult hitResult = ProjectileUtil.raycast(
+                    HitResult hitResult = raycastExpanded(
                             cameraEntity,
                             start,
                             end,
                             box,
                             entity -> !entity.isSpectator() && entity.canHit(),
                             renderer.getFarPlaneDistance()
-                    );
+                    ,0.5F);
                     if (hitResult == null) {
                         hitResult = cameraEntity.getWorld().raycast(new RaycastContext(
                                 start,
@@ -225,6 +233,50 @@ public class MouseMixin {
         }
     }
 
+    @Nullable
+    public static EntityHitResult raycastExpanded(Entity entity, Vec3d min, Vec3d max, Box box, Predicate<Entity> predicate, double maxDistance, float margin) {
+        World world = entity.getWorld();
+        double d = maxDistance;
+        Entity entity2 = null;
+        Vec3d vec3d = null;
+        Iterator var12 = world.getOtherEntities(entity, box, predicate).iterator();
+
+        while(true) {
+            while(var12.hasNext()) {
+                Entity entity3 = (Entity)var12.next();
+                Box box2 = entity3.getBoundingBox().expand((double)entity3.getTargetingMargin()+margin);
+                Optional<Vec3d> optional = box2.raycast(min, max);
+                if (box2.contains(min)) {
+                    if (d >= 0.0) {
+                        entity2 = entity3;
+                        vec3d = (Vec3d)optional.orElse(min);
+                        d = 0.0;
+                    }
+                } else if (optional.isPresent()) {
+                    Vec3d vec3d2 = (Vec3d)optional.get();
+                    double e = min.squaredDistanceTo(vec3d2);
+                    if (e < d || d == 0.0) {
+                        if (entity3.getRootVehicle() == entity.getRootVehicle()) {
+                            if (d == 0.0) {
+                                entity2 = entity3;
+                                vec3d = vec3d2;
+                            }
+                        } else {
+                            entity2 = entity3;
+                            vec3d = vec3d2;
+                            d = e;
+                        }
+                    }
+                }
+            }
+
+            if (entity2 == null) {
+                return null;
+            }
+
+            return new EntityHitResult(entity2, vec3d);
+        }
+    }
     @Inject(
             method = {"updateMouse"}, at = {
             @At(

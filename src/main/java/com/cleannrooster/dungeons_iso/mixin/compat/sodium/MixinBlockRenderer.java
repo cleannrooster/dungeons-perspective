@@ -18,12 +18,15 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.system.windows.POINT;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.Objects;
 
 @Mixin(AbstractBlockRenderContext.class)
 public abstract class MixinBlockRenderer  {
@@ -38,10 +41,14 @@ public abstract class MixinBlockRenderer  {
                     && (pos.getY() < box.maxY && pos.getY() > box.minY)
                     && (pos.getZ() < box.maxZ && pos.getZ() > box.minZ-1)
             ){*/
-            if(MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera  &&
-                    ((((Math.abs(MinecraftClient.getInstance().cameraEntity.getEyePos().subtract(camera.getPos()).normalize().dotProduct(pos.toCenterPos().subtract( camera.getPos()).normalize())) > 0.90 || camera.getPos().distanceTo(pos.toCenterPos()) < 3) &&
-                            (MinecraftClient.getInstance().cameraEntity.getEyePos().subtract((pos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getEyePos()).subtract(camera.getPos()).normalize()) > 0.7071 || camera.getPos().distanceTo(pos.toCenterPos()) < 3)))||
-                            (pos.toCenterPos().y > player.getPos().y+8))
+            if(MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera  &&(
+                     (((
+                             ((MinecraftClient.getInstance().cameraEntity.getEyePos().subtract((pos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getEyePos()).subtract(camera.getPos()).normalize()) > 0.7071 || camera.getPos().distanceTo(pos.toCenterPos()) < 3) &&
+
+                             (Math.abs(MinecraftClient.getInstance().cameraEntity.getEyePos().subtract(camera.getPos()).normalize().dotProduct(pos.toCenterPos().subtract( camera.getPos()).normalize())) > 0.90 || camera.getPos().distanceTo(pos.toCenterPos()) < 3)) &&
+                             (MinecraftClient.getInstance().cameraEntity.getPos().subtract(pos.toCenterPos()).normalize().dotProduct(new Vec3d(0,-1,0)) > 0.2899)))  ||
+
+                            Objects.equals(pos, BlockPos.ofFloored(player.getX(), (int) player.getBoundingBox().getMax(Direction.Axis.Y), player.getZ())) || Objects.equals(pos, BlockPos.ofFloored(player.getX(), (int) player.getBoundingBox().getMax(Direction.Axis.Y)+1, player.getZ()))
                 //(MinecraftClient.getInstance().cameraEntity.getEyePos().subtract((blockInfo.blockPos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getEyePos()).subtract(camera.getPos()).normalize()) > 0.7071 || camera.getPos().distanceTo(blockInfo.blockPos.toCenterPos()) < 3)
 
 
@@ -49,21 +56,17 @@ public abstract class MixinBlockRenderer  {
                     /*&& (blockInfo.blockPos.getX()<=(int)box.maxX-1 && blockInfo.blockPos.getX() >=(int) box.minX-1)
                     && (blockInfo.blockPos.getY() <= (int)box.maxY && blockInfo.blockPos.getY() >=(int) box.minY)
                     && (blockInfo.blockPos.getZ() <= (int)box.maxZ && blockInfo.blockPos.getZ() >=(int) box.minZ)*/
-            ){
+            ))){
                 ci.setReturnValue(true);
                 return;
             }
             else{
-                ci.setReturnValue(false);
+                if(direction != Direction.DOWN) {
+                    ci.setReturnValue(false);
+                }
             }
 
-          /*  if(!(player.getWorld().raycast(new RaycastContext(
-                    MinecraftClient.getInstance().gameRenderer.getCamera().getPos(),
-                    pos.toCenterPos(),
-                    RaycastContext.ShapeType.OUTLINE,
-                    RaycastContext.FluidHandling.NONE,
-                    player
-            ))).getType().equals(HitResult.Type.MISS)) {
+          /*  if().getType().equals(HitResult.Type.MISS)) {
                 ci.cancel();
             }*/
         }
