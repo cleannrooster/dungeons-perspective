@@ -18,7 +18,18 @@ public class SodiumCompat {
     public static void run(){
 
         Box box = new Box(MinecraftClient.getInstance().player.getEyePos(),MinecraftClient.getInstance().gameRenderer.getCamera().getPos()).expand(1,0,1);
-            SodiumWorldRenderer.instance().scheduleRebuildForBlockArea((int) box.minX - 1, (int) box.minY, (int) box.minZ - 1, (int) box.maxX, (int) box.maxY, (int) box.maxZ, true);
+            SodiumWorldRenderer.instance().scheduleRebuildForBlockArea((int) box.minX - 8, (int) box.minY - 8, (int) box.minZ - 8, (int) box.maxX + 8, (int) box.maxY + 8, (int) box.maxZ + 8, true);
+        if(!((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild()){
+            if(SodiumClientMod.options().performance.alwaysDeferChunkUpdates) {
+                SodiumClientMod.options().performance.alwaysDeferChunkUpdates = false;
+            }
 
+        }
+        else{
+            if(!SodiumClientMod.options().performance.alwaysDeferChunkUpdates) {
+                SodiumClientMod.options().performance.alwaysDeferChunkUpdates = true;
+            }
+
+        }
     }
 }

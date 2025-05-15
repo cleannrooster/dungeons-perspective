@@ -25,7 +25,8 @@
     "BlockMixin",
     "compat.sodium.MixinBlockRenderer",
     "compat.sodium.SodiumWorldRendererMixin",
-    "compat.sodium.AbstractRenderContextMixin"
+    "compat.sodium.AbstractRenderContextMixin",
+    "compat.sodium.FluidRendererMixin"
 
   ],
   "server": [

@@ -16,6 +16,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -34,11 +35,14 @@ public class ClientInit implements ClientModInitializer {
     private static final ArrayList<Consumer<Capabilities>> capabilityListeners = new ArrayList<>();
     public static KeyBinding toggleBinding;
     public static KeyBinding isoBinding;
+    public static KeyBinding lockOn;
 
     public static KeyBinding moveCameraBinding;
     public static KeyBinding zoomInBinding;
     public static KeyBinding zoomOutBinding;
     public static KeyBinding cycleTargetBinding;
+    public static KeyBinding rotateCounterClockwise;
+    public static KeyBinding rotateClockwase;
 
     @Nullable
     public static Capabilities capabilities;
@@ -106,28 +110,41 @@ public class ClientInit implements ClientModInitializer {
         ));
         KeyBindingHelper.registerKeyBinding(moveCameraBinding = new KeyBinding(
                 "dungeons_iso.binds.moveCamera",
-                InputUtil.Type.MOUSE,
+                InputUtil.Type.KEYSYM,
                 GLFW.GLFW_MOUSE_BUTTON_3,
+                "dungeons_iso.binds.category"
+        ));
+
+        KeyBindingHelper.registerKeyBinding(lockOn = new KeyBinding(
+                "dungeons_iso.binds.lockOn",
+                InputUtil.Type.MOUSE,
+                GLFW.GLFW_KEY_H,
                 "dungeons_iso.binds.category"
         ));
         KeyBindingHelper.registerKeyBinding(zoomInBinding = new KeyBinding(
                 "dungeons_iso.binds.zoomIn",
                 InputUtil.Type.MOUSE,
-                GLFW.GLFW_MOUSE_BUTTON_6,
+                GLFW.GLFW_KEY_UP,
                 "dungeons_iso.binds.category"
         ));
         KeyBindingHelper.registerKeyBinding(zoomOutBinding = new KeyBinding(
                 "dungeons_iso.binds.zoomOut",
                 InputUtil.Type.MOUSE,
-                GLFW.GLFW_MOUSE_BUTTON_7,
+                GLFW.GLFW_KEY_DOWN,
                 "dungeons_iso.binds.category"
         ));
-        KeyBindingHelper.registerKeyBinding(cycleTargetBinding = new KeyBinding(
-                "dungeons_iso.binds.cycleTarget",
+        KeyBindingHelper.registerKeyBinding(rotateClockwase = new KeyBinding(
+                "dungeons_iso.binds.rotateClockwise",
                 InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_TAB,
+                GLFW.GLFW_KEY_RIGHT,
+                "dungeons_iso.binds.category"
+        )); KeyBindingHelper.registerKeyBinding(rotateCounterClockwise = new KeyBinding(
+                "dungeons_iso.binds.rotateCounterClockwise",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_LEFT,
                 "dungeons_iso.binds.category"
         ));
+
 
 
 

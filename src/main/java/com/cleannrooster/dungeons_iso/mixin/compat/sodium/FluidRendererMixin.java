@@ -2,26 +2,20 @@ package com.cleannrooster.dungeons_iso.mixin.compat.sodium;
 
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
 import com.cleannrooster.dungeons_iso.mod.Mod;
-import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.gui.SodiumGameOptions;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
-import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.FluidRenderer;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.TranslucentGeometryCollector;
 import net.caffeinemc.mods.sodium.client.render.frapi.render.AbstractBlockRenderContext;
-import net.fabricmc.fabric.api.renderer.v1.mesh.MutableQuadView;
+import net.caffeinemc.mods.sodium.client.world.LevelSlice;
+import net.caffeinemc.mods.sodium.fabric.render.FluidRendererImpl;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.model.BakedModel;
-import net.minecraft.util.hit.HitResult;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.system.windows.POINT;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,16 +23,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Objects;
-
 import static java.lang.Math.sqrt;
 
-@Mixin(AbstractBlockRenderContext.class)
-public abstract class MixinBlockRenderer  {
-    @Shadow    protected BlockPos pos;
+@Mixin(FluidRendererImpl.class)
+public abstract class FluidRendererMixin {
 
-    @Inject(at = @At("HEAD"), method = "isFaceCulled", cancellable = true)
-    protected final void isFaceCulledDungeons(@Nullable Direction direction, CallbackInfoReturnable<Boolean> ci) {
+    @Inject(at = @At("HEAD"), method = "render", cancellable = true)
+    public void renderXIV(LevelSlice level, BlockState blockState, FluidState fluidState, BlockPos pos, BlockPos offset, TranslucentGeometryCollector collector, ChunkBuildBuffers buffers, CallbackInfo ci) {
         if(MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player instanceof ClientPlayerEntity player && Mod.enabled && ((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild()) {
             Box box = new Box(player.getEyePos(),MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
 
@@ -68,14 +59,8 @@ public abstract class MixinBlockRenderer  {
                     && (blockInfo.blockPos.getY() <= (int)box.maxY && blockInfo.blockPos.getY() >=(int) box.minY)
                     && (blockInfo.blockPos.getZ() <= (int)box.maxZ && blockInfo.blockPos.getZ() >=(int) box.minZ)*/
             )){
-
-                ci.setReturnValue(true);
+                ci.cancel();
                 return;
-            }
-            else{
-                if(direction != Direction.DOWN) {
-                    ci.setReturnValue(false);
-                }
             }
 
           /*  if().getType().equals(HitResult.Type.MISS)) {

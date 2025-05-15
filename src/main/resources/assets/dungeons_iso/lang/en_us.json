@@ -4,8 +4,10 @@
   "dungeons_iso.binds.moveCamera": "Move camera",
   "dungeons_iso.binds.zoomIn": "Zoom in",
   "dungeons_iso.binds.zoomOut": "Zoom out",
-  "dungeons_iso.binds.cycleTarget": "Cycle target",
-  "dungeons_iso.binds.iso": "Snap to Isometric",
+  "dungeons_iso.binds.lockOn": "Hold to disable locking on to enemy position",
+  "dungeons_iso.binds.iso": "Snap to Axis",
+  "dungeons_iso.binds.rotateClockwise": "Rotate Right",
+  "dungeons_iso.binds.rotateCounterClockwise": "Rotate Left",
 
   "dungeons_iso.config.title": "Dungeons Perspective",
   "dungeons_iso.config.category.options": "Options",

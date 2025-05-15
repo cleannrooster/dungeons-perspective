@@ -25,6 +25,7 @@ import net.minecraft.item.ProjectileItem;
 import net.minecraft.item.ThrowablePotionItem;
 import net.minecraft.server.command.DebugCommand;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -85,7 +86,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
             HitResult hitResultOrigin = client.cameraEntity.getWorld().raycast(new RaycastContext(
                     client.player.getEyePos(),
                     client.gameRenderer.getCamera().getPos(),
-                    RaycastContext.ShapeType.OUTLINE,
+                    RaycastContext.ShapeType.VISUAL,
                     RaycastContext.FluidHandling.NONE,
                     client.cameraEntity
             ));
@@ -205,13 +206,13 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
         if (ClientInit.zoomInBinding.wasPressed()) {
             if (Mod.enabled) {
-                Mod.zoom = Math.max(Mod.zoom - 0.1f, 0.0f);
+                Mod.zoom = Math.max(Mod.zoom - 0.2f, 0.0f);
             }
         }
 
         if (ClientInit.zoomOutBinding.wasPressed()) {
             if (Mod.enabled) {
-                Mod.zoom = Math.min(Mod.zoom + 0.1f, 2.0f);
+                Mod.zoom = Math.min(Mod.zoom + 0.2f, 5.0f);
             }
         }
 
@@ -271,15 +272,20 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
     @Inject(method = "hasOutline", at = @At("HEAD"), cancellable = true)
     public void hasOutlineXIV(Entity entity, CallbackInfoReturnable<Boolean> cir) {
-        if (entity == Mod.lockOnTarget) {
-            cir.setReturnValue(true);
-            cir.cancel();
+        if(Mod.enabled &&Mod.crosshairTarget instanceof EntityHitResult hitResult){
+            if(entity.equals(hitResult.getEntity())){
+                if(!ClientInit.lockOn.isPressed()) {
+                    cir.setReturnValue(true);
+                }
+            }
         }
         if(Mod.enabled && player != null && entity == player ){
+
             if(Mod.enabled){
                 if(FabricLoader.getInstance().isModLoaded("sodium")){
                     SodiumCompat.run();
                 }
+
             }
             if(  player.getWorld().raycast(new RaycastContext(
                     MinecraftClient.getInstance().gameRenderer.getCamera().getPos(),

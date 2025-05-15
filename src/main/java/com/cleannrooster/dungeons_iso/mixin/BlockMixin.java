@@ -38,9 +38,9 @@ public abstract class BlockMixin  {
     protected  BlockRenderInfo blockInfo;
 
     @Inject(
-            method = "renderQuad", at = @At("HEAD"),cancellable = true,remap = false
+            method = "isFaceCulled", at = @At("HEAD"),cancellable = true,remap = false
     )
-    private void renderQuadCleann(MutableQuadViewImpl quad, CallbackInfo callbackInfo) {
+    public void isFaceCulledXIV(@Nullable Direction face, CallbackInfoReturnable<Boolean> cir) {
 
         AbstractBlockRenderContext info = (AbstractBlockRenderContext)(Object) this;
         if(MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player instanceof ClientPlayerEntity player &&Mod.enabled  && ((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild()) {
@@ -51,10 +51,7 @@ public abstract class BlockMixin  {
                 ){*/
 
             if(MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera  &&
-                    ((((Math.abs(MinecraftClient.getInstance().cameraEntity.getEyePos().subtract(camera.getPos()).normalize().dotProduct(blockInfo.blockPos.toCenterPos().subtract( camera.getPos()).normalize())) > 0.90 || camera.getPos().distanceTo(blockInfo.blockPos.toCenterPos()) < 3) ||
-                    (MinecraftClient.getInstance().cameraEntity.getEyePos().subtract((blockInfo.blockPos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getEyePos()).subtract(camera.getPos()).normalize()) > 0.7071 || camera.getPos().distanceTo(blockInfo.blockPos.toCenterPos()) < 3)) &&
-                    ((Math.abs(new Vec3d(0,1,0).dotProduct(blockInfo.blockPos.toCenterPos().subtract(player.getPos()).normalize())) > 0.5 || camera.getPos().distanceTo(blockInfo.blockPos.toCenterPos()) < 3))) ||
-                    (blockInfo.blockPos.toCenterPos().y > player.getPos().y+8))
+                    ((int)Math.abs(MinecraftClient.getInstance().cameraEntity.getPos().subtract((blockInfo.blockPos.toCenterPos())).normalize().multiply(1,1,1).dotProduct((MinecraftClient.getInstance().cameraEntity.getPos()).subtract(camera.getPos()).normalize().multiply(8,8,8))) >= (int)(0.8*8) && blockInfo.blockPos.toCenterPos().getY() > player.getY()+1)
                     //(MinecraftClient.getInstance().cameraEntity.getEyePos().subtract((blockInfo.blockPos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getEyePos()).subtract(camera.getPos()).normalize()) > 0.7071 || camera.getPos().distanceTo(blockInfo.blockPos.toCenterPos()) < 3)
 
 
@@ -63,17 +60,11 @@ public abstract class BlockMixin  {
                     && (blockInfo.blockPos.getY() <= (int)box.maxY && blockInfo.blockPos.getY() >=(int) box.minY)
                     && (blockInfo.blockPos.getZ() <= (int)box.maxZ && blockInfo.blockPos.getZ() >=(int) box.minZ)*/
             ){
-                callbackInfo.cancel();
+                cir.setReturnValue(true);
                 return;
             }
-            if(!(player.getWorld().raycast(new RaycastContext(
-                    MinecraftClient.getInstance().gameRenderer.getCamera().getPos(),
-                    blockInfo.blockPos.toCenterPos(),
-                    RaycastContext.ShapeType.OUTLINE,
-                    RaycastContext.FluidHandling.NONE,
-                    player
-            ))).getType().equals(HitResult.Type.MISS)) {
-                callbackInfo.cancel();
+            else{
+                cir.setReturnValue(false);
             }
 
         }

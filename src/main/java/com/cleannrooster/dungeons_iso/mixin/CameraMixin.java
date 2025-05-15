@@ -26,7 +26,7 @@ import com.cleannrooster.dungeons_iso.mod.Mod;
 @Mixin(Camera.class)
 public abstract class CameraMixin implements CameraAccessor {
     @Override
-    public void setPos(Vec3d pos) {
+    public void setPosInterfae(Vec3d pos) {
         this.pos = pos;
     }
 
@@ -78,10 +78,17 @@ public abstract class CameraMixin implements CameraAccessor {
         if (Mod.enabled) {
             if(ClientInit.isoBinding.wasPressed()){
                 this.setRotation((float) (Math.ceil(Mod.yaw / 90) * 90 - 45),45);
+
                 Mod.yaw = this.yaw;
                 Mod.pitch = this.pitch;
             }else {
-                this.setRotation(Mod.yaw, Mod.pitch);
+                if(ClientInit.rotateClockwase.wasPressed()) {
+                    this.setRotation(Mod.yaw+5, Mod.pitch);
+                }
+                if(ClientInit.rotateCounterClockwise.wasPressed()){
+                    this.setRotation(Mod.yaw-5, Mod.pitch);
+
+                }
 
             }
 
@@ -95,7 +102,7 @@ public abstract class CameraMixin implements CameraAccessor {
     )
     private void clipToSpaceXIV(float a, CallbackInfoReturnable<Float> callbackInfoReturnable) {
 
-        if (MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera && Mod.enabled && Config.GSON.instance().dynamicCamera) {
+        if (MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera && Mod.enabled ) {
 
             callbackInfoReturnable.setReturnValue(a);
 
@@ -132,8 +139,12 @@ public abstract class CameraMixin implements CameraAccessor {
                 Vec3d d = (new Vec3d(this.pos.x + (double)vector3f.x, this.pos.y + (double)vector3f.y, this.pos.z + (double)vector3f.z));
 
                 double dot = Math.abs(getRotationVector(45,this.yaw).subtract(0,getRotationVector(45,this.yaw).getY(),0).normalize().dotProduct(f.getEyePos().subtract( d).normalize()));
+                if(!Config.GSON.instance().dynamicCamera){
+                    delta = 1;
+                    vec3d = new Vec3d(MathHelper.lerp(delta,vec3d.getX(),this.pos.getX()),this.pos.getY(), MathHelper.lerp(delta,vec3d.getZ(),this.pos.getZ()));
 
-                 if(!(MinecraftClient.getInstance().options.pickItemKey.isPressed()||ClientInit.moveCameraBinding.isPressed())) {
+                }else
+                if(!(MinecraftClient.getInstance().options.pickItemKey.isPressed()||ClientInit.moveCameraBinding.isPressed())) {
 
                     vec3d = new Vec3d(MathHelper.lerp(delta,vec3d.getX(),this.pos.getX()+Mod.x*Math.max(0.1,Config.GSON.instance().moveFactor) *(1+Mod.zoom)),this.pos.getY(), MathHelper.lerp(delta,vec3d.getZ(),this.pos.getZ()+Mod.z*Math.max(0.1,Config.GSON.instance().moveFactor) *(1+Mod.zoom)));
                 }
