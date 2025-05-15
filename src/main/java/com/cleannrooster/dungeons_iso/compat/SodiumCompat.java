@@ -1,6 +1,8 @@
 package com.cleannrooster.dungeons_iso.compat;
 
+import com.cleannrooster.dungeons_iso.api.BlockCuller;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
+import com.cleannrooster.dungeons_iso.api.cullers.GenericBlockCuller;
 import it.unimi.dsi.fastutil.longs.LongCollection;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
@@ -10,10 +12,21 @@ import net.caffeinemc.mods.sodium.client.render.chunk.map.ChunkTracker;
 import net.caffeinemc.mods.sodium.client.render.chunk.map.ChunkTrackerHolder;
 import net.caffeinemc.mods.sodium.client.render.frapi.SodiumRenderer;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import org.spongepowered.asm.mixin.Shadow;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SodiumCompat {
+    public static List<BlockCuller> blockCullers = new ArrayList<>();
+
+
+    static{
+        blockCullers.add(new GenericBlockCuller());
+    }
+
 
     public static void run(){
 
@@ -30,6 +43,9 @@ public class SodiumCompat {
                 SodiumClientMod.options().performance.alwaysDeferChunkUpdates = true;
             }
 
+        }
+        for(BlockCuller culler :blockCullers) {
+            culler.resetCulledBlocks();
         }
     }
 }

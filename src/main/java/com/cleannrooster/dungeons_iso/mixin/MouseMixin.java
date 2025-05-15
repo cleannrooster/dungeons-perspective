@@ -18,6 +18,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
@@ -57,6 +58,7 @@ public class MouseMixin {
     private double y;
 
 
+    private static int lockontime;
     @Unique
     @Nullable
     private Double lastX;
@@ -274,8 +276,14 @@ public class MouseMixin {
             if (entity2 == null || (entity instanceof LivingEntity living && !living.canSee(entity2)) || entity2.isInvisible() || (entity instanceof PlayerEntity player && entity2.isInvisibleTo(player))) {
                 return null;
             }
-
-            return new EntityHitResult(entity2, ClientInit.lockOn.isPressed() ? vec3d : entity2.getEyePos());
+            if(Mod.crosshairTarget instanceof EntityHitResult result && entity2.equals(result.getEntity())){
+                lockontime++;
+            }
+            else{
+                lockontime = 0;
+            }
+            lockontime = Math.min(160,lockontime);
+            return new EntityHitResult(entity2, ClientInit.lockOn.isPressed() ? vec3d : new Vec3d(entity2.getX(),MathHelper.lerp((double)lockontime/160D,entity2.getBoundingBox().getCenter().getY(),entity2.getEyeY()),entity2.getZ()));
         }
     }
     @Inject(

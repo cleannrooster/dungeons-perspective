@@ -1,6 +1,10 @@
 package com.cleannrooster.dungeons_iso.mixin.compat.sodium;
 
+import com.cleannrooster.dungeons_iso.api.BlockCuller;
+import com.cleannrooster.dungeons_iso.api.BlockCullerUser;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
+import com.cleannrooster.dungeons_iso.api.cullers.GenericBlockCuller;
+import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.gui.SodiumGameOptions;
@@ -29,58 +33,34 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static java.lang.Math.sqrt;
 
 @Mixin(AbstractBlockRenderContext.class)
-public abstract class MixinBlockRenderer  {
+public abstract class MixinBlockRenderer implements BlockCullerUser {
     @Shadow    protected BlockPos pos;
+
 
     @Inject(at = @At("HEAD"), method = "isFaceCulled", cancellable = true)
     protected final void isFaceCulledDungeons(@Nullable Direction direction, CallbackInfoReturnable<Boolean> ci) {
         if(MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player instanceof ClientPlayerEntity player && Mod.enabled && ((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild()) {
-            Box box = new Box(player.getEyePos(),MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
+            if(MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera){
+                for(BlockCuller culler : SodiumCompat.blockCullers){
+                    culler.cullBlocks(pos,camera,player,direction);
+                    if(culler.getCulledBlocks().contains(pos)){
+                        ci.setReturnValue(true);
+                    }
+                }
 
-            /*if((pos.getX() < box.maxX && pos.getX() > box.minX-1)
-                    && (pos.getY() < box.maxY && pos.getY() > box.minY)
-                    && (pos.getZ() < box.maxZ && pos.getZ() > box.minZ-1)
-            ){*/
-            if(MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera  &&(
-
-              /*               (((float)MinecraftClient.getInstance().cameraEntity.getEyePos().subtract((pos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getEyePos()).subtract(camera.getPos()).normalize()) > 0.71F || camera.getPos().distanceTo(pos.toCenterPos()) < 3) &&
-
-                             (Math.abs((float)MinecraftClient.getInstance().cameraEntity.getEyePos().subtract(camera.getPos()).normalize().dotProduct(pos.toCenterPos().subtract( camera.getPos()).normalize())) >= 0.9F || camera.getPos().distanceTo(pos.toCenterPos()) < 3)) &&
-                             ((float)MinecraftClient.getInstance().cameraEntity.getPos().subtract(pos.toCenterPos()).normalize().dotProduct(new Vec3d(0,-1,0)) > 0.3F)))  ||
-*/
-/*
-                            Objects.equals(pos, BlockPos.ofFloored(player.getX(), (int) player.getBoundingBox().getMax(Direction.Axis.Y), player.getZ())) || Objects.equals(pos, BlockPos.ofFloored(player.getX(), (int) player.getBoundingBox().getMax(Direction.Axis.Y)+1, player.getZ())) ||
-*/
-                    ((int)Math.abs(MinecraftClient.getInstance().cameraEntity.getPos().subtract((pos.toCenterPos())).normalize().multiply(1,1,1).dotProduct((MinecraftClient.getInstance().cameraEntity.getPos()).subtract(camera.getPos()).normalize().multiply(8,8,8))) >= (int)(0.8*8) && pos.toCenterPos().getY() > player.getY()+1)
-
-/*            ((MinecraftClient.getInstance().cameraEntity.getPos().subtract((pos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getPos()).subtract(camera.getPos()).normalize()) > 0.5 && pos.toCenterPos().getY() > player.getY()+1) )*/
-
-                                     //(MinecraftClient.getInstance().cameraEntity.getEyePos().subtract((blockInfo.blockPos.toCenterPos())).normalize().dotProduct((MinecraftClient.getInstance().cameraEntity.getEyePos()).subtract(camera.getPos()).normalize()) > 0.7071 || camera.getPos().distanceTo(blockInfo.blockPos.toCenterPos()) < 3)
-
-
-
-                    /*&& (blockInfo.blockPos.getX()<=(int)box.maxX-1 && blockInfo.blockPos.getX() >=(int) box.minX-1)
-                    && (blockInfo.blockPos.getY() <= (int)box.maxY && blockInfo.blockPos.getY() >=(int) box.minY)
-                    && (blockInfo.blockPos.getZ() <= (int)box.maxZ && blockInfo.blockPos.getZ() >=(int) box.minZ)*/
-            )){
-
-                ci.setReturnValue(true);
-                return;
             }
             else{
                 if(direction != Direction.DOWN) {
                     ci.setReturnValue(false);
                 }
             }
-
-          /*  if().getType().equals(HitResult.Type.MISS)) {
-                ci.cancel();
-            }*/
         }
     }
 }
