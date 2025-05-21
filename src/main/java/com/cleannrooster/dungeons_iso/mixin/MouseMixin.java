@@ -1,6 +1,10 @@
 package com.cleannrooster.dungeons_iso.mixin;
 
+import com.cleannrooster.dungeons_iso.api.CameraAccessor;
+import com.cleannrooster.dungeons_iso.api.RaycastContextCull;
+import com.cleannrooster.dungeons_iso.api.CustomShapeTypes;
 import com.llamalad7.mixinextras.sugar.Local;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.option.KeyBinding;
@@ -8,20 +12,17 @@ import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.Window;
-import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.projectile.ProjectileUtil;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
-import net.minecraft.world.World;
+import net.minecraft.util.math.*;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.world.*;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2d;
 import org.joml.Vector3d;
@@ -34,13 +35,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.cleannrooster.dungeons_iso.ClientInit;
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
-import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
 
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
-
-import static net.minecraft.entity.projectile.ProjectileUtil.raycast;
 
 @Mixin(Mouse.class)
 public class MouseMixin {
@@ -189,45 +189,99 @@ public class MouseMixin {
                     Box box = Box.of(camera.getPos(),2,2,2)
                             .stretch(rayDir.multiply(renderer.getFarPlaneDistance()*2))
                             .expand(1.0, 1.0, 1.0);
-                    Vec3d start = camera.getPos().add(rayDir.multiply(camera.getPos().distanceTo(client.player.getEyePos())-0));
+                    Vec3d end = camera.getPos().add(rayDir.multiply(renderer.getFarPlaneDistance()));
+                    if(cameraEntity instanceof PlayerEntity player && player.isFallFlying()){
 
-                    HitResult hitResult0 = cameraEntity.getWorld().raycast(new RaycastContext(
-                            start,
+
+                        if(((CameraAccessor)camera).getPosBeforeModulation() != null){
+                            HitResult hitResult0 = raycast(camera.getPos(),end,new RaycastContextCull(
+                                    camera.getPos(),
+                                    end,
+                                    CustomShapeTypes.AIR_AT_LEVEL,
+                                    RaycastContext.ShapeType.OUTLINE,
+                                    RaycastContext.FluidHandling.NONE,
+                                    cameraEntity
+                            ),(innerContext, pos) -> {
+                                BlockState blockState = client.player.getWorld().getBlockState(pos);
+                                FluidState fluidState = client.player.getWorld().getFluidState(pos);
+                                Vec3d vec3d = innerContext.getStart();
+                                Vec3d vec3d2 = innerContext.getEnd();
+                                VoxelShape voxelShape = innerContext.getBlockShape(blockState, client.player.getWorld(), pos);
+
+
+                                BlockHitResult firstResult = voxelShape.raycast(vec3d, vec3d2, pos);
+
+                                VoxelShape voxelShape2 = innerContext.getFluidShape(fluidState, client.player.getWorld(), pos);
+                                BlockHitResult blockHitResult2 = voxelShape2.raycast(vec3d, vec3d2, pos);
+                                double d = firstResult == null ? Double.MAX_VALUE : innerContext.getStart().squaredDistanceTo(firstResult.getPos());
+                                double e = blockHitResult2 == null ? Double.MAX_VALUE : innerContext.getStart().squaredDistanceTo(blockHitResult2.getPos());
+                                return d <= e ? firstResult : blockHitResult2;
+                            }, (innerContext) -> {
+                                Vec3d vec3d = innerContext.getStart().subtract(innerContext.getEnd());
+                                return BlockHitResult.createMissed(innerContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), BlockPos.ofFloored(innerContext.getEnd()));
+                            });
+                            if(hitResult0 instanceof BlockHitResult result) {
+                                Mod.flyingYAddition = -2*Math.log(result.getPos().distanceTo(player.getEyePos()) / 8F);
+                            }
+                            end = hitResult0.getPos().add(0,Mod.flyingYAddition,0);
+
+                        }
+                    }
+
+
+                    HitResult hitResult0 = raycast(camera.getPos(),end,new RaycastContextCull(
                             camera.getPos(),
+                            end,
+                            CustomShapeTypes.CULLED,
                             RaycastContext.ShapeType.OUTLINE,
                             RaycastContext.FluidHandling.NONE,
                             cameraEntity
-                    ));
-                    if(hitResult0.getType().equals(HitResult.Type.BLOCK) && hitResult0.getPos().getY() > client.player.getPos().getY()+0.5){
-                        start = start.add(rayDir.multiply(-1).multiply(0.9*hitResult0.getPos().distanceTo(start)));
+                    ),(innerContext, pos) -> {
+                        BlockState blockState = client.player.getWorld().getBlockState(pos);
+                        FluidState fluidState = client.player.getWorld().getFluidState(pos);
+                        Vec3d vec3d = innerContext.getStart();
+                        Vec3d vec3d2 = innerContext.getEnd();
+                        VoxelShape voxelShape = innerContext.getBlockShape(blockState, client.player.getWorld(), pos);
+
+
+                        BlockHitResult firstResult = voxelShape.raycast(vec3d, vec3d2, pos);
+
+                        VoxelShape voxelShape2 = innerContext.getFluidShape(fluidState, client.player.getWorld(), pos);
+                        BlockHitResult blockHitResult2 = voxelShape2.raycast(vec3d, vec3d2, pos);
+                        double d = firstResult == null ? Double.MAX_VALUE : innerContext.getStart().squaredDistanceTo(firstResult.getPos());
+                        double e = blockHitResult2 == null ? Double.MAX_VALUE : innerContext.getStart().squaredDistanceTo(blockHitResult2.getPos());
+                        return d <= e ? firstResult : blockHitResult2;
+                    }, (innerContext) -> {
+                        Vec3d vec3d = innerContext.getStart().subtract(innerContext.getEnd());
+                        return BlockHitResult.createMissed(innerContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), BlockPos.ofFloored(innerContext.getEnd()));
+                    });
+                    BlockHitResult scanUp = client.player.getWorld().raycast(
+                            new RaycastContext(
+                                    hitResult0.getPos(),camera.getPos(), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE,client.player)
+
+                    );
+                    BlockHitResult scanDown = client.player.getWorld().raycast(
+                            new RaycastContext(
+                                    hitResult0.getPos().add(scanUp.getPos().subtract(hitResult0.getPos()).multiply(0.95F)),hitResult0.getPos(), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE,client.player)
+
+                    );
+                    if(Mod.crosshairTarget == null){
+                        Mod.crosshairTarget = client.crosshairTarget;
                     }
-                    else{
-                        start = camera.getPos();
-                    }
-                    Vec3d start2 = client.player.getEyePos();
-
-                    Vec3d end = start.add(rayDir.multiply(renderer.getFarPlaneDistance()));
-
-
                     HitResult hitResult = raycastExpanded(
                             cameraEntity,
-                            start,
-                            end,
+                            scanDown.getPos(),
+                            camera.getPos(),
                             box,
                             entity -> !entity.isSpectator() && entity.canHit(),
                             renderer.getFarPlaneDistance()*2
                     ,0.5F);
                     if (hitResult == null) {
-                        hitResult = cameraEntity.getWorld().raycast(new RaycastContext(
-                                start,
-                                end,
-                                RaycastContext.ShapeType.OUTLINE,
-                                RaycastContext.FluidHandling.NONE,
-                                cameraEntity
-                        ));
-                    }
-                    Mod.crosshairTarget = hitResult;
+                        hitResult = scanDown;
 
+                    }
+
+                        Mod.crosshairTarget = hitResult;
 
                 }
 
@@ -235,7 +289,66 @@ public class MouseMixin {
 
         }
     }
+    private static <T, C> T raycast(Vec3d start, Vec3d end, C context, BiFunction<C, BlockPos, T> blockHitFactory, Function<C, T> missFactory) {
+        if (start.equals(end)) {
+            return missFactory.apply(context);
+        } else {
+            double d = MathHelper.lerp(-1.0E-7, end.x, start.x);
+            double e = MathHelper.lerp(-1.0E-7, end.y, start.y);
+            double f = MathHelper.lerp(-1.0E-7, end.z, start.z);
+            double g = MathHelper.lerp(-1.0E-7, start.x, end.x);
+            double h = MathHelper.lerp(-1.0E-7, start.y, end.y);
+            double i = MathHelper.lerp(-1.0E-7, start.z, end.z);
+            int j = MathHelper.floor(g);
+            int k = MathHelper.floor(h);
+            int l = MathHelper.floor(i);
+            BlockPos.Mutable mutable = new BlockPos.Mutable(j, k, l);
+            T object = blockHitFactory.apply(context, mutable);
+            if (object != null) {
+                return object;
+            } else {
+                double m = d - g;
+                double n = e - h;
+                double o = f - i;
+                int p = MathHelper.sign(m);
+                int q = MathHelper.sign(n);
+                int r = MathHelper.sign(o);
+                double s = p == 0 ? Double.MAX_VALUE : (double)p / m;
+                double t = q == 0 ? Double.MAX_VALUE : (double)q / n;
+                double u = r == 0 ? Double.MAX_VALUE : (double)r / o;
+                double v = s * (p > 0 ? 1.0 - MathHelper.fractionalPart(g) : MathHelper.fractionalPart(g));
+                double w = t * (q > 0 ? 1.0 - MathHelper.fractionalPart(h) : MathHelper.fractionalPart(h));
+                double x = u * (r > 0 ? 1.0 - MathHelper.fractionalPart(i) : MathHelper.fractionalPart(i));
 
+                Object object2;
+                do {
+                    if (!(v <= 1.0) && !(w <= 1.0) && !(x <= 1.0)) {
+                        return missFactory.apply(context);
+                    }
+
+                    if (v < w) {
+                        if (v < x) {
+                            j += p;
+                            v += s;
+                        } else {
+                            l += r;
+                            x += u;
+                        }
+                    } else if (w < x) {
+                        k += q;
+                        w += t;
+                    } else {
+                        l += r;
+                        x += u;
+                    }
+
+                    object2 = blockHitFactory.apply(context, mutable.set(j, k, l));
+                } while(object2 == null);
+
+                return (T) object2;
+            }
+        }
+    }
     @Nullable
      private static EntityHitResult raycastExpanded(Entity entity, Vec3d min, Vec3d max, Box box, Predicate<Entity> predicate, double maxDistance, float margin) {
         World world = entity.getWorld();
@@ -283,7 +396,10 @@ public class MouseMixin {
                 lockontime = 0;
             }
             lockontime = Math.min(160,lockontime);
-            return new EntityHitResult(entity2, ClientInit.lockOn.isPressed() ? vec3d : new Vec3d(entity2.getX(),MathHelper.lerp((double)lockontime/160D,entity2.getBoundingBox().getCenter().getY(),entity2.getEyeY()),entity2.getZ()));
+            return new EntityHitResult(entity2, ClientInit.lockOn.isPressed() ? vec3d : new Vec3d(
+                    MathHelper.lerp((double)lockontime/160D,Mod.crosshairTarget.getPos().getX(),entity2.getX()),
+                    MathHelper.lerp((double)lockontime/160D,Mod.crosshairTarget.getPos().getY(),entity2.getEyeY()),
+                    MathHelper.lerp((double)lockontime/160D,Mod.crosshairTarget.getPos().getZ(),entity2.getZ())));
         }
     }
     @Inject(

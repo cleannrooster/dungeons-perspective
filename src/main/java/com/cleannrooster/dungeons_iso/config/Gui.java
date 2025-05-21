@@ -85,6 +85,18 @@ public class Gui implements ModMenuApi {
                                             .controller(FloatFieldControllerBuilder::create)
                                             .build())
                                     .option(Option
+                                            .<Boolean>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.force_no_defer.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.force_no_defer.description")))
+                                            .binding(
+                                                    defaults.forceNoDefer,
+                                                    () -> config.forceNoDefer,
+                                                    (value) -> config.forceNoDefer = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
+                                    .option(Option
                                             .<Float>createBuilder()
                                             .name(Text.translatable("dungeons_iso.config.fov.name"))
                                             .description(OptionDescription.of(Text.translatable(

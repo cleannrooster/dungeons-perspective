@@ -19,6 +19,8 @@ public class Config {
     @SerialEntry
     public boolean dynamicCamera = false;
     @SerialEntry
+    public boolean forceNoDefer = true;
+    @SerialEntry
 
     public float moveFactor = 2.0F;
     @SerialEntry

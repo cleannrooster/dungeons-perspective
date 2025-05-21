@@ -32,6 +32,8 @@
   "dungeons_iso.config.movefactor.name": "Smooth Camera Move Factor",
   "dungeons_iso.config.movefactor.description":"Subtly changes motion of smooth camera.",
   "dungeons_iso.config.fov.name": "Default FOV",
-  "dungeons_iso.config.fov.description":"FOV that the game starts in."
+  "dungeons_iso.config.fov.description":"FOV that the game starts in.",
+  "dungeons_iso.config.force_no_defer.name": "Force never deferring chunks",
+  "dungeons_iso.config.force_no_defer.description":"Might help to turn off if you are experiencing lag. Turn Always Chunk Deferring on in Sodium as well if you turn this off."
 
 }

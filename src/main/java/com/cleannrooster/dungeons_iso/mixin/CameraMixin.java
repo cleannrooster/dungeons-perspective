@@ -39,6 +39,13 @@ public abstract class CameraMixin implements CameraAccessor {
     @Shadow
 
     private Vec3d pos;
+    private Vec3d posBeforeModulation;
+
+    @Override
+    public Vec3d getPosBeforeModulation() {
+        return posBeforeModulation;
+    }
+
     private Vec3d cachedMovement = Vec3d.ZERO;
 
     int i = 0;
@@ -114,6 +121,7 @@ public abstract class CameraMixin implements CameraAccessor {
             ClientPlayerEntity f = (MinecraftClient.getInstance().player);
 
             if (Mod.enabled ) {
+                this.posBeforeModulation = pos;
 
                 MinecraftClient client = MinecraftClient.getInstance();
                 assert client.player != null;

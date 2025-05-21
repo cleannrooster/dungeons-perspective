@@ -34,7 +34,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = AbstractBlockRenderContext.class,priority = Integer.MIN_VALUE)
 public abstract class BlockMixin  {
-    @Shadow
+  /*  @Shadow
     protected  BlockRenderInfo blockInfo;
 
     @Inject(
@@ -45,10 +45,10 @@ public abstract class BlockMixin  {
         AbstractBlockRenderContext info = (AbstractBlockRenderContext)(Object) this;
         if(MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player instanceof ClientPlayerEntity player &&Mod.enabled  && ((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild()) {
             Box box = new Box(player.getEyePos(),MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
-           /* if((blockInfo.blockPos.getX() < box.maxX && blockInfo.blockPos.getX() > box.minX - 1)
+           *//* if((blockInfo.blockPos.getX() < box.maxX && blockInfo.blockPos.getX() > box.minX - 1)
                     && (blockInfo.blockPos.getY() < box.maxY && blockInfo.blockPos.getY() > box.minY)
                     && (blockInfo.blockPos.getZ() < box.maxZ && blockInfo.blockPos.getZ() > box.minZ -1)
-                ){*/
+                ){*//*
 
             if(MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera  &&
                     ((int)Math.abs(MinecraftClient.getInstance().cameraEntity.getPos().subtract((blockInfo.blockPos.toCenterPos())).normalize().multiply(1,1,1).dotProduct((MinecraftClient.getInstance().cameraEntity.getPos()).subtract(camera.getPos()).normalize().multiply(8,8,8))) >= (int)(0.8*8) && blockInfo.blockPos.toCenterPos().getY() > player.getY()+1)
@@ -56,9 +56,9 @@ public abstract class BlockMixin  {
 
 
 
-                    /*&& (blockInfo.blockPos.getX()<=(int)box.maxX-1 && blockInfo.blockPos.getX() >=(int) box.minX-1)
+                    *//*&& (blockInfo.blockPos.getX()<=(int)box.maxX-1 && blockInfo.blockPos.getX() >=(int) box.minX-1)
                     && (blockInfo.blockPos.getY() <= (int)box.maxY && blockInfo.blockPos.getY() >=(int) box.minY)
-                    && (blockInfo.blockPos.getZ() <= (int)box.maxZ && blockInfo.blockPos.getZ() >=(int) box.minZ)*/
+                    && (blockInfo.blockPos.getZ() <= (int)box.maxZ && blockInfo.blockPos.getZ() >=(int) box.minZ)*//*
             ){
                 cir.setReturnValue(true);
                 return;
@@ -68,7 +68,7 @@ public abstract class BlockMixin  {
             }
 
         }
-    }
+    }*/
 /*    @Inject(
             method = "transform", at = @At("HEAD"),cancellable = true,remap = false
     )
