@@ -62,6 +62,18 @@ public class Gui implements ModMenuApi {
                                             .build())
                                     .option(Option
                                             .<Boolean>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.click_to_move.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.click_to_move.description")))
+                                            .binding(
+                                                    defaults.clickToMove,
+                                                    () -> config.clickToMove,
+                                                    (value) -> config.clickToMove = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
+                                    .option(Option
+                                            .<Boolean>createBuilder()
                                             .name(Text.translatable("dungeons_iso.config.dynamic_camera.name"))
                                             .description(OptionDescription.of(Text.translatable(
                                                     "dungeons_iso.config.dynamic_camera.description")))

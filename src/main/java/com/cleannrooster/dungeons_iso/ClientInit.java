@@ -43,6 +43,7 @@ public class ClientInit implements ClientModInitializer {
     public static KeyBinding cycleTargetBinding;
     public static KeyBinding rotateCounterClockwise;
     public static KeyBinding rotateClockwase;
+    public static KeyBinding interact;
 
     @Nullable
     public static Capabilities capabilities;
@@ -138,7 +139,14 @@ public class ClientInit implements ClientModInitializer {
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_RIGHT,
                 "dungeons_iso.binds.category"
-        )); KeyBindingHelper.registerKeyBinding(rotateCounterClockwise = new KeyBinding(
+        ));
+        KeyBindingHelper.registerKeyBinding(interact = new KeyBinding(
+                "dungeons_iso.binds.interact",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_G,
+                "dungeons_iso.binds.category"
+        ));
+        KeyBindingHelper.registerKeyBinding(rotateCounterClockwise = new KeyBinding(
                 "dungeons_iso.binds.rotateCounterClockwise",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_LEFT,

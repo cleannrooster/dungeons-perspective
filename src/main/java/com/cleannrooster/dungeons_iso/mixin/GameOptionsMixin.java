@@ -22,6 +22,8 @@ public class GameOptionsMixin {
     private static SimpleOption<Double> fovscale;
     private static SimpleOption<Boolean> bobbing;
 
+    private static SimpleOption<Boolean> autoJumpXIV;
+
     private static Text getPercentValueTextCleann(Text prefix, double value) {
         return Text.translatable("options.percent_value", new Object[]{prefix, (int)(value * 100.0)});
     }
@@ -31,6 +33,8 @@ public class GameOptionsMixin {
 
 
     static{
+        autoJumpXIV = SimpleOption.ofBoolean("options.autoJump", true);
+
         bobbing = SimpleOption.ofBoolean("options.viewBobbing", true);
 
         fov30 = new SimpleOption<Integer>("options.fov", SimpleOption.emptyTooltip(), (optionText, value) -> {
@@ -59,6 +63,7 @@ public class GameOptionsMixin {
         });
         fovscale.setValue(0D);
         bobbing.setValue(false);
+        autoJumpXIV.setValue(true);
     }
     @Inject(
             method = "getFov",
@@ -91,6 +96,17 @@ public class GameOptionsMixin {
         if(Mod.enabled) {
 
             option.setReturnValue(bobbing);
+        }
+    }
+    @Inject(
+            method = "getAutoJump",
+            at = @At(value = "HEAD"),
+            cancellable = true
+    )
+    public void getAutoJumpCleann(CallbackInfoReturnable<SimpleOption<Boolean>> option) {
+        if(Mod.enabled && Config.GSON.instance().clickToMove) {
+
+            option.setReturnValue(autoJumpXIV);
         }
     }
 

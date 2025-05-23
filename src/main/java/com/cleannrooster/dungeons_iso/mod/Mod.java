@@ -12,6 +12,9 @@ public class Mod {
     public static double flyingYAddition;
 
     public static double z;
+    public static int cooldownIs;
+    public static int cooldownWas;
+
     public static float zoom = 5.0F;
     public static boolean enabled = false;
     public static Perspective lastPerspective;

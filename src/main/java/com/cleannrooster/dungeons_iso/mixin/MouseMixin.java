@@ -1,6 +1,7 @@
 package com.cleannrooster.dungeons_iso.mixin;
 
 import com.cleannrooster.dungeons_iso.api.CameraAccessor;
+import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
 import com.cleannrooster.dungeons_iso.api.RaycastContextCull;
 import com.cleannrooster.dungeons_iso.api.CustomShapeTypes;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -10,13 +11,17 @@ import net.minecraft.client.Mouse;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.sound.ElytraSoundInstance;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.Window;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -138,6 +143,7 @@ public class MouseMixin {
         GameRenderer renderer = client.gameRenderer;
         Window window = client.getWindow();
         Mouse mouse = client.mouse;
+
         Camera camera = renderer.getCamera();
         float tickDelta = camera.getLastTickDelta();
         Entity cameraEntity = client.cameraEntity;
@@ -242,9 +248,8 @@ public class MouseMixin {
                         Vec3d vec3d = innerContext.getStart();
                         Vec3d vec3d2 = innerContext.getEnd();
                         VoxelShape voxelShape = innerContext.getBlockShape(blockState, client.player.getWorld(), pos);
+                        BlockHitResult firstResult = client.world.raycastBlock(vec3d, vec3d2, pos, voxelShape, blockState);
 
-
-                        BlockHitResult firstResult = voxelShape.raycast(vec3d, vec3d2, pos);
 
                         VoxelShape voxelShape2 = innerContext.getFluidShape(fluidState, client.player.getWorld(), pos);
                         BlockHitResult blockHitResult2 = voxelShape2.raycast(vec3d, vec3d2, pos);
@@ -281,7 +286,9 @@ public class MouseMixin {
 
                     }
 
-                        Mod.crosshairTarget = hitResult;
+
+
+                    Mod.crosshairTarget = hitResult;
 
                 }
 
@@ -289,6 +296,7 @@ public class MouseMixin {
 
         }
     }
+
     private static <T, C> T raycast(Vec3d start, Vec3d end, C context, BiFunction<C, BlockPos, T> blockHitFactory, Function<C, T> missFactory) {
         if (start.equals(end)) {
             return missFactory.apply(context);

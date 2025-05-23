@@ -8,6 +8,7 @@
   "dungeons_iso.binds.iso": "Snap to Axis",
   "dungeons_iso.binds.rotateClockwise": "Rotate Right",
   "dungeons_iso.binds.rotateCounterClockwise": "Rotate Left",
+  "dungeons_iso.binds.interact": "Interact",
 
   "dungeons_iso.config.title": "Dungeons Perspective",
   "dungeons_iso.config.category.options": "Options",
@@ -34,6 +35,8 @@
   "dungeons_iso.config.fov.name": "Default FOV",
   "dungeons_iso.config.fov.description":"FOV that the game starts in.",
   "dungeons_iso.config.force_no_defer.name": "Force never deferring chunks",
-  "dungeons_iso.config.force_no_defer.description":"Might help to turn off if you are experiencing lag. Turn Always Chunk Deferring on in Sodium as well if you turn this off."
+  "dungeons_iso.config.force_no_defer.description":"Might help to turn off if you are experiencing lag. Turn Always Chunk Deferring on in Sodium as well if you turn this off.",
+  "dungeons_iso.config.click_to_move.name": "Click To Move",
+  "dungeons_iso.config.click_to_move.description":"Turn on to experience the mod in Click To Move mode."
 
 }

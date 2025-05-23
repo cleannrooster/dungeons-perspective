@@ -19,11 +19,15 @@ public class Config {
     @SerialEntry
     public boolean dynamicCamera = false;
     @SerialEntry
-    public boolean forceNoDefer = true;
+    public boolean forceNoDefer =  false;
     @SerialEntry
 
     public float moveFactor = 2.0F;
     @SerialEntry
     public float fov = 70.0F;
+
+    @SerialEntry
+
+    public boolean clickToMove = false;
 
 }

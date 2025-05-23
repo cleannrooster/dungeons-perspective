@@ -68,6 +68,18 @@ public class GenericBlockCuller implements BlockCuller {
             return false;
         }
     }
+
+    @Override
+    public boolean shouldIgnoreBlockPick(BlockPos blockPos, Camera camera, Entity cameraEntity) {
+        if(!(isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) && blockPos != null && blockPos.toCenterPos().distanceTo(cameraEntity.getPos()) < 10
+                && blockPos.toCenterPos().getY() > cameraEntity.getY()+1){
+            if(new Vec3d(0,1,0).dotProduct(blockPos.toCenterPos().subtract(cameraEntity.getPos()).normalize())>0.5F) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     List<Class<? extends Block>> ignoredTypes = List.of(WallMountedBlock.class);
     public boolean isIgnoredType(Block block){
         for(Class<? extends Block> ignoredType : ignoredTypes){

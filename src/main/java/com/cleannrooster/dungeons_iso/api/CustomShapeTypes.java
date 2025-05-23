@@ -16,6 +16,9 @@ public enum CustomShapeTypes implements RaycastContext.ShapeProvider {
             if(culler.shouldCull(pos,MinecraftClient.getInstance().gameRenderer.getCamera(),MinecraftClient.getInstance().cameraEntity)){
                 return VoxelShapes.empty();
             }
+            if(culler.shouldIgnoreBlockPick(pos,MinecraftClient.getInstance().gameRenderer.getCamera(),MinecraftClient.getInstance().cameraEntity)){
+                return VoxelShapes.empty();
+            }
         }
 
             return  state.getCameraCollisionShape(world,pos,context);
@@ -26,6 +29,7 @@ public enum CustomShapeTypes implements RaycastContext.ShapeProvider {
             if(culler.shouldCull(pos,MinecraftClient.getInstance().gameRenderer.getCamera(),MinecraftClient.getInstance().cameraEntity)){
                 return VoxelShapes.empty();
             }
+
         }
         if(pos.getY() > MinecraftClient.getInstance().cameraEntity.getY()){
             return VoxelShapes.empty();

@@ -19,7 +19,9 @@ public interface BlockCuller {
         return getCulledBlocks().contains(pos);
     }
      boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity);
-     boolean isIgnoredType(Block block);
+    boolean shouldIgnoreBlockPick(BlockPos blockPos, Camera camera, Entity cameraEntity);
+
+    boolean isIgnoredType(Block block);
      float blockTransparancy(BlockPos pos);
     public  class TransparentBlock {
         public TransparentBlock(BlockPos pos, float transparency){
