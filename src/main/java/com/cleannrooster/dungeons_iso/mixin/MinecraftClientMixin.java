@@ -5,6 +5,7 @@ import com.cleannrooster.dungeons_iso.api.WorldRendererAccessor;
 import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.config.Config;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.screen.Screen;
@@ -36,6 +37,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
+import net.minecraft.world.event.BlockPositionSource;
 import net.minecraft.world.gen.chunk.DebugChunkGenerator;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -200,13 +202,15 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                         if (Mod.prevCrosshairTarget == null) {
                             Mod.prevCrosshairTarget = Mod.crosshairTarget;
                         }
-                        if (!player.isFallFlying()) {
+                        if (!Mod.crosshairTarget.getType().equals(HitResult.Type.ENTITY)) {
+                            Mod.prevCrosshairTarget = Mod.crosshairTarget;
+
+                        }
 
                             client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, new Vec3d(
                                     MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getX(), Mod.crosshairTarget.getPos().getX()),
                                     MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getY(), Mod.crosshairTarget.getPos().getY()),
                                     MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getZ(), Mod.crosshairTarget.getPos().getZ())));
-                        }
                     }
 
 
@@ -368,6 +372,10 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                     if( mouseCooldown >= 40 || mouseCooldown <= 0){
                         if (Mod.prevCrosshairTarget == null) {
                             Mod.prevCrosshairTarget = Mod.crosshairTarget;
+                        }
+                        if (!Mod.crosshairTarget.getType().equals(HitResult.Type.ENTITY)) {
+                            Mod.prevCrosshairTarget = Mod.crosshairTarget;
+
                         }
                         if (!player.isFallFlying()) {
 

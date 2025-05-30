@@ -3,6 +3,7 @@ package com.cleannrooster.dungeons_iso.compat;
 import com.cleannrooster.dungeons_iso.api.BlockCuller;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
 import com.cleannrooster.dungeons_iso.api.WorldRendererAccessor;
+import com.cleannrooster.dungeons_iso.api.cullers.DirectionalBlockCuller;
 import com.cleannrooster.dungeons_iso.api.cullers.GenericBlockCuller;
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
@@ -27,7 +28,7 @@ public class SodiumCompat {
     public static LinkedHashMap<BlockPos,BlockCuller.TransparentBlock> transparentBlocks;
 
     static{
-        blockCullers.add(new GenericBlockCuller());
+        blockCullers.add(new DirectionalBlockCuller());
         transparentBlocks = new LinkedHashMap<>();
     }
 
