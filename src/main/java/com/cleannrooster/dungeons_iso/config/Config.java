@@ -13,6 +13,10 @@ public class Config {
                     .setPath(YACLPlatform.getConfigDir().resolve("dungeons_iso.json"))
                     .build())
             .build();
+    @SerialEntry
+    public boolean onStartup =  false;
+    @SerialEntry
+    public boolean force =  false;
 
     @SerialEntry
     public boolean scrollWheelZoom = true;
@@ -21,11 +25,17 @@ public class Config {
     @SerialEntry
     public boolean forceNoDefer =  false;
     @SerialEntry
-
-    public float moveFactor = 2.0F;
+    public boolean turnToMouse =  true;
     @SerialEntry
-    public float fov = 70.0F;
+    public boolean forceAutoJump =  true;
 
+    @SerialEntry
+
+    public float moveFactor_v3 = 0.5F;
+    @SerialEntry
+    public float fov = 45.0F;
+    @SerialEntry
+    public float zoomFactor = 1F;
     @SerialEntry
 
     public boolean clickToMove = false;

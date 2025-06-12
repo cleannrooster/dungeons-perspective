@@ -1,32 +1,19 @@
 package com.cleannrooster.dungeons_iso.api.cullers;
 
 import com.cleannrooster.dungeons_iso.api.BlockCuller;
-import com.cleannrooster.dungeons_iso.api.CustomShapeTypes;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
-import com.cleannrooster.dungeons_iso.api.RaycastContextCull;
 import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import net.minecraft.block.DoorBlock;
 import net.minecraft.block.WallMountedBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.RaycastContext;
-import org.joml.Quaterniond;
-import org.joml.Quaternionf;
-import org.joml.Quaternionfc;
-import org.joml.Vector3d;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -34,9 +21,17 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class DirectionalBlockCuller implements BlockCuller {
+public class GenericBlockCuller2 implements BlockCuller {
     public  List<BlockPos> culledBlocks = new ArrayList<>(1000);
 
+    @Override
+    public boolean shouldForceCull() {
+        return false;
+    }
+    @Override
+    public boolean shouldForceNonCull() {
+        return true;
+    }
     @Override
     public boolean cullBlocks(  BlockPos blockPos, Camera camera, Entity cameraEntity) {
 
@@ -71,18 +66,24 @@ public class DirectionalBlockCuller implements BlockCuller {
         double angle = Math.acos(cosineTheta) * 57.29577951308232;
         return Double.isNaN(angle) ? 0.0 : angle;
     }
-    public boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity){
-        if(((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild()) {
 
-        var vec1 = (camera.getPos().subtract(blockPos.toCenterPos())) ;
-        var vec2 = camera.getPos().subtract(cameraEntity.getEyePos());
+    public boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity){
+        if( camera != null && cameraEntity != null) {
+
+        var vec1 = (blockPos.toCenterPos().subtract(camera.getPos())) ;
+        var vec2 = cameraEntity.getPos().subtract(camera.getPos());
+        var vec3 = blockPos.toCenterPos().subtract(cameraEntity.getPos());
+
         if(cameraEntity instanceof PlayerEntity player){
 
             vec1 = vec1.add(player.getMovement().normalize().multiply(2));
         }
-        var calc_theta =angleBetween(vec1, vec2)  ;
+        var calc_theta =angleBetween(vec2, vec1)  ;
+        var calc_phi =angleBetween(vec3, new Vec3d(0,1,0))  ;
+        var calc =angleBetween(vec3, vec1)  ;
 
-        if(!isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock()) && blockPos.getY() > cameraEntity.getPos().getY() + 1 && (calc_theta < 60*Math.pow(0.9,Mod.zoom) || camera.getPos().distanceTo(blockPos.toCenterPos()) < 5)){
+        if(!isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock()) && blockPos.toCenterPos().getY() > cameraEntity.getPos().getY() + 1 &&
+                ( (calc_theta < 90*Math.pow(0.9,Mod.zoom)   )|| camera.getPos().distanceTo(blockPos.toCenterPos()) < 5)){
             return true;
         }
         else {
@@ -165,7 +166,7 @@ public class DirectionalBlockCuller implements BlockCuller {
         return false;
     }
 
-    List<Class<? extends Block>> ignoredTypes = List.of(WallMountedBlock.class);
+    List<Class<? extends Block>> ignoredTypes = List.of(WallMountedBlock.class, DoorBlock.class);
     public boolean isIgnoredType(Block block){
         for(Class<? extends Block> ignoredType : ignoredTypes){
             if(ignoredType.isInstance(block)){

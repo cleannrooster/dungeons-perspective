@@ -13,11 +13,14 @@ public enum CustomShapeTypes implements RaycastContext.ShapeProvider {
 
     CULLED((state, world, pos, context) -> {
         for(BlockCuller culler : SodiumCompat.blockCullers){
-            if(culler.shouldCull(pos,MinecraftClient.getInstance().gameRenderer.getCamera(),MinecraftClient.getInstance().cameraEntity)){
-                return VoxelShapes.empty();
-            }
-            if(culler.shouldIgnoreBlockPick(pos,MinecraftClient.getInstance().gameRenderer.getCamera(),MinecraftClient.getInstance().cameraEntity)){
-                return VoxelShapes.empty();
+            if(MinecraftClient.getInstance().gameRenderer.getCamera() != null && MinecraftClient.getInstance().cameraEntity != null)
+            {
+                if (culler.shouldCull(pos, MinecraftClient.getInstance().gameRenderer.getCamera(), MinecraftClient.getInstance().cameraEntity)) {
+                    return VoxelShapes.empty();
+                }
+                if (culler.shouldIgnoreBlockPick(pos, MinecraftClient.getInstance().gameRenderer.getCamera(), MinecraftClient.getInstance().cameraEntity)) {
+                    return VoxelShapes.empty();
+                }
             }
         }
 
@@ -26,8 +29,10 @@ public enum CustomShapeTypes implements RaycastContext.ShapeProvider {
     }),
     AIR_AT_LEVEL((state, world, pos, context) -> {
         for(BlockCuller culler : SodiumCompat.blockCullers){
-            if(culler.shouldCull(pos,MinecraftClient.getInstance().gameRenderer.getCamera(),MinecraftClient.getInstance().cameraEntity)){
-                return VoxelShapes.empty();
+            if(MinecraftClient.getInstance().gameRenderer.getCamera() != null && MinecraftClient.getInstance().cameraEntity != null) {
+                if (culler.shouldCull(pos, MinecraftClient.getInstance().gameRenderer.getCamera(), MinecraftClient.getInstance().cameraEntity)) {
+                    return VoxelShapes.empty();
+                }
             }
 
         }

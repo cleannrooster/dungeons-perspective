@@ -1,11 +1,11 @@
 package com.cleannrooster.dungeons_iso.mixin;
 
-import com.cleannrooster.dungeons_iso.api.CameraAccessor;
-import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
-import com.cleannrooster.dungeons_iso.api.RaycastContextCull;
-import com.cleannrooster.dungeons_iso.api.CustomShapeTypes;
+import com.cleannrooster.dungeons_iso.api.*;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.DoorBlock;
+import net.minecraft.block.TrapdoorBlock;
+import net.minecraft.block.WallMountedBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.option.KeyBinding;
@@ -48,9 +48,12 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 @Mixin(Mouse.class)
-public class MouseMixin {
+public class MouseMixin implements MouseAccessor {
     @Shadow
     private boolean cursorLocked;
+    @Shadow
+    private boolean rightButtonClicked;
+
     @Shadow
     @Final
     private MinecraftClient client;
@@ -71,11 +74,7 @@ public class MouseMixin {
     @Nullable
     private Double lastY;
 
-    /**
-     * It doesn't make sense to "lock" the cursor of an absolute pointing device.
-     *
-     * @author quaternary
-     */
+
     @Inject(
             method = "lockCursor",
             at = @At(value = "HEAD"),
@@ -267,9 +266,10 @@ public class MouseMixin {
                     );
                     BlockHitResult scanDown = client.player.getWorld().raycast(
                             new RaycastContext(
-                                    hitResult0.getPos().add(scanUp.getPos().subtract(hitResult0.getPos()).multiply(0.95F)),hitResult0.getPos(), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE,client.player)
+                                    scanUp.getPos(),end, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE,client.player)
 
                     );
+
                     if(Mod.crosshairTarget == null){
                         Mod.crosshairTarget = client.crosshairTarget;
                     }
@@ -281,9 +281,16 @@ public class MouseMixin {
                             entity -> !entity.isSpectator() && entity.canHit(),
                             renderer.getFarPlaneDistance()*2
                     ,0.5F);
-                    if (hitResult == null) {
-                        hitResult = scanDown;
+                    if (!(hitResult instanceof EntityHitResult result && result.getType().equals(HitResult.Type.ENTITY))) {
 
+                            hitResult = scanDown;
+
+                        if(cameraEntity instanceof PlayerEntity player && hitResult.getPos().distanceTo(cameraEntity.getEyePos()) > player.getBlockInteractionRange() && cameraEntity.getWorld().getBlockEntity(BlockPos.ofFloored(hitResult.getPos())) == null
+                    && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof WallMountedBlock)
+                                && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof DoorBlock)
+                                && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof TrapdoorBlock)) {
+                            hitResult = new BlockHitResult(new Vec3d(scanDown.getPos().getX(), cameraEntity.getEyeY(), scanDown.getPos().getZ()), scanDown.getSide(),BlockPos.ofFloored(scanDown.getPos().getX(), cameraEntity.getEyeY(), scanDown.getPos().getZ()),false);
+                        }
                     }
 
 
@@ -405,9 +412,9 @@ public class MouseMixin {
             }
             lockontime = Math.min(160,lockontime);
             return new EntityHitResult(entity2, ClientInit.lockOn.isPressed() ? vec3d : new Vec3d(
-                    MathHelper.lerp((double)lockontime/160D,Mod.crosshairTarget.getPos().getX(),entity2.getX()),
-                    MathHelper.lerp((double)lockontime/160D,Mod.crosshairTarget.getPos().getY(),entity2.getEyeY()),
-                    MathHelper.lerp((double)lockontime/160D,Mod.crosshairTarget.getPos().getZ(),entity2.getZ())));
+                    MathHelper.lerp((double)lockontime/160D,entity2.getBoundingBox().getCenter().getX(),entity2.getX()),
+                    MathHelper.lerp((double)lockontime/160D,entity2.getBoundingBox().getCenter().getY(), Math.min(entity2.getY() + entity2.getHeight(), entity2.getY() + entity2.getHeight()/2 + 0.1*entity2.getHeight()*Math.log(Math.max(1,entity.distanceTo(entity2))))),
+                    MathHelper.lerp((double)lockontime/160D,entity2.getBoundingBox().getCenter().getZ(),entity2.getZ())));
         }
     }
     @Inject(
@@ -434,8 +441,7 @@ public class MouseMixin {
             if (Mod.enabled && Config.GSON.instance().scrollWheelZoom ) {
 
 
-                Mod.zoom = (Math.clamp(Mod.zoom - (float) scrollAmount * 0.2f,0,5.0F));
-
+                Mod.zoom = (Math.clamp(Mod.zoom - (float) scrollAmount * 0.2f,0.5F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F),5.0F));
 
             } else {
 
@@ -446,4 +452,9 @@ public class MouseMixin {
 
 
         }
+
+    @Override
+    public void setRightClick(boolean bool) {
+        rightButtonClicked = bool;
+    }
 }

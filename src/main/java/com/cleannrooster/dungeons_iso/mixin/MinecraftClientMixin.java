@@ -1,17 +1,18 @@
 package com.cleannrooster.dungeons_iso.mixin;
 
-import com.cleannrooster.dungeons_iso.api.ChunkDataAccessor;
-import com.cleannrooster.dungeons_iso.api.WorldRendererAccessor;
+import com.cleannrooster.dungeons_iso.api.*;
 import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.config.Config;
+import com.google.common.collect.Lists;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.block.Block;
+import net.minecraft.block.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.option.GameOptions;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
@@ -20,22 +21,24 @@ import net.minecraft.client.util.Window;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
+import net.minecraft.entity.ai.control.LookControl;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BowItem;
-import net.minecraft.item.CrossbowItem;
-import net.minecraft.item.ProjectileItem;
-import net.minecraft.item.ThrowablePotionItem;
+import net.minecraft.fluid.FluidState;
+import net.minecraft.item.*;
 import net.minecraft.server.command.DebugCommand;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.*;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.event.BlockPositionSource;
 import net.minecraft.world.gen.chunk.DebugChunkGenerator;
@@ -51,8 +54,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.cleannrooster.dungeons_iso.ClientInit;
 import com.cleannrooster.dungeons_iso.compat.SpellEngineCompat;
 import com.cleannrooster.dungeons_iso.mod.Mod;
-import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
 import com.cleannrooster.dungeons_iso.util.Util;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
+import static com.cleannrooster.dungeons_iso.mod.Mod.isInteractable;
 
 @Mixin(MinecraftClient.class)
 public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
@@ -62,10 +73,11 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 @Shadow
     private int itemUseCooldown;
     private Vec3d originalLocation;
+    private boolean hasClicked;
 
     @Override
     public boolean shouldRebuild() {
-        return shouldRebuild;
+        return Mod.shouldReload || Mod.endTime > 0;
     }
 
     @Shadow
@@ -129,23 +141,82 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                     }
                 }
             }
-        if (Mod.enabled && client.cameraEntity != null && client.player != null) {
-            HitResult hitResultOrigin = client.cameraEntity.getWorld().raycast(new RaycastContext(
-                    client.player.getEyePos(),
-                    client.gameRenderer.getCamera().getPos(),
-                    RaycastContext.ShapeType.VISUAL,
-                    RaycastContext.FluidHandling.NONE,
-                    client.cameraEntity
-            ));
-            if(client.mouse.wasRightButtonClicked() && Config.GSON.instance().clickToMove) {
-                ((MinecraftClientAccessor) client).setLocation(Mod.crosshairTarget);
-                ((MinecraftClientAccessor) client).setOriginalLocation(client.player.getPos());
-            }
+        if (Mod.enabled && client.cameraEntity != null && client.player != null ) {
 
-            this.shouldRebuild = hitResultOrigin.getType().equals(HitResult.Type.BLOCK);
-            if(FabricLoader.getInstance().isModLoaded("sodium")){
-                SodiumCompat.run();
+            double x = ((Mod.crosshairTarget != null ? Mod.crosshairTarget.getPos().subtract(client.cameraEntity.getPos()).getX():0));
+            double y = ((Mod.crosshairTarget != null ? Mod.crosshairTarget.getPos().subtract(client.cameraEntity.getPos()).getZ():0));
+            if((Mod.crosshairTarget != null && Mod.crosshairTarget.getPos().distanceTo(client.cameraEntity.getPos()) > client.player.getBlockInteractionRange()) ||
+                    (Mod.crosshairTarget != null && Mod.crosshairTarget.getPos().distanceTo(client.cameraEntity.getPos()) > client.player.getEntityInteractionRange())) {
+
+                Mod.x += MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta() * 0.10 * Mod.zoom * 1.5 * new Vec3d(x, 0, y).normalize().x;
+                Mod.z += MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta() * 0.10 * Mod.zoom * 1.5 * new Vec3d(x, 0, y).normalize().z;
             }
+            if(Mod.crosshairTarget != null) {
+                Mod.x = Math.clamp(Mod.x, -Math.abs(new Vec3d(Mod.x, 0, Mod.z).normalize().getX()) * Mod.crosshairTarget.getPos().subtract(client.cameraEntity.getPos()).horizontalLength(), Math.abs(new Vec3d(Mod.x, 0, Mod.z).normalize().getX()) * Mod.crosshairTarget.getPos().subtract(client.cameraEntity.getPos()).horizontalLength());
+                Mod.z = Math.clamp(Mod.z, -Math.abs(new Vec3d(Mod.x, 0, Mod.z).normalize().getZ()) * Mod.crosshairTarget.getPos().subtract(client.cameraEntity.getPos()).horizontalLength(), Math.abs(new Vec3d(Mod.x, 0, Mod.z).normalize().getZ()) * Mod.crosshairTarget.getPos().subtract(client.cameraEntity.getPos()).horizontalLength());
+
+            }
+            Mod.x = Math.clamp(Mod.x,-Math.abs(new Vec3d(Mod.x,0,Mod.z).normalize().getX())*Mod.zoom*1.5,Math.abs(new Vec3d(Mod.x,0,Mod.z).normalize().getX())*Mod.zoom*1.5);
+            Mod.z = Math.clamp(Mod.z,-Math.abs(new Vec3d(Mod.x,0,Mod.z).normalize().getZ())*Mod.zoom*1.5,Math.abs(new Vec3d(Mod.x,0,Mod.z).normalize().getZ())*Mod.zoom*1.5);
+
+                    SodiumCompat.run();
+
+
+
+            if(  ClientInit.clickToMove.isPressed() && Config.GSON.instance().clickToMove) {
+
+                if (  (Mod.crosshairTarget instanceof BlockHitResult hit &&  isInteractable(hit))){
+                    Hand[] var1 = Hand.values();
+                    for (Hand hand : var1) {
+                        var interact = client.interactionManager.interactBlock(player, hand, hit);
+                        if (interact.isAccepted()) {
+
+                            ((MinecraftClientAccessor) client).setLocation(null);
+                            ((MinecraftClientAccessor) client).setOriginalLocation(null);
+                            if (interact.shouldSwingHand()) {
+                                itemUseCooldown = 4;
+
+                                this.player.swingHand(hand);
+                                return;
+
+                            }
+                        }
+                    }
+
+                }
+                else if (   (Mod.crosshairTarget instanceof EntityHitResult hit && hit.getPos().distanceTo(player.getEyePos()) <= player.getEntityInteractionRange()/2) ){
+                    Hand[] var1 = Hand.values();
+                    for (Hand hand : var1) {
+                        var interact = client.interactionManager.interactEntity(player, hit.getEntity(), hand);
+
+                        if (interact.isAccepted()) {
+
+                            ((MinecraftClientAccessor) client).setLocation(null);
+                            ((MinecraftClientAccessor) client).setOriginalLocation(null);
+                            if (interact.shouldSwingHand()) {
+                                itemUseCooldown = 4;
+
+                                this.player.swingHand(hand);
+                                return;
+
+                            }
+                        }
+                    }
+                    Mod.using = true;
+
+                }
+                else
+                if(  Mod.crosshairTarget != null && !(Mod.crosshairTarget instanceof BlockHitResult hit &&  isInteractable(hit))) {
+
+                    ((MinecraftClientAccessor) client).setLocation(Mod.crosshairTarget);
+                    ((MinecraftClientAccessor) client).setOriginalLocation(client.player.getPos());
+                }
+
+                return;
+            }
+            Mod.using = false;
+
+
             boolean bool = false;
             if(!player.isFallFlying() && this.location != null && Config.GSON.instance().clickToMove){
                 Vec3d vec3d2 = new Vec3d((double)this.player.sidewaysSpeed, (double)this.player.upwardSpeed, (double)this.player.forwardSpeed);
@@ -167,20 +238,27 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
             }
             if(this.options.attackKey.isPressed()){
-                mouseCooldown =  40+(int)(0.4F*20F/client.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED));
+                mouseCooldown =  40+(int)(0.2F*20F/client.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED));
             }
-            if (client.player.getMainHandStack().getItem() instanceof ProjectileItem || client.player.getMainHandStack().getItem() instanceof BowItem || client.player.getMainHandStack().getItem() instanceof CrossbowItem || client.player.isUsingItem() || ( this.options.useKey.isPressed()) || spell ) {
+            if (client.player.getMainHandStack().getItem() instanceof RangedWeaponItem ||
+                    client.player.getMainHandStack().getItem() instanceof ProjectileItem ||
+                    client.player.getMainHandStack().getItem() instanceof BowItem ||
+                    client.player.getMainHandStack().getItem() instanceof CrossbowItem ||
+                    client.player.isUsingItem() ||
+                    ( this.options.useKey.isPressed()) ||
+                    spell
+            ){
                 mouseCooldown = 40;
                 bool = true;
             }
-            if (      !player.isFallFlying() && (
+            if ( (!Config.GSON.instance().turnToMouse &&     !player.isFallFlying()) && (
                     !bool && (mouseCooldown <= 0 && client.player.input.getMovementInput().length() > 0.1))) {
                 if (client.player.getVehicle() != null) {
                     Vec3d vec3d = movementInputToVelocity(new Vec3d(client.player.input.movementSideways, 0, client.player.input.movementForward), 1.0F, client.player.getVehicle().getYaw());
-                    client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(vec3d.normalize()));
+                    lookAt(client.player,EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(vec3d.normalize()),true);
                 } else {
-                    client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(client.player.getMovement().subtract(
-                            0, client.player.getMovement().getY(), 0).normalize()));
+                    lookAt(client.player,EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(client.player.getMovement().subtract(
+                            0, client.player.getMovement().getY(), 0).normalize()),true);
 
                 }
                 Mod.prevCrosshairTarget = client.crosshairTarget;
@@ -202,12 +280,11 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                         if (Mod.prevCrosshairTarget == null) {
                             Mod.prevCrosshairTarget = Mod.crosshairTarget;
                         }
-                        if (!Mod.crosshairTarget.getType().equals(HitResult.Type.ENTITY)) {
                             Mod.prevCrosshairTarget = Mod.crosshairTarget;
 
-                        }
 
-                            client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, new Vec3d(
+
+                            lookAt(client.player,EntityAnchorArgumentType.EntityAnchor.EYES, new Vec3d(
                                     MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getX(), Mod.crosshairTarget.getPos().getX()),
                                     MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getY(), Mod.crosshairTarget.getPos().getY()),
                                     MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getZ(), Mod.crosshairTarget.getPos().getZ())));
@@ -240,10 +317,88 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
             Mod.crosshairTarget = null;
             Mod.prevCrosshairTarget = null;
-
         }
     }
+    private  void lookAt(LivingEntity living, EntityAnchorArgumentType.EntityAnchor anchorPoint, Vec3d target) {
+        lookAt(living,anchorPoint,target,false);
+    }
 
+
+    private  void lookAt(LivingEntity living, EntityAnchorArgumentType.EntityAnchor anchorPoint, Vec3d target, boolean bool) {
+        Vec3d vec3d = anchorPoint.positionAt(living);
+        double d = target.x - vec3d.x;
+        double e = target.y - vec3d.y;
+        double f = target.z - vec3d.z;
+        double g = Math.sqrt(d * d + f * f);
+        living.setPitch(MathHelper.wrapDegrees((float)(-(MathHelper.atan2(e, g) * 57.2957763671875))));
+        living.setHeadYaw(MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F));
+        living.prevHeadYaw = living.headYaw;
+        living.setYaw(mouseCooldown  >= 40 || bool || Config.GSON.instance().turnToMouse ? living.headYaw : MathHelper.clampAngle(living.getYaw(), living.headYaw, (float) 70));
+        living.prevYaw = (living.getYaw());
+        living.bodyYaw = (living.getYaw());
+        living.prevBodyYaw = (living.bodyYaw);
+    }
+    private static <T, C> T raycast(Vec3d start, Vec3d end, C context, BiFunction<C, BlockPos, T> blockHitFactory, Function<C, T> missFactory) {
+        if (start.equals(end)) {
+            return missFactory.apply(context);
+        } else {
+            double d = MathHelper.lerp(-1.0E-7, end.x, start.x);
+            double e = MathHelper.lerp(-1.0E-7, end.y, start.y);
+            double f = MathHelper.lerp(-1.0E-7, end.z, start.z);
+            double g = MathHelper.lerp(-1.0E-7, start.x, end.x);
+            double h = MathHelper.lerp(-1.0E-7, start.y, end.y);
+            double i = MathHelper.lerp(-1.0E-7, start.z, end.z);
+            int j = MathHelper.floor(g);
+            int k = MathHelper.floor(h);
+            int l = MathHelper.floor(i);
+            BlockPos.Mutable mutable = new BlockPos.Mutable(j, k, l);
+            T object = blockHitFactory.apply(context, mutable);
+            if (object != null) {
+                return object;
+            } else {
+                double m = d - g;
+                double n = e - h;
+                double o = f - i;
+                int p = MathHelper.sign(m);
+                int q = MathHelper.sign(n);
+                int r = MathHelper.sign(o);
+                double s = p == 0 ? Double.MAX_VALUE : (double)p / m;
+                double t = q == 0 ? Double.MAX_VALUE : (double)q / n;
+                double u = r == 0 ? Double.MAX_VALUE : (double)r / o;
+                double v = s * (p > 0 ? 1.0 - MathHelper.fractionalPart(g) : MathHelper.fractionalPart(g));
+                double w = t * (q > 0 ? 1.0 - MathHelper.fractionalPart(h) : MathHelper.fractionalPart(h));
+                double x = u * (r > 0 ? 1.0 - MathHelper.fractionalPart(i) : MathHelper.fractionalPart(i));
+
+                Object object2;
+                do {
+                    if (!(v <= 1.0) && !(w <= 1.0) && !(x <= 1.0)) {
+                        return missFactory.apply(context);
+                    }
+
+                    if (v < w) {
+                        if (v < x) {
+                            j += p;
+                            v += s;
+                        } else {
+                            l += r;
+                            x += u;
+                        }
+                    } else if (w < x) {
+                        k += q;
+                        w += t;
+                    } else {
+                        l += r;
+                        x += u;
+                    }
+
+                    object2 = blockHitFactory.apply(context, mutable.set(j, k, l));
+                } while(object2 == null);
+
+                return (T) object2;
+            }
+        }
+    }
+    public boolean first = false;
 
     @Inject(method = "tick", at = @At("TAIL"))
     public void tickXIV(CallbackInfo ci) {
@@ -262,10 +417,10 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
             }});
         }
 
-        if (ClientInit.toggleBinding.wasPressed() || (
+        if (Config.GSON.instance().force || (Config.GSON.instance().onStartup && !first) ||ClientInit.toggleBinding.wasPressed() || (
                 this.options.togglePerspectiveKey.isPressed() && Mod.enabled
         )) {
-            if (Mod.enabled) {
+            if (!Config.GSON.instance().force && Mod.enabled) {
                 Mod.enabled = false;
 
                 options.setPerspective(Mod.lastPerspective);
@@ -274,39 +429,41 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                     InputUtil.setCursorParameters(client.getWindow().getHandle(), GLFW.GLFW_CURSOR_DISABLED,client.mouse.getX(), client.mouse.getY());
 
                 }
+                client.mouse.lockCursor();
 
-            } else {
-                Mod.enabled = true;
+            } else
+                if(!Mod.enabled && client.world != null && client.player != null) {
+                    if (Config.GSON.instance().onStartup) {
+                        first = true;
+                    }
+                    Mod.enabled = true;
 
-                Mod.lastPerspective = this.options.getPerspective();
-                this.options.setPerspective(Perspective.THIRD_PERSON_BACK);
-                if (Mod.lastPerspective == Perspective.THIRD_PERSON_FRONT) {
-                    Mod.yaw = ((180 + this.player.getYaw() + 180) % 360) - 180;
-                    Mod.pitch = -this.player.getPitch();
-                } else {
-                    Mod.yaw = this.player.getYaw();
-                    Mod.pitch = this.player.getPitch();
+                    Mod.lastPerspective = this.options.getPerspective();
+                    this.options.setPerspective(Perspective.THIRD_PERSON_BACK);
+                    if (Mod.lastPerspective == Perspective.THIRD_PERSON_FRONT) {
+                        Mod.yaw = ((180 + this.player.getYaw() + 180) % 360) - 180;
+                        Mod.pitch = -this.player.getPitch();
+                    } else {
+                        Mod.yaw = this.player.getYaw();
+                        Mod.pitch = this.player.getPitch();
+                    }
+                    Util.debug("Enabled Minecraft XIV");
+                    client.mouse.lockCursor();
+
+                    InputUtil.setCursorParameters(client.getWindow().getHandle(), GLFW.GLFW_CURSOR_NORMAL, client.mouse.getX(), client.mouse.getY());
                 }
-                Util.debug("Enabled Minecraft XIV");
 
-                InputUtil.setCursorParameters(client.getWindow().getHandle(), GLFW.GLFW_CURSOR_NORMAL, client.mouse.getX(), client.mouse.getY());
-            }
-
-
-
-            // Re-lock the cursor so it correctly changes state
-            client.mouse.lockCursor();
         }
 
         if (ClientInit.zoomInBinding.wasPressed()) {
             if (Mod.enabled) {
-                Mod.zoom = Math.max(Mod.zoom - 0.2f, 0.0f);
+                Mod.zoom = Math.clamp(Mod.zoom - 0.2f, 0.5F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F),8);
             }
         }
 
         if (ClientInit.zoomOutBinding.wasPressed()) {
             if (Mod.enabled) {
-                Mod.zoom = Math.min(Mod.zoom + 0.2f, 5.0f);
+                Mod.zoom = Math.clamp(Mod.zoom + 0.2f,0.5F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F), 8.0F);
             }
         }
 
@@ -322,13 +479,13 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
         if(client.player != null && Mod.enabled) {
             if (this.options.attackKey.isPressed()) {
-                mouseCooldown = 40 + (int) (0.4*20F / client.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED));
+                mouseCooldown = 40 + (int) (0.2*20F / client.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED));
             }
             if (client.player.isUsingItem() || (this.options.useKey.isPressed()) || spell) {
                 mouseCooldown = 40;
                 bool = true;
             }
-            if((originalLocation != null && location != null && this.player.squaredDistanceTo(originalLocation) >= this.originalLocation.squaredDistanceTo(location.getPos())-0.5) || this.player.input.pressingBack ||
+            if((originalLocation != null && location != null && !(this.location instanceof EntityHitResult entityHitResult) && this.player.squaredDistanceTo(originalLocation) >= this.originalLocation.squaredDistanceTo(location.getPos())-0.5) || this.player.input.pressingBack ||
                     this.player.input.pressingRight ||
                     this.player.input.pressingLeft||
                     this.player.input.pressingForward){
@@ -344,14 +501,15 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
                 }
             }
-            if (      !player.isFallFlying() && (
+
+            if ( (!Config.GSON.instance().turnToMouse &&     !player.isFallFlying()) && (
                 !bool && (mouseCooldown <= 0 && client.player.input.getMovementInput().length() > 0.1))) {
                 if (client.player.getVehicle() != null) {
                     Vec3d vec3d = movementInputToVelocity(new Vec3d(client.player.input.movementSideways, 0, client.player.input.movementForward), 1.0F, client.player.getVehicle().getYaw());
-                    client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(vec3d.normalize()));
+                    lookAt(client.player,EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(vec3d.normalize()),true);
                 } else {
-                    client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(client.player.getMovement().subtract(
-                            0, client.player.getMovement().getY(), 0).normalize()));
+                    lookAt(client.player,EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(client.player.getMovement().subtract(
+                            0, client.player.getMovement().getY(), 0).normalize()),true);
 
                 }
                 lookingTime = client.world.getTime();
@@ -373,13 +531,12 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                         if (Mod.prevCrosshairTarget == null) {
                             Mod.prevCrosshairTarget = Mod.crosshairTarget;
                         }
-                        if (!Mod.crosshairTarget.getType().equals(HitResult.Type.ENTITY)) {
                             Mod.prevCrosshairTarget = Mod.crosshairTarget;
 
-                        }
+
                         if (!player.isFallFlying()) {
 
-                            client.player.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, new Vec3d(
+                            lookAt(client.player,EntityAnchorArgumentType.EntityAnchor.EYES, new Vec3d(
                                     MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getX(), Mod.crosshairTarget.getPos().getX()),
                                     MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getY(), Mod.crosshairTarget.getPos().getY()),
                                     MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getZ(), Mod.crosshairTarget.getPos().getZ())));
@@ -395,7 +552,17 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
         Mod.cooldownWas++;
         mouseCooldown--;
-
+        if(MinecraftClient.getInstance().world != null && MinecraftClient.getInstance().world.getTime()-Mod.dirtyTime > 20) {
+            Mod.dirty = false;
+        }
+        if(Mod.shouldReload){
+           Mod.endTime = 20;
+        }
+        else{
+            if(Mod.endTime >= 0) {
+                Mod.endTime--;
+            }
+        }
     }
 
     @Inject(method = "hasOutline", at = @At("HEAD"), cancellable = true)

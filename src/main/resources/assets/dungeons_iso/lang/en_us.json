@@ -37,6 +37,16 @@
   "dungeons_iso.config.force_no_defer.name": "Force never deferring chunks",
   "dungeons_iso.config.force_no_defer.description":"Might help to turn off if you are experiencing lag. Turn Always Chunk Deferring on in Sodium as well if you turn this off.",
   "dungeons_iso.config.click_to_move.name": "Click To Move",
-  "dungeons_iso.config.click_to_move.description":"Turn on to experience the mod in Click To Move mode."
+  "dungeons_iso.config.click_to_move.description":"Turn on to experience the mod in Click To Move mode.",
+  "dungeons_iso.config.turn_to_mouse.name": "Always Rotate Towards Mouse",
+  "dungeons_iso.config.turn_to_mouse.description":"Turn on always be rotated towards the mouse when not on a mount. Otherwise, you sometimes move towards your movement.",
+  "dungeons_iso.config.force.name": "Force Perspective",
+  "dungeons_iso.config.force.description":"Force the perspective to always be on.",
+  "dungeons_iso.config.onStartup.name": "Force on Startup",
+  "dungeons_iso.config.onStartup.description":"Turn the perspective on upon first loading into a world in your session.",
+  "dungeons_iso.config.forceAutoJump.name": "Force AutoJump in Click To Move",
+  "dungeons_iso.config.forceAutoJump.description":"Force AutoJump in Click To Move.",
+  "dungeons_iso.config.zoomFactor.name": "Zoom and FOV factor",
+  "dungeons_iso.config.zoomFactor.description":"Zoom and FOV factor"
 
 }

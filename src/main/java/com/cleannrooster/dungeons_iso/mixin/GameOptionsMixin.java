@@ -5,6 +5,7 @@ import com.cleannrooster.dungeons_iso.mod.Mod;
 import com.mojang.serialization.Codec;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.GameOptions;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.SimpleOption;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
@@ -23,6 +24,7 @@ public class GameOptionsMixin {
     private static SimpleOption<Boolean> bobbing;
 
     private static SimpleOption<Boolean> autoJumpXIV;
+
 
     private static Text getPercentValueTextCleann(Text prefix, double value) {
         return Text.translatable("options.percent_value", new Object[]{prefix, (int)(value * 100.0)});
@@ -51,14 +53,15 @@ public class GameOptionsMixin {
             }
             return var10000;
 
-        }, new SimpleOption.ValidatingIntSliderCallbacks(30, 110), Codec.DOUBLE.xmap((value) -> {
+        }, new SimpleOption.ValidatingIntSliderCallbacks(45, 90), Codec.DOUBLE.xmap((value) -> {
             return (int)(value * 40.0 + 70.0);
         }, (value) -> {
             return ((double)value - 70.0) / 40.0;
-        }), 70, (value) -> {
+        }), 45, (value) -> {
             MinecraftClient.getInstance().worldRenderer.scheduleTerrainUpdate();
         });
-        fov30.setValue((int) Config.GSON.instance().fov);
+
+        fov30.setValue(Math.clamp((int) 45,30,90));
         fovscale = new SimpleOption("options.fovEffectScale", SimpleOption.constantTooltip(Text.translatable("options.fovEffectScale.tooltip")), ((optionText, value) -> getPercentValueOrOffTextCleann(optionText,(double)value)), SimpleOption.DoubleSliderCallbacks.INSTANCE.withModifier(MathHelper::square, Math::sqrt), Codec.doubleRange(0.0, 1.0), 1.0, (value) -> {
         });
         fovscale.setValue(0D);
@@ -72,6 +75,7 @@ public class GameOptionsMixin {
     )
     public void getFovCleann(CallbackInfoReturnable<SimpleOption<Integer>> option) {
         if(Mod.enabled){
+            fov30.setValue((int) (90*(1-0.5*Mod.zoom/5)));
             option.setReturnValue(fov30);
         }
     }
@@ -104,7 +108,7 @@ public class GameOptionsMixin {
             cancellable = true
     )
     public void getAutoJumpCleann(CallbackInfoReturnable<SimpleOption<Boolean>> option) {
-        if(Mod.enabled && Config.GSON.instance().clickToMove) {
+        if(Mod.enabled && Config.GSON.instance().clickToMove && Config.GSON.instance().forceAutoJump) {
 
             option.setReturnValue(autoJumpXIV);
         }

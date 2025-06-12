@@ -28,6 +28,14 @@ public class GenericBlockCuller implements BlockCuller {
     public  List<BlockPos> culledBlocks = new ArrayList<>(1000);
 
     @Override
+    public boolean shouldForceCull() {
+        return false;
+    }
+    @Override
+    public boolean shouldForceNonCull() {
+        return true;
+    }
+    @Override
     public boolean cullBlocks(  BlockPos blockPos, Camera camera, Entity cameraEntity) {
 
         if( this.shouldCull(blockPos,camera,cameraEntity)){
@@ -58,7 +66,7 @@ public class GenericBlockCuller implements BlockCuller {
     }
 
     public boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity){
-        if(((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild()) {
+        if(  camera != null && cameraEntity != null) {
 
             if (!(isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) && blockPos != null && blockPos.toCenterPos().getY() > cameraEntity.getPos().getY() + 1 &&
                     (cameraEntity.getPos().subtract((blockPos.toCenterPos())).normalize()

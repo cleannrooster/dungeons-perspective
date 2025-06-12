@@ -20,6 +20,9 @@ public interface BlockCuller {
     }
      boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity);
     boolean shouldIgnoreBlockPick(BlockPos blockPos, Camera camera, Entity cameraEntity);
+    boolean shouldForceCull();
+    boolean shouldForceNonCull();
+
 
     boolean isIgnoredType(Block block);
      float blockTransparancy(BlockPos pos);

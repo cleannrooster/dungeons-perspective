@@ -2,6 +2,7 @@ package com.cleannrooster.dungeons_iso;
 
 
 import com.cleannrooster.dungeons_iso.config.Config;
+import com.cleannrooster.dungeons_iso.mod.Mod;
 import com.cleannrooster.dungeons_iso.network.Capabilities;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
@@ -9,6 +10,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -18,10 +20,18 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -36,6 +46,7 @@ public class ClientInit implements ClientModInitializer {
     public static KeyBinding toggleBinding;
     public static KeyBinding isoBinding;
     public static KeyBinding lockOn;
+    public static KeyBinding clickToMove;
 
     public static KeyBinding moveCameraBinding;
     public static KeyBinding zoomInBinding;
@@ -122,6 +133,13 @@ public class ClientInit implements ClientModInitializer {
                 GLFW.GLFW_KEY_H,
                 "dungeons_iso.binds.category"
         ));
+
+        KeyBindingHelper.registerKeyBinding(clickToMove = new KeyBinding(
+                "dungeons_iso.binds.clickToMove",
+                InputUtil.Type.MOUSE,
+                InputUtil.UNKNOWN_KEY.getCode(),
+                "dungeons_iso.binds.category"
+        ));
         KeyBindingHelper.registerKeyBinding(zoomInBinding = new KeyBinding(
                 "dungeons_iso.binds.zoomIn",
                 InputUtil.Type.MOUSE,
@@ -196,6 +214,26 @@ public class ClientInit implements ClientModInitializer {
                     ServerPlayNetworking.send(player, capabilities);
                 }
             }
+        });
+       /* WorldRenderEvents.BLOCK_OUTLINE.register(((worldRenderContext, blockOutlineContext) -> {
+            if(Mod.enabled && Mod.crosshairTarget  instanceof BlockHitResult && blockOutlineContext.blockPos().equals(((BlockHitResult) Mod.crosshairTarget).getBlockPos())){
+                drawCuboidShapeOutline(worldRenderContext.matrixStack(),worldRenderContext.consumers().getBuffer(RenderLayer.getSolid()), VoxelShapes.cuboid(new Box(blockOutlineContext.blockPos()).expand(0.7)), (double)blockOutlineContext.blockPos().getX() - worldRenderContext.camera().getPos().getX(), (double)blockOutlineContext.blockPos().getY() - worldRenderContext.camera().getPos().getY(), (double)blockOutlineContext.blockPos().getZ() - worldRenderContext.camera().getPos().getZ(), 0.0F, 0.0F, 0.0F, 0.4F);
+            }
+            return true;
+        }));*/
+    }
+    private static void drawCuboidShapeOutline(MatrixStack matrices, VertexConsumer vertexConsumer, VoxelShape shape, double offsetX, double offsetY, double offsetZ, float red, float green, float blue, float alpha) {
+        MatrixStack.Entry entry = matrices.peek();
+        shape.forEachEdge((minX, minY, minZ, maxX, maxY, maxZ) -> {
+            float k = (float)(maxX - minX);
+            float l = (float)(maxY - minY);
+            float m = (float)(maxZ - minZ);
+            float n = MathHelper.sqrt(k * k + l * l + m * m);
+            k /= n;
+            l /= n;
+            m /= n;
+            vertexConsumer.vertex(entry, (float)(minX + offsetX), (float)(minY + offsetY), (float)(minZ + offsetZ)).color(red, green, blue, alpha).normal(entry, k, l, m);
+            vertexConsumer.vertex(entry, (float)(maxX + offsetX), (float)(maxY + offsetY), (float)(maxZ + offsetZ)).color(red, green, blue, alpha).normal(entry, k, l, m);
         });
     }
 }

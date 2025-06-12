@@ -1,6 +1,7 @@
 package com.cleannrooster.dungeons_iso.mixin;
 
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
+import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -46,7 +47,7 @@ public abstract class AbstractHorseEntityMixin {
         AbstractHorseEntity entity = (AbstractHorseEntity)  (Object) this;
         if (Mod.enabled && controllingPlayer instanceof ClientPlayerEntity player) {
 
-            if (((MinecraftClientAccessor)MinecraftClient.getInstance()).getMouseCooldown() > 0 && player.getVehicle() != null && player.input.getMovementInput().length() > 0.1) {
+            if ((Config.GSON.instance().turnToMouse && player.input.getMovementInput().length() > 0.1) || ((MinecraftClientAccessor)MinecraftClient.getInstance()).getMouseCooldown() > 0 && player.getVehicle() != null && player.input.getMovementInput().length() > 0.1) {
                 float f = entity.sidewaysSpeed ;
                 float g = entity.forwardSpeed;
                 vec3dCallbackInfo.setReturnValue( new Vec3d(f, 0,g).normalize());
@@ -62,7 +63,7 @@ public abstract class AbstractHorseEntityMixin {
         AbstractHorseEntity entity = (AbstractHorseEntity)  (Object) this;
         if (Mod.enabled && controllingPassenger instanceof ClientPlayerEntity player) {
 
-            if (((MinecraftClientAccessor)MinecraftClient.getInstance()).getMouseCooldown() > 0 && player.getVehicle() != null && player.input.getMovementInput().length() > 0.1) {
+            if ((Config.GSON.instance().turnToMouse && player.input.getMovementInput().length() > 0.1) || ((MinecraftClientAccessor)MinecraftClient.getInstance()).getMouseCooldown() > 0 && player.getVehicle() != null && player.input.getMovementInput().length() > 0.1) {
                 Vec3d vec3d = player.getVelocity();
                 double d = vec3d.x;
                 double e = vec3d.y;

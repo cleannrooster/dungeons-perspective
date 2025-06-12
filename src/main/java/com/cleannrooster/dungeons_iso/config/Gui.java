@@ -50,6 +50,42 @@ public class Gui implements ModMenuApi {
                                     .name(Text.translatable("dungeons_iso.config.category.options"))
                                     .option(Option
                                             .<Boolean>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.force.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.force.description")))
+                                            .binding(
+                                                    defaults.force,
+                                                    () -> config.force,
+                                                    (value) -> config.force = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
+                                    .option(Option
+                                            .<Boolean>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.forceAutoJump.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.forceAutoJump.description")))
+                                            .binding(
+                                                    defaults.onStartup,
+                                                    () -> config.forceAutoJump,
+                                                    (value) -> config.forceAutoJump = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
+                                    .option(Option
+                                            .<Boolean>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.onStartup.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.onStartup.description")))
+                                            .binding(
+                                                    defaults.onStartup,
+                                                    () -> config.onStartup,
+                                                    (value) -> config.onStartup = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
+                                    .option(Option
+                                            .<Boolean>createBuilder()
                                             .name(Text.translatable("dungeons_iso.config.scrollWheelZoom.name"))
                                             .description(OptionDescription.of(Text.translatable(
                                                     "dungeons_iso.config.scrollWheelZoom.description")))
@@ -90,9 +126,9 @@ public class Gui implements ModMenuApi {
                                             .description(OptionDescription.of(Text.translatable(
                                                     "dungeons_iso.config.movefactor.description")))
                                             .binding(
-                                                    defaults.moveFactor,
-                                                    () -> config.moveFactor,
-                                                    (value) -> config.moveFactor = value
+                                                    defaults.moveFactor_v3,
+                                                    () -> config.moveFactor_v3,
+                                                    (value) -> config.moveFactor_v3 = value
                                             )
                                             .controller(FloatFieldControllerBuilder::create)
                                             .build())
@@ -109,14 +145,26 @@ public class Gui implements ModMenuApi {
                                             .controller(BooleanControllerBuilder::create)
                                             .build())
                                     .option(Option
-                                            .<Float>createBuilder()
-                                            .name(Text.translatable("dungeons_iso.config.fov.name"))
+                                            .<Boolean>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.turn_to_mouse.name"))
                                             .description(OptionDescription.of(Text.translatable(
-                                                    "dungeons_iso.config.fov.description")))
+                                                    "dungeons_iso.config.turn_to_mouse.description")))
                                             .binding(
-                                                    defaults.fov,
-                                                    () -> config.fov,
-                                                    (value) -> config.fov = value
+                                                    defaults.turnToMouse,
+                                                    () -> config.turnToMouse,
+                                                    (value) -> config.turnToMouse = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
+                                    .option(Option
+                                            .<Float>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.zoomFactor.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.zoomFactor.description")))
+                                            .binding(
+                                                    defaults.zoomFactor,
+                                                    () -> config.zoomFactor,
+                                                    (value) -> config.zoomFactor = value
                                             )
                                             .controller(FloatFieldControllerBuilder::create)
                                             .build())
