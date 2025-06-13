@@ -34,6 +34,7 @@ public class GenericCuller3 implements BlockCuller {
 
     @Override
     public boolean cullBlocks(  BlockPos blockPos, Camera camera, Entity cameraEntity) {
+        try {
 
         if( this.shouldCull(blockPos,camera,cameraEntity)){
             if(culledBlocks.size() < 1000) {
@@ -55,6 +56,11 @@ public class GenericCuller3 implements BlockCuller {
         else{
             return false;
         }
+        }
+        catch (Exception ignored){
+
+        }
+        return false;
     }
 
     @Override

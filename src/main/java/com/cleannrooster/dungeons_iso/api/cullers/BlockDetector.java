@@ -66,32 +66,36 @@ public class BlockDetector implements BlockCuller {
     }
 
     public boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity){
-        if( camera != null && cameraEntity != null) {
+        try {
+            if (camera != null && cameraEntity != null) {
 
-        var vec1 = (blockPos.toCenterPos().subtract(camera.getPos())) ;
-        var vec2 = cameraEntity.getPos().subtract(camera.getPos());
-        var vec3 = blockPos.toCenterPos().subtract(cameraEntity.getPos());
+                var vec1 = (blockPos.toCenterPos().subtract(camera.getPos()));
+                var vec2 = cameraEntity.getPos().subtract(camera.getPos());
+                var vec3 = blockPos.toCenterPos().subtract(cameraEntity.getPos());
 
-        if(cameraEntity instanceof PlayerEntity player){
+                if (cameraEntity instanceof PlayerEntity player) {
 
-            vec1 = vec1.add(player.getMovement().normalize().multiply(2));
-        }
-        var calc_theta =angleBetween(vec2, vec1)  ;
-        var calc_phi =angleBetween(vec3, new Vec3d(0,1,0))  ;
-        var calc =angleBetween(vec3, vec1)  ;
+                    vec1 = vec1.add(player.getMovement().normalize().multiply(2));
+                }
+                var calc_theta = angleBetween(vec2, vec1);
+                var calc_phi = angleBetween(vec3, new Vec3d(0, 1, 0));
+                var calc = angleBetween(vec3, vec1);
 
-        if(!isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock()) && blockPos.toCenterPos().getY() > cameraEntity.getPos().getY() + 2 &&
-                ( (calc_theta < 5*Math.pow(0.9,Mod.zoom)   )|| camera.getPos().distanceTo(blockPos.toCenterPos()) < 5)){
-            return true;
+                if (!isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock()) && blockPos.toCenterPos().getY() > cameraEntity.getPos().getY() + 2 &&
+                        ((calc_theta < 15 * Math.pow(0.9, Mod.zoom)) || camera.getPos().distanceTo(blockPos.toCenterPos()) < 5)) {
+                    return true;
+                } else {
+                    return false;
+
+                }
+            } else {
+                return false;
+            }
         }
-        else {
-            return false;
+        catch (Exception ignored){
 
         }
-        }
-        else{
-            return false;
-        }
+        return false;
     }
     private static <T, C> T raycast(Vec3d start, Vec3d end, C context, BiFunction<C, BlockPos, T> blockHitFactory, Function<C, T> missFactory) {
         if (start.equals(end)) {

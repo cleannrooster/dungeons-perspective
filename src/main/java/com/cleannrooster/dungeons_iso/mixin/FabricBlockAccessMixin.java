@@ -20,15 +20,25 @@ public class FabricBlockAccessMixin {
     @Inject(method = "shouldBlockEntityGlow", at = @At("RETURN"), cancellable = true)
 
     public void shouldBlockEntityGlowXIV(BlockEntity blockEntity, ClientPlayerEntity player, CallbackInfoReturnable<Boolean> info) {
-        if(Mod.enabled && Mod.crosshairTarget != null &&  blockEntity.getPos().toCenterPos().distanceTo(Mod.crosshairTarget.getPos()) < 2) {
+        try {
+
+            if(Mod.enabled && Mod.crosshairTarget != null &&  blockEntity.getPos().toCenterPos().distanceTo(Mod.crosshairTarget.getPos()) < 2) {
             info.setReturnValue(true);
+        }
+        }
+            catch(Exception ignored){
+
         }
     }
     @Inject(method = "getLightEmission", at = @At("RETURN"), cancellable = true)
     public void getLightEmissionXIV(BlockState state, BlockRenderView level, BlockPos pos, CallbackInfoReturnable<Integer> cir) {
-        if(Mod.enabled && Mod.crosshairTarget != null && pos.toCenterPos().distanceTo(Mod.crosshairTarget.getPos()) < 2 &&  MinecraftClient.getInstance().player != null && Mod.isInteractable(pos)) {
+        try {
+            if (Mod.enabled && Mod.crosshairTarget != null && pos.toCenterPos().distanceTo(Mod.crosshairTarget.getPos()) < 2 && MinecraftClient.getInstance().player != null && Mod.isInteractable(pos)) {
+                cir.setReturnValue(Math.max(15, state.getLuminance()));
+            }
+        }
+        catch(Exception ignored){
 
-            cir.setReturnValue(Math.max(15,state.getLuminance()));
         }
     }
 

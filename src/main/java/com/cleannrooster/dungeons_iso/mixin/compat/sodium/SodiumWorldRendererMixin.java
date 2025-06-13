@@ -47,11 +47,13 @@ public abstract class SodiumWorldRendererMixin  implements SodiumWorldRendererAc
     @Inject(at = @At("HEAD"), method = "renderBlockEntity", cancellable = true,remap = false)
 
     private static void renderBlockEntityCleann(MatrixStack matrices, BufferBuilderStorage bufferBuilders, Long2ObjectMap<SortedSet<BlockBreakingInfo>> blockBreakingProgressions, float tickDelta, VertexConsumerProvider.Immediate immediate, double x, double y, double z, BlockEntityRenderDispatcher dispatcher, BlockEntity entity, ClientPlayerEntity player, LocalBooleanRef isGlowing, CallbackInfo ci) {
-        BlockPos pos = entity.getPos();
+        if(Mod.enabled) {
+            BlockPos pos = entity.getPos();
 
-        BlockEntity block  = entity.getWorld().getBlockEntity(entity.getWorld().raycast(new RaycastContext(player.getEyePos(), entity.getPos().toCenterPos(), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player)).getBlockPos());
-        if(block == null || (block != null && !block.equals(entity))){
-               ci.cancel();
+            BlockEntity block = entity.getWorld().getBlockEntity(entity.getWorld().raycast(new RaycastContext(player.getEyePos(), entity.getPos().toCenterPos(), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player)).getBlockPos());
+            if (block == null || (block != null && !block.equals(entity))) {
+                ci.cancel();
+            }
         }
     }
 
