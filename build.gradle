@@ -42,7 +42,7 @@ dependencies {
     mappings "net.fabricmc:yarn:${yarn_mappings}:v2"
     modImplementation("maven.modrinth:spell-engine:${project.spell_engine_version}")
     include(implementation("com.github.ZsoltMolnarrr:TinyConfig:${project.tiny_config_version}"))
-
+    modImplementation "maven.modrinth:combat-roll:2.0.4+1.21.1-fabric"
     modImplementation "net.fabricmc:fabric-loader:${loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
     modImplementation "dev.isxander:yet-another-config-lib:${project.yacl_version}"

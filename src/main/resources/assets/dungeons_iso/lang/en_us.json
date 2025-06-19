@@ -14,8 +14,8 @@
   "dungeons_iso.config.category.options": "Options",
   "dungeons_iso.config.scrollWheelZoom.name": "Scroll wheel zoom",
   "dungeons_iso.config.scrollWheelZoom.description": "Zoom with scroll wheel (overrides hotbar scrolling).",
-  "dungeons_iso.config.movementCameraRelative.name": "Camera-relative movement",
-  "dungeons_iso.config.movementCameraRelative.description": "Make movement work relative to the camera instead of the player.",
+  "dungeons_iso.config.cameraRelative.name": "Camera-relative movement",
+  "dungeons_iso.config.cameraRelative.description": "Make movement work relative to the camera instead of the player. (Recommended with Turn to Mouse On, when Off)",
   "dungeons_iso.config.lockOnTargeting.name": "Lock-on targeting",
   "dungeons_iso.config.lockOnTargeting.description": "Cycle through mobs with a keybind. Locked-on mobs override cursor targeting.",
   "dungeons_iso.config.category.capabilities": "Extras",
@@ -47,6 +47,8 @@
   "dungeons_iso.config.forceAutoJump.name": "Force AutoJump in Click To Move",
   "dungeons_iso.config.forceAutoJump.description":"Force AutoJump in Click To Move.",
   "dungeons_iso.config.zoomFactor.name": "Zoom and FOV factor",
-  "dungeons_iso.config.zoomFactor.description":"Zoom and FOV factor"
+  "dungeons_iso.config.zoomFactor.description":"Zoom and FOV factor",
+  "dungeons_iso.config.rollTowardsCursor.name": "(Combat Roll Compat) Roll Towards Cursor",
+  "dungeons_iso.config.rollTowardsCursor.description":"When enabled, you will roll towards the cursor rather than in the direction you're moving."
 
 }

@@ -66,9 +66,21 @@ public class Gui implements ModMenuApi {
                                             .description(OptionDescription.of(Text.translatable(
                                                     "dungeons_iso.config.forceAutoJump.description")))
                                             .binding(
-                                                    defaults.onStartup,
+                                                    defaults.forceAutoJump,
                                                     () -> config.forceAutoJump,
                                                     (value) -> config.forceAutoJump = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
+                                    .option(Option
+                                            .<Boolean>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.rollTowardsCursor.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.rollTowardsCursor.description")))
+                                            .binding(
+                                                    defaults.rollTowardsCursor,
+                                                    () -> config.rollTowardsCursor,
+                                                    (value) -> config.rollTowardsCursor = value
                                             )
                                             .controller(BooleanControllerBuilder::create)
                                             .build())
@@ -141,6 +153,18 @@ public class Gui implements ModMenuApi {
                                                     defaults.forceNoDefer,
                                                     () -> config.forceNoDefer,
                                                     (value) -> config.forceNoDefer = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
+                                    .option(Option
+                                            .<Boolean>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.cameraRelative.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.cameraRelative.description")))
+                                            .binding(
+                                                    defaults.cameraRelative,
+                                                    () -> config.cameraRelative,
+                                                    (value) -> config.cameraRelative = value
                                             )
                                             .controller(BooleanControllerBuilder::create)
                                             .build())

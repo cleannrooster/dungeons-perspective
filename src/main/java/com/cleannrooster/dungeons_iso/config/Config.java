@@ -25,9 +25,14 @@ public class Config {
     @SerialEntry
     public boolean forceNoDefer =  false;
     @SerialEntry
+    public boolean cameraRelative =  true;
+
+    @SerialEntry
     public boolean turnToMouse =  true;
     @SerialEntry
     public boolean forceAutoJump =  true;
+    @SerialEntry
+    public boolean rollTowardsCursor =  true;
 
     @SerialEntry
 

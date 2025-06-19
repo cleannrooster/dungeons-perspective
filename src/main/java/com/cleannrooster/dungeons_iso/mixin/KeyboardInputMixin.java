@@ -86,10 +86,13 @@ public abstract class KeyboardInputMixin extends Input {
                 movementForward=0;
                 movementSideways=0;
             }
-            movement.mul(new Matrix2f().rotate((float) Math.toRadians(-yaw)));
+            if(Config.GSON.instance().cameraRelative) {
+                movement.mul(new Matrix2f().rotate((float) Math.toRadians(-yaw)));
+            }
+
+
             this.movementForward = movement.x;
             this.movementSideways = movement.y;
-
 
         }
     }
