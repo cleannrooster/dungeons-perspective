@@ -13,12 +13,5 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Entity.class)
 public class LivingEntityMixin {
-    @Inject(method = "teleportTo", at = @At("TAIL"))
-    @Nullable
-    public void teleportToCleann(TeleportTarget teleportTarget, CallbackInfoReturnable<Entity> callbackInfoReturnable) {
-        Entity entity = (Entity) (Object) this;
-        if (Mod.enabled && MinecraftClient.getInstance().gameRenderer.getCamera() instanceof CameraAccessor camera &&  (entity == MinecraftClient.getInstance().cameraEntity || entity == MinecraftClient.getInstance().player)){
-            camera.setPosInterfae(teleportTarget.pos());
-        }
-    }
+
 }

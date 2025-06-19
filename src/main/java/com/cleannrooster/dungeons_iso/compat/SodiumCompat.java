@@ -4,7 +4,7 @@ import com.cleannrooster.dungeons_iso.api.BlockCuller;
 import com.cleannrooster.dungeons_iso.api.cullers.BlockDetector;
 import com.cleannrooster.dungeons_iso.api.cullers.GenericCuller3;
 import com.cleannrooster.dungeons_iso.api.cullers.GenericBlockCuller2;
-import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
+import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;

@@ -3,16 +3,11 @@ package com.cleannrooster.dungeons_iso.mixin.compat.sodium;
 import com.cleannrooster.dungeons_iso.api.BlockCullerUser;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
 import com.cleannrooster.dungeons_iso.mod.Mod;
-import net.caffeinemc.mods.sodium.api.util.ColorARGB;
-import net.caffeinemc.mods.sodium.client.model.light.LightMode;
-import net.caffeinemc.mods.sodium.client.model.light.LightPipeline;
-import net.caffeinemc.mods.sodium.client.model.light.LightPipelineProvider;
-import net.caffeinemc.mods.sodium.client.model.light.data.QuadLightData;
-import net.caffeinemc.mods.sodium.client.render.frapi.helper.ColorHelper;
-import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableQuadViewImpl;
-import net.caffeinemc.mods.sodium.client.render.frapi.render.AbstractBlockRenderContext;
-import net.caffeinemc.mods.sodium.fabric.block.FabricBlockAccess;
-import net.fabricmc.fabric.api.renderer.v1.material.ShadeMode;
+
+import me.jellysquid.mods.sodium.client.model.light.LightPipelineProvider;
+import me.jellysquid.mods.sodium.client.model.light.data.QuadLightData;
+import net.fabricmc.fabric.api.renderer.v1.mesh.MutableQuadView;
+import net.fabricmc.fabric.impl.client.indigo.renderer.render.AbstractBlockRenderContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -31,20 +26,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AbstractBlockRenderContext.class)
 public abstract class AbstractRenderContextMixin implements BlockCullerUser {
-    @Shadow    protected BlockPos pos;
-    @Shadow
-    protected BlockState state;
-
-    @Shadow
-    protected LightPipelineProvider lighters;
-@Shadow
-    protected  QuadLightData quadLightData ;
 
     @Inject(at = @At("RETURN"), method = "isFaceCulled", cancellable = true)
     protected final void isFaceCulledDungeons(@Nullable Direction direction, CallbackInfoReturnable<Boolean> ci) {
-        if(MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player instanceof ClientPlayerEntity player && Mod.enabled) {
+        if(MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player != null     && Mod.enabled) {
 
                     ci.setReturnValue(false);
+
+        }
+    }
+    @Inject(at = @At("RETURN"), method = "transform", cancellable = true)
+
+    protected void transformDDungeons(MutableQuadView q, CallbackInfoReturnable<Boolean> ci) {
+        if(MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player != null     && Mod.enabled) {
+
+            ci.setReturnValue(true);
 
         }
     }

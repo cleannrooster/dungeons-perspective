@@ -13,6 +13,8 @@ import net.minecraft.util.math.Direction;
 
 public class Mod {
     public static float yaw;
+    public static float lastyaw;
+
     public static float pitch;
     public static double x;
     public static boolean shouldReload;
@@ -56,7 +58,7 @@ public class Mod {
                 || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof LoomBlock
 
         ) && MinecraftClient.getInstance().player.getPos().distanceTo(pos.toCenterPos())<
-                MinecraftClient.getInstance().player.getBlockInteractionRange()));
+                4.5));
     }
     public static boolean isInteractable(BlockPos result){
         return (((MinecraftClient.getInstance().world.getBlockEntity(result)) != null ||
@@ -78,6 +80,6 @@ public class Mod {
                 || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof LoomBlock
 
         ) && MinecraftClient.getInstance().player.getPos().distanceTo(result.toCenterPos())<
-                MinecraftClient.getInstance().player.getBlockInteractionRange());
+                4.5);
     }
 }

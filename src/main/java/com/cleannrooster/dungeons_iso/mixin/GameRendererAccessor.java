@@ -12,7 +12,5 @@ public interface GameRendererAccessor {
     @Invoker("getFov")
     double callGetFov(Camera camera, float tickDelta, boolean changingFov);
 
-    @Invoker("ensureTargetInRange")
-    HitResult callEnsureTargetInRange(HitResult hitResult, Vec3d cameraPos, double interactionRange);
 
 }

@@ -2,9 +2,8 @@ package com.cleannrooster.dungeons_iso.mixin.compat.sodium;
 
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
-import net.caffeinemc.mods.sodium.client.render.chunk.RenderSectionManager;
+import me.jellysquid.mods.sodium.client.render.chunk.RenderSection;
+import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.util.math.BlockPos;
@@ -19,10 +18,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(RenderSectionManager.class)
 public class RenderSectionManagerMixin {
     @Shadow
-    private @Nullable BlockPos cameraBlockPos;
+    private @Nullable BlockPos lastCameraPosition;
 
 
-    @Inject(at = @At("HEAD"), method = "getRenderDistance", cancellable = true,remap = false)
+    @Inject(at = @At("HEAD"), method = "getEffectiveRenderDistance", cancellable = true,remap = false)
 
     private void getEffectiveRenderDistanceXIV(CallbackInfoReturnable<Float> cir) {
         if(Mod.enabled) {
@@ -30,11 +29,11 @@ public class RenderSectionManagerMixin {
 
         }
     }
-    @Inject(at = @At("HEAD"), method = "shouldPrioritizeTask", cancellable = true,remap = false)
+    @Inject(at = @At("HEAD"), method = "shouldPrioritizeRebuild", cancellable = true,remap = false)
 
-    private void shouldPrioritizeTaskXIV(RenderSection section, float distance,CallbackInfoReturnable<Boolean> cir) {
-        if(Mod.enabled && cameraBlockPos != null &&  MinecraftClient.getInstance().player != null) {
-            cir.setReturnValue(section.getSquaredDistance(cameraBlockPos) < 64*64);
+    private void shouldPrioritizeTaskXIV(RenderSection section,  CallbackInfoReturnable<Boolean> cir) {
+        if(Mod.enabled && lastCameraPosition != null &&  MinecraftClient.getInstance().player != null) {
+            cir.setReturnValue(section.getSquaredDistance(lastCameraPosition) < 64*64);
 
         }
     }

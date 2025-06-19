@@ -36,13 +36,13 @@ public abstract class KeyboardInputMixin extends Input {
             assert client.player != null;
             Vector2f movement = new Vector2f(this.movementForward, this.movementSideways);
 
-            float tickDelta = client.gameRenderer.getCamera().getLastTickDelta();
+            float tickDelta = client.getTickDelta();
 
             float yaw = client.gameRenderer.getCamera().getYaw() - client.player.getYaw(tickDelta);
-            if(Config.GSON.instance().clickToMove &&  ((MinecraftClientAccessor)client).getOriginalLocation() != null  && ((MinecraftClientAccessor)client).getLocation() != null &&((MinecraftClientAccessor)client).getLocation().getPos() instanceof Vec3d vec3d
+            if(Config.GSON.instance().clickToMove &&  ((MinecraftClientAccessor)client).getOriginalLocation() != null  && ((MinecraftClientAccessor)client).getLocation() != null &&((MinecraftClientAccessor)client).getLocation().getPos() != null
                     && client.player.squaredDistanceTo(((MinecraftClientAccessor)client).getOriginalLocation()) < (((MinecraftClientAccessor)client).getOriginalLocation()).squaredDistanceTo(((MinecraftClientAccessor)client).getLocation().getPos())-1) {
                    if(((MinecraftClientAccessor)client).getLocation() instanceof EntityHitResult && ((MinecraftClientAccessor)client).getLocation().getPos().subtract(0,((MinecraftClientAccessor)client).getLocation().getPos().getY()-(client.player.getPos()).getY(),0)
-                           .squaredDistanceTo(client.player.getPos()) < (client.player.getEntityInteractionRange() * client.player.getEntityInteractionRange()/4)){
+                           .squaredDistanceTo(client.player.getPos()) < (4.5 * 4.5/4)){
                        return;
                    }
                 if(((MinecraftClientAccessor)client).getLocation() instanceof BlockHitResult result && Mod.isInteractable(result)){
@@ -66,7 +66,7 @@ public abstract class KeyboardInputMixin extends Input {
                     return;
                 }
                     movement = new Vector2f(1.0F, 0F);
-                   yaw = getAngle(new Vec3d(0, 0, 0), vec3d.subtract(client.player.getPos()).subtract(0, vec3d.subtract(client.player.getPos()).getY(), 0));
+                   yaw = getAngle(new Vec3d(0, 0, 0), ((MinecraftClientAccessor)client).getLocation().getPos().subtract(client.player.getPos()).subtract(0, ((MinecraftClientAccessor)client).getLocation().getPos().subtract(client.player.getPos()).getY(), 0));
 
                    movement.mul(new Matrix2f().rotate((float) Math.toRadians(yaw)));
                    movement.mul(new Matrix2f().rotate((float) Math.toRadians(+client.player.getYaw(tickDelta))));

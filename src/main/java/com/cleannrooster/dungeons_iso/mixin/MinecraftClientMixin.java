@@ -145,19 +145,19 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
             double x = ((Mod.crosshairTarget != null ? Mod.crosshairTarget.getPos().subtract(client.cameraEntity.getPos()).getX():0));
             double y = ((Mod.crosshairTarget != null ? Mod.crosshairTarget.getPos().subtract(client.cameraEntity.getPos()).getZ():0));
-            if((Mod.crosshairTarget != null && Mod.crosshairTarget.getPos().distanceTo(client.cameraEntity.getPos()) > client.player.getBlockInteractionRange()) ||
-                    (Mod.crosshairTarget != null && Mod.crosshairTarget.getPos().distanceTo(client.cameraEntity.getPos()) > client.player.getEntityInteractionRange())) {
+            if((Mod.crosshairTarget != null && Mod.crosshairTarget.getPos().distanceTo(client.cameraEntity.getPos()) > 4.5) ||
+                    (Mod.crosshairTarget != null && Mod.crosshairTarget.getPos().distanceTo(client.cameraEntity.getPos()) > 4.5)) {
 
-                Mod.x += MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta() * 0.10 * Mod.zoom * 1.5 * new Vec3d(x, 0, y).normalize().x;
-                Mod.z += MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta() * 0.10 * Mod.zoom * 1.5 * new Vec3d(x, 0, y).normalize().z;
+                Mod.x += MinecraftClient.getInstance().getTickDelta() * 0.10 * Mod.zoom * 1.5 * new Vec3d(x, 0, y).normalize().x;
+                Mod.z += MinecraftClient.getInstance().getTickDelta() * 0.10 * Mod.zoom * 1.5 * new Vec3d(x, 0, y).normalize().z;
             }
             if(Mod.crosshairTarget != null) {
-                Mod.x = Math.clamp(Mod.x, -Math.abs(new Vec3d(Mod.x, 0, Mod.z).normalize().getX()) * Mod.crosshairTarget.getPos().subtract(client.cameraEntity.getPos()).horizontalLength(), Math.abs(new Vec3d(Mod.x, 0, Mod.z).normalize().getX()) * Mod.crosshairTarget.getPos().subtract(client.cameraEntity.getPos()).horizontalLength());
-                Mod.z = Math.clamp(Mod.z, -Math.abs(new Vec3d(Mod.x, 0, Mod.z).normalize().getZ()) * Mod.crosshairTarget.getPos().subtract(client.cameraEntity.getPos()).horizontalLength(), Math.abs(new Vec3d(Mod.x, 0, Mod.z).normalize().getZ()) * Mod.crosshairTarget.getPos().subtract(client.cameraEntity.getPos()).horizontalLength());
+                Mod.x = MathHelper.clamp(Mod.x, -Math.abs(new Vec3d(Mod.x, 0, Mod.z).normalize().getX()) * Mod.crosshairTarget.getPos().subtract(client.cameraEntity.getPos()).horizontalLength(), Math.abs(new Vec3d(Mod.x, 0, Mod.z).normalize().getX()) * Mod.crosshairTarget.getPos().subtract(client.cameraEntity.getPos()).horizontalLength());
+                Mod.z = MathHelper.clamp(Mod.z, -Math.abs(new Vec3d(Mod.x, 0, Mod.z).normalize().getZ()) * Mod.crosshairTarget.getPos().subtract(client.cameraEntity.getPos()).horizontalLength(), Math.abs(new Vec3d(Mod.x, 0, Mod.z).normalize().getZ()) * Mod.crosshairTarget.getPos().subtract(client.cameraEntity.getPos()).horizontalLength());
 
             }
-            Mod.x = Math.clamp(Mod.x,-Math.abs(new Vec3d(Mod.x,0,Mod.z).normalize().getX())*Mod.zoom*1.5,Math.abs(new Vec3d(Mod.x,0,Mod.z).normalize().getX())*Mod.zoom*1.5);
-            Mod.z = Math.clamp(Mod.z,-Math.abs(new Vec3d(Mod.x,0,Mod.z).normalize().getZ())*Mod.zoom*1.5,Math.abs(new Vec3d(Mod.x,0,Mod.z).normalize().getZ())*Mod.zoom*1.5);
+            Mod.x = MathHelper.clamp(Mod.x,-Math.abs(new Vec3d(Mod.x,0,Mod.z).normalize().getX())*Mod.zoom*1.5,Math.abs(new Vec3d(Mod.x,0,Mod.z).normalize().getX())*Mod.zoom*1.5);
+            Mod.z = MathHelper.clamp(Mod.z,-Math.abs(new Vec3d(Mod.x,0,Mod.z).normalize().getZ())*Mod.zoom*1.5,Math.abs(new Vec3d(Mod.x,0,Mod.z).normalize().getZ())*Mod.zoom*1.5);
 
                     SodiumCompat.run();
 
@@ -184,7 +184,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                     }
 
                 }
-                else if (   (Mod.crosshairTarget instanceof EntityHitResult hit && hit.getPos().distanceTo(player.getEyePos()) <= player.getEntityInteractionRange()/2) ){
+                else if (   (Mod.crosshairTarget instanceof EntityHitResult hit && hit.getPos().distanceTo(player.getEyePos()) <= 4.5/2) ){
                     Hand[] var1 = Hand.values();
                     for (Hand hand : var1) {
                         var interact = client.interactionManager.interactEntity(player, hit.getEntity(), hand);
@@ -241,7 +241,6 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                 mouseCooldown =  40+(int)(0.2F*20F/client.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED));
             }
             if (client.player.getMainHandStack().getItem() instanceof RangedWeaponItem ||
-                    client.player.getMainHandStack().getItem() instanceof ProjectileItem ||
                     client.player.getMainHandStack().getItem() instanceof BowItem ||
                     client.player.getMainHandStack().getItem() instanceof CrossbowItem ||
                     client.player.isUsingItem() ||
@@ -257,8 +256,8 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                     Vec3d vec3d = movementInputToVelocity(new Vec3d(client.player.input.movementSideways, 0, client.player.input.movementForward), 1.0F, client.player.getVehicle().getYaw());
                     lookAt(client.player,EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(vec3d.normalize()),true);
                 } else {
-                    lookAt(client.player,EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(client.player.getMovement().subtract(
-                            0, client.player.getMovement().getY(), 0).normalize()),true);
+                    lookAt(client.player,EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(client.player.getVelocity().subtract(
+                            0, client.player.getVelocity().getY(), 0).normalize()),true);
 
                 }
                 Mod.prevCrosshairTarget = client.crosshairTarget;
@@ -272,7 +271,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                 }
                 GameRenderer renderer = client.gameRenderer;
                 Camera camera = renderer.getCamera();
-                float tickDelta = camera.getLastTickDelta();
+                float tickDelta = client.getTickDelta();
 
                 if (Mod.crosshairTarget != null) {
 
@@ -457,13 +456,13 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
         if (ClientInit.zoomInBinding.wasPressed()) {
             if (Mod.enabled) {
-                Mod.zoom = Math.clamp(Mod.zoom - 0.2f, 0.5F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F),8);
+                Mod.zoom = MathHelper.clamp(Mod.zoom - 0.2f, 0.5F/MathHelper.clamp(Config.GSON.instance().zoomFactor,1F,1.5F),8);
             }
         }
 
         if (ClientInit.zoomOutBinding.wasPressed()) {
             if (Mod.enabled) {
-                Mod.zoom = Math.clamp(Mod.zoom + 0.2f,0.5F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F), 8.0F);
+                Mod.zoom = MathHelper.clamp(Mod.zoom + 0.2f,0.5F/MathHelper.clamp(Config.GSON.instance().zoomFactor,1F,1.5F), 8.0F);
             }
         }
 
@@ -508,8 +507,8 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                     Vec3d vec3d = movementInputToVelocity(new Vec3d(client.player.input.movementSideways, 0, client.player.input.movementForward), 1.0F, client.player.getVehicle().getYaw());
                     lookAt(client.player,EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(vec3d.normalize()),true);
                 } else {
-                    lookAt(client.player,EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(client.player.getMovement().subtract(
-                            0, client.player.getMovement().getY(), 0).normalize()),true);
+                    lookAt(client.player,EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(client.player.getVelocity().subtract(
+                            0, client.player.getVelocity().getY(), 0).normalize()),true);
 
                 }
                 lookingTime = client.world.getTime();
@@ -521,7 +520,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
                 GameRenderer renderer = client.gameRenderer;
                 Camera camera = renderer.getCamera();
-                float tickDelta = camera.getLastTickDelta();
+                float tickDelta = client.getTickDelta();
                 if (      player.isFallFlying()){
                     Mod.prevCrosshairTarget = Mod.crosshairTarget;
                 }
@@ -604,9 +603,5 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
     public int setMouseCooldown(int cooldown) {
         this.mouseCooldown = cooldown;
         return this.mouseCooldown;
-    }
-    @Inject(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V", at = @At("HEAD"))
-    public void disconnectPre(Screen screen, CallbackInfo ci) {
-        ClientInit.capabilities = null;
     }
 }

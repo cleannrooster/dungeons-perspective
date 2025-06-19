@@ -137,27 +137,29 @@ public class MouseMixin implements MouseAccessor {
             at = @At(value = "INVOKE", target = "net/minecraft/client/tutorial/TutorialManager.onUpdateMouse(DD)V")
     )
     private void updateMouseAXIV(
-            double timeDelta, CallbackInfo ci, @Local(ordinal = 1) double i, @Local(ordinal = 2) double j, @Local int k
+            CallbackInfo ci, @Local(ordinal = 1) double i, @Local(ordinal = 2) double j, @Local int k
     ) {
         GameRenderer renderer = client.gameRenderer;
         Window window = client.getWindow();
         Mouse mouse = client.mouse;
 
         Camera camera = renderer.getCamera();
-        float tickDelta = camera.getLastTickDelta();
+        float tickDelta = client.getTickDelta();
         Entity cameraEntity = client.cameraEntity;
         boolean spell = false;
 
         if (Mod.enabled && cameraEntity != null && client.player != null) {
                 if (client.options.pickItemKey.isPressed()||ClientInit.moveCameraBinding.isPressed()) {
+
                     if (lastX == null || lastY == null) {
                         InputUtil.setCursorParameters(client.getWindow().getHandle(), InputUtil.GLFW_CURSOR_DISABLED,
                                 x, y
                         );
                         lastX = x;
                         lastY = y;
+                        Mod.lastyaw = Mod.yaw;
                     }
-                    float yaw1 = (float) (Mod.yaw + i / 8.0D);
+                    float yaw1 = (float) (Mod.lastyaw + (x - lastX) / (8.0D));
                     float pitch1 = (float) (Mod.pitch + j * k / 8.0D);
                     Mod.yaw = yaw1;
                     Mod.pitch = 45;
@@ -186,8 +188,8 @@ public class MouseMixin implements MouseAccessor {
                     coords.x *= aspect;
                     coords.y = -coords.y;
                     Vector2d offsets = coords.mul(Math.tan(fov2));
-                    Vector3d forward = camera.getRotation().transform(new Vector3d(0.0, 0.0, -1.0));
-                    Vector3d right = camera.getRotation().transform(new Vector3d(1.0, 0.0, 0.0));
+                    Vector3d forward = camera.getRotation().transform(new Vector3d(0.0, 0.0, 1.0));
+                    Vector3d right = camera.getRotation().transform(new Vector3d(-1.0, 0.0, 0.0));
                     Vector3d up = camera.getRotation().transform(new Vector3d(0.0, 1.0, 0.0));
                     Vector3d dir = forward.add(right.mul(offsets.x).add(up.mul(offsets.y))).normalize();
                     Vec3d rayDir = new Vec3d(dir.x, dir.y, dir.z);
@@ -238,7 +240,7 @@ public class MouseMixin implements MouseAccessor {
                             camera.getPos(),
                             end,
                             CustomShapeTypes.CULLED,
-                            RaycastContext.ShapeType.OUTLINE,
+                            RaycastContext.ShapeType.COLLIDER,
                             RaycastContext.FluidHandling.NONE,
                             cameraEntity
                     ),(innerContext, pos) -> {
@@ -285,11 +287,11 @@ public class MouseMixin implements MouseAccessor {
 
                             hitResult = scanDown;
 
-                        if(cameraEntity instanceof PlayerEntity player && hitResult.getPos().distanceTo(cameraEntity.getEyePos()) > player.getBlockInteractionRange() && cameraEntity.getWorld().getBlockEntity(BlockPos.ofFloored(hitResult.getPos())) == null
+                        if(cameraEntity instanceof PlayerEntity player && hitResult.getPos().distanceTo(cameraEntity.getEyePos()) > 4.5 && cameraEntity.getWorld().getBlockEntity(BlockPos.ofFloored(hitResult.getPos())) == null
                     && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof WallMountedBlock)
                                 && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof DoorBlock)
                                 && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof TrapdoorBlock)) {
-                            hitResult = new BlockHitResult(new Vec3d(scanDown.getPos().getX(), cameraEntity.getEyeY(), scanDown.getPos().getZ()), scanDown.getSide(),BlockPos.ofFloored(scanDown.getPos().getX(), cameraEntity.getEyeY(), scanDown.getPos().getZ()),false);
+                            hitResult = new BlockHitResult(new Vec3d(scanDown.getPos().getX(), player.getEyeY(), scanDown.getPos().getZ()), scanDown.getSide(),BlockPos.ofFloored(scanDown.getPos().getX(), cameraEntity.getEyeY(), scanDown.getPos().getZ()),false);
                         }
                     }
 
@@ -441,7 +443,7 @@ public class MouseMixin implements MouseAccessor {
             if (Mod.enabled && Config.GSON.instance().scrollWheelZoom ) {
 
 
-                Mod.zoom = (Math.clamp(Mod.zoom - (float) scrollAmount * 0.2f,0.5F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F),5.0F));
+                Mod.zoom = (MathHelper.clamp(Mod.zoom - (float) scrollAmount * 0.2f,0.5F/MathHelper.clamp(Config.GSON.instance().zoomFactor,1F,1.5F),5.0F));
 
             } else {
 

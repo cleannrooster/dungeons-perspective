@@ -89,7 +89,7 @@ public abstract class CameraMixin implements CameraAccessor {
 
     @ModifyArgs(
             method = "update",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;clipToSpace(F)F", ordinal = 0)
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;clipToSpace(D)D", ordinal = 0)
     )
     public void b(Args args) {
         if (Mod.enabled) {
@@ -109,7 +109,7 @@ public abstract class CameraMixin implements CameraAccessor {
 
             }
 
-                args.set(0, (float) args.get(0) * Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F)*Mod.zoom);
+                args.set(0, (double) args.get(0) * MathHelper.clamp(Config.GSON.instance().zoomFactor,1F,1.5F)*Mod.zoom);
         }
     }
     @Inject(
@@ -117,13 +117,13 @@ public abstract class CameraMixin implements CameraAccessor {
             at = @At(value = "HEAD"),
             cancellable = true
     )
-    private void clipToSpaceXIV(float a, CallbackInfoReturnable<Float> callbackInfoReturnable) {
+    private void clipToSpaceXIV(double a, CallbackInfoReturnable<Double> callbackInfoReturnable) {
 
-        if (MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera && Mod.enabled ) {
+        if (MinecraftClient.getInstance().gameRenderer.getCamera() != null && Mod.enabled ) {
 
             callbackInfoReturnable.setReturnValue(a);
 
-            if(camera.getPitch() != 45){
+            if(MinecraftClient.getInstance().gameRenderer.getCamera().getPitch() != 45){
                 this.setRotation(this.yaw,45);
             }
             Mod.yaw = this.yaw;
@@ -135,9 +135,9 @@ public abstract class CameraMixin implements CameraAccessor {
 
                 MinecraftClient client = MinecraftClient.getInstance();
                 assert client.player != null;
-                float tickDelta = client.gameRenderer.getCamera().getLastTickDelta();
+                float tickDelta = client.getTickDelta();
 
-                Vec3d movement = client.player.getMovement().subtract(0,client.player.getMovement().getY(),0).multiply(5.5).multiply(1+2*Mod.zoom);
+                Vec3d movement = client.player.getVelocity().subtract(0,client.player.getVelocity().getY(),0).multiply(5.5).multiply(1+2*Mod.zoom);
 
                 if(f.getVehicle() != null){
                    movement = client.player.getVehicle().getVelocity().subtract(0,client.player.getVehicle().getVelocity().getY(),0).multiply(5.5).multiply(2*Mod.zoom);

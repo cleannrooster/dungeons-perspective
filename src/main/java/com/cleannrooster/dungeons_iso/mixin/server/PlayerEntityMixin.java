@@ -10,11 +10,5 @@ import com.cleannrooster.dungeons_iso.ServerInit;
 
 @Mixin(PlayerEntity.class)
 public class PlayerEntityMixin {
-    @Inject(method = "canInteractWithBlockAt", at = @At("RETURN"), cancellable = true)
-    public void canInteractWithBlockAt(BlockPos pos, double additionalRange, CallbackInfoReturnable<Boolean> cir) {
-        if (ServerInit.capabilities.unlimitedReach()) {
-            cir.setReturnValue(true);
-            cir.cancel();
-        }
-    }
+
 }

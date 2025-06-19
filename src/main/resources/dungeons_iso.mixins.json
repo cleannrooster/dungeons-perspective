@@ -27,11 +27,9 @@
     "BlockMixin",
     "ClientPlayerEntityMixin",
     "BossBarHudMixin",
-    "FabricBlockAccessMixin",
     "compat.sodium.MixinBlockRenderer",
     "compat.sodium.SodiumWorldRendererMixin",
     "compat.sodium.AbstractRenderContextMixin",
-    "compat.sodium.FluidRendererMixin",
     "compat.sodium.RenderSectionManagerMixin"
 
 

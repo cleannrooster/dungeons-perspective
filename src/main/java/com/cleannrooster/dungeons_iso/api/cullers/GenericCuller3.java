@@ -73,13 +73,18 @@ public class GenericCuller3 implements BlockCuller {
         return Double.isNaN(angle) ? 0.0 : angle;
     }
     public final Vec3d getRotationVec(Entity entity, float tickDelta) {
-        return entity.getRotationVector(entity.getPitch(tickDelta), entity.getHeadYaw());
-    }
+        float f = entity.getPitch(tickDelta) * 0.017453292F;
+        float g = -entity.getHeadYaw() * 0.017453292F;
+        float h = MathHelper.cos(g);
+        float i = MathHelper.sin(g);
+        float j = MathHelper.cos(f);
+        float k = MathHelper.sin(f);
+        return new Vec3d((double)(i * j), (double)(-k), (double)(h * j));    }
 
     public boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity){
         if( ((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild() && camera != null && cameraEntity != null) {
 
-        var posBehindPlayerUp = cameraEntity.getEyePos().subtract(getRotationVec(cameraEntity,camera.getLastTickDelta()).multiply(-4)).add(0,blockPos.getY()-cameraEntity.getEyeY(),0) ;
+        var posBehindPlayerUp = cameraEntity.getEyePos().subtract(getRotationVec(cameraEntity,MinecraftClient.getInstance().getTickDelta()).multiply(-4)).add(0,blockPos.getY()-cameraEntity.getEyeY(),0) ;
             var vec7 = (blockPos.toCenterPos().subtract(camera.getPos()).normalize()) ;
             var vec8 = cameraEntity.getPos().subtract(camera.getPos()).normalize();
         var vec1 = blockPos.toCenterPos().subtract(cameraEntity.getPos()).normalize();
@@ -167,7 +172,7 @@ public class GenericCuller3 implements BlockCuller {
     }
     @Override
     public boolean shouldIgnoreBlockPick(BlockPos blockPos, Camera camera, Entity cameraEntity) {
-        if(!(isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) && blockPos != null && (cameraEntity instanceof PlayerEntity player && blockPos.toCenterPos().distanceTo(cameraEntity.getEyePos()) > player.getBlockInteractionRange())
+        if(!(isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) && blockPos != null && (cameraEntity instanceof PlayerEntity player && blockPos.toCenterPos().distanceTo(cameraEntity.getEyePos()) > 4.5)
                 && blockPos.toCenterPos().getY() > cameraEntity.getY()+1){
             if(new Vec3d(0,1,0).dotProduct(blockPos.toCenterPos().subtract(cameraEntity.getPos()).normalize())>0.5F) {
                 return true;

@@ -5,6 +5,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 
 import java.util.List;
 
@@ -37,11 +38,11 @@ public interface BlockCuller {
         public void tickOpacity(){
 
             this.transparency = this.transparency- transparencyAdd();
-            this.transparency =Math.clamp(this.transparency,0F,1F);
+            this.transparency = MathHelper.clamp(this.transparency,0F,1F);
         }
         public void tickTransparency(){
             this.transparency = this.transparency+transparencyAdd();
-            this.transparency = Math.clamp(this.transparency,0F,1F);
+            this.transparency = MathHelper.clamp(this.transparency,0F,1F);
 
         }
         public float transparencyAdd(){

@@ -76,7 +76,7 @@ public class GenericBlockCuller2 implements BlockCuller {
 
         if(cameraEntity instanceof PlayerEntity player){
 
-            vec1 = vec1.add(player.getMovement().normalize().multiply(2));
+            vec1 = vec1.add(player.getVelocity().normalize().multiply(2));
         }
         var calc_theta =angleBetween(vec2, vec1)  ;
         var calc_phi =angleBetween(vec3, new Vec3d(0,1,0))  ;
@@ -157,7 +157,7 @@ public class GenericBlockCuller2 implements BlockCuller {
     }
     @Override
     public boolean shouldIgnoreBlockPick(BlockPos blockPos, Camera camera, Entity cameraEntity) {
-        if(!(isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) && blockPos != null && (cameraEntity instanceof PlayerEntity player && blockPos.toCenterPos().distanceTo(cameraEntity.getEyePos()) > player.getBlockInteractionRange())
+        if(!(isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) && blockPos != null && (cameraEntity instanceof PlayerEntity player && blockPos.toCenterPos().distanceTo(cameraEntity.getEyePos()) > 4.5)
                 && blockPos.toCenterPos().getY() > cameraEntity.getY()+1){
             if(new Vec3d(0,1,0).dotProduct(blockPos.toCenterPos().subtract(cameraEntity.getPos()).normalize())>0.5F) {
                 return true;
