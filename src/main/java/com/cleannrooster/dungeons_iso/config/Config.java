@@ -30,10 +30,11 @@ public class Config {
     @SerialEntry
     public boolean turnToMouse =  true;
     @SerialEntry
+    public boolean additionalMeleeAssistance =  false;
+    @SerialEntry
     public boolean forceAutoJump =  true;
     @SerialEntry
     public boolean rollTowardsCursor =  true;
-
     @SerialEntry
 
     public float moveFactor_v3 = 0.5F;

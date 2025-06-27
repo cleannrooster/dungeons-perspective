@@ -14,6 +14,8 @@ import net.caffeinemc.mods.sodium.client.render.frapi.render.AbstractBlockRender
 import net.caffeinemc.mods.sodium.fabric.block.FabricBlockAccess;
 import net.fabricmc.fabric.api.renderer.v1.material.ShadeMode;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.IceBlock;
+import net.minecraft.block.TranslucentBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
@@ -42,7 +44,7 @@ public abstract class AbstractRenderContextMixin implements BlockCullerUser {
 
     @Inject(at = @At("RETURN"), method = "isFaceCulled", cancellable = true)
     protected final void isFaceCulledDungeons(@Nullable Direction direction, CallbackInfoReturnable<Boolean> ci) {
-        if(MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player instanceof ClientPlayerEntity player && Mod.enabled) {
+        if(MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player instanceof ClientPlayerEntity player && Mod.enabled && !(state.getBlock() instanceof TranslucentBlock)) {
 
                     ci.setReturnValue(false);
 

@@ -4,6 +4,7 @@ import com.cleannrooster.dungeons_iso.api.BlockCuller;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
 import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.mod.Mod;
+import net.fabricmc.loader.impl.lib.sat4j.core.Vec;
 import net.minecraft.block.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
@@ -78,6 +79,8 @@ public class GenericCuller3 implements BlockCuller {
 
     public boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity){
         if( ((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild() && camera != null && cameraEntity != null) {
+            List<Vec3d> vec3ds = new ArrayList<>();
+
 
         var posBehindPlayerUp = cameraEntity.getEyePos().subtract(getRotationVec(cameraEntity,camera.getLastTickDelta()).multiply(-4)).add(0,blockPos.getY()-cameraEntity.getEyeY(),0) ;
             var vec7 = (blockPos.toCenterPos().subtract(camera.getPos()).normalize()) ;
@@ -89,11 +92,11 @@ public class GenericCuller3 implements BlockCuller {
         var theta =angleBetween(vec8, vec7)  ;
         var phi =angleBetween(vec1,  vec2)  ;
         var chi =angleBetween(vec6,  new Vec3d(0,1,0))  ;
-        var factor = 0.05*(Math.min(20,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime,Mod.endTime)))*45*Math.pow(0.9,Mod.zoom);
-        var factor2 = 0.05*(Math.min(20,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime,Mod.endTime)))*90*Math.pow(0.9,Mod.zoom);
+        var factor = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,Mod.endTime)))*45*Math.pow(0.9,Mod.zoom);
+        var factor2 = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,Mod.endTime)))*45*Math.pow(0.9,Mod.zoom);
 
         if(!isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock()) && blockPos.toCenterPos().getY() > cameraEntity.getPos().getY() + 1 &&
-                (((  theta < factor && phi < factor2 ) ) ||(  camera.getPos().distanceTo(blockPos.toCenterPos()) < 5))){
+                (((  theta < factor  ) && chi < 60 ) ||(  camera.getPos().distanceTo(blockPos.toCenterPos()) < 5))){
             return true;
         }
         else {
@@ -176,7 +179,7 @@ public class GenericCuller3 implements BlockCuller {
         return false;
     }
 
-    List<Class<? extends Block>> ignoredTypes = List.of(WallMountedBlock.class, DoorBlock.class, CarpetBlock.class, SnowBlock.class);
+    List<Class<? extends Block>> ignoredTypes = List.of(VaultBlock.class, SpawnerBlock.class, TrialSpawnerBlock.class, WallMountedBlock.class,LadderBlock.class, DoorBlock.class);
     public boolean isIgnoredType(Block block){
         for(Class<? extends Block> ignoredType : ignoredTypes){
             if(ignoredType.isInstance(block)){

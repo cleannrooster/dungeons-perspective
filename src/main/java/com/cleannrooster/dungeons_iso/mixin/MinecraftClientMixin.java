@@ -1,6 +1,7 @@
 package com.cleannrooster.dungeons_iso.mixin;
 
 import com.cleannrooster.dungeons_iso.api.*;
+import com.cleannrooster.dungeons_iso.compat.DragonCompat;
 import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.google.common.collect.Lists;
@@ -23,6 +24,7 @@ import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
+import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.ai.control.LookControl;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.MobEntity;
@@ -40,6 +42,7 @@ import net.minecraft.util.math.*;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.RaycastContext;
+import net.minecraft.world.entity.EntityLookup;
 import net.minecraft.world.event.BlockPositionSource;
 import net.minecraft.world.gen.chunk.DebugChunkGenerator;
 import org.jetbrains.annotations.Nullable;
@@ -63,7 +66,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static com.cleannrooster.dungeons_iso.mod.Mod.isInteractable;
+import static com.cleannrooster.dungeons_iso.mod.Mod.*;
 
 @Mixin(MinecraftClient.class)
 public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
@@ -244,15 +247,53 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                     client.player.getMainHandStack().getItem() instanceof ProjectileItem ||
                     client.player.getMainHandStack().getItem() instanceof BowItem ||
                     client.player.getMainHandStack().getItem() instanceof CrossbowItem ||
-                    client.player.isUsingItem() ||
-                    ( this.options.useKey.isPressed()) ||
-                    spell
+                    client.player.isUsingItem()  ||
+                    client.options.useKey.isPressed()
+                    || spell
             ){
                 mouseCooldown = 40;
                 bool = true;
             }
-            if ( (!Config.GSON.instance().turnToMouse &&     !player.isFallFlying()) && (
-                    !bool && (mouseCooldown <= 0 && client.player.input.getMovementInput().length() > 0.1))) {
+            if((FabricLoader.getInstance().isModLoaded("bettercombat") && !bool && Config.GSON.instance().additionalMeleeAssistance &&  (mouseTarget == null ||  !mouseTarget.getType().equals(HitResult.Type.ENTITY)))){
+                Entity entity;
+                var additionMod =  player.getEntityInteractionRange();
+                List<LivingEntity> living = player.getWorld().getEntitiesByClass(LivingEntity.class,player.getBoundingBox().expand(additionMod),
+                        (target) ->{
+                            return target != player && player.canSee(target) &&  target.distanceTo(player) < additionMod
+                                    && target.getPos().subtract(player.getPos().subtract(player.getRotationVec(1.0F).multiply(additionMod))).normalize().dotProduct(player.getRotationVec(1.0F).normalize()) > 0.5F
+                                    && target.getPos().subtract(player.getPos()).normalize().dotProduct(player.getRotationVec(1.0F).normalize()) > 0;
+                        });
+                if(!living.isEmpty()) {
+                    var vec3d =  player.getPos();
+                    living.sort(Comparator.comparing((a) -> a.getPos().distanceTo(vec3d)));
+                    entity = living.get(0);
+                    if(Mod.pickedTarget != null && Mod.pickedTarget instanceof LivingEntity livingPicekdTarget  && living.contains(livingPicekdTarget) && livingPicekdTarget.isAlive()) {
+
+                        Mod.crosshairTarget = new EntityHitResult(Mod.pickedTarget,Mod.pickedTarget.getBoundingBox().getCenter());
+                        Mod.prevCrosshairTarget = new EntityHitResult(Mod.pickedTarget, Mod.pickedTarget.getBoundingBox().getCenter());
+                        Mod.targeted = Mod.pickedTarget;
+
+                    }
+                    else {
+                            Mod.crosshairTarget = new EntityHitResult(entity, living.get(0).getBoundingBox().getCenter());
+                            Mod.prevCrosshairTarget = new EntityHitResult(entity, living.get(0).getBoundingBox().getCenter());
+                        Mod.targeted = entity;
+
+
+                    }
+
+                }
+                else{
+                    Mod.targeted = null;
+                }
+
+            }
+            else{
+                Mod.targeted = null;
+
+            }
+            if ((  (!Config.GSON.instance().turnToMouse &&     !player.isFallFlying()) && (
+                    !bool && (this.mouseCooldown <= 30 &&  client.player.input.getMovementInput().length() > 0.1)))) {
                 if (client.player.getVehicle() != null) {
                     Vec3d vec3d = movementInputToVelocity(new Vec3d(client.player.input.movementSideways, 0, client.player.input.movementForward), 1.0F, client.player.getVehicle().getYaw());
                     lookAt(client.player,EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(vec3d.normalize()),true);
@@ -276,7 +317,9 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
                 if (Mod.crosshairTarget != null) {
 
+/*
                     if( mouseCooldown >= 40 || mouseCooldown <= 0){
+*/
                         if (Mod.prevCrosshairTarget == null) {
                             Mod.prevCrosshairTarget = Mod.crosshairTarget;
                         }
@@ -288,7 +331,9 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                                     MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getX(), Mod.crosshairTarget.getPos().getX()),
                                     MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getY(), Mod.crosshairTarget.getPos().getY()),
                                     MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getZ(), Mod.crosshairTarget.getPos().getZ())));
+/*
                     }
+*/
 
 
 
@@ -407,19 +452,16 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
             return;
         }
 
-        // For some reason, KeyBinding#wasPressed doesn't work here, so I'm using KeyBinding#isPressed, which doesn't
-        // seem to break anything.
-        //if (ClientInit.getInstance().getKeyBinding().wasPressed() || (this.options.togglePerspectiveKey.wasPressed
-        // () && mod.isEnabled())) {
+
         if(Mod.enabled && client.worldRenderer != null ){
             ((WorldRendererAccessor)client.worldRenderer).chunks().forEach(builtChunk -> {{
                 builtChunk.scheduleRebuild(true);
             }});
         }
 
-        if (Config.GSON.instance().force || (Config.GSON.instance().onStartup && !first) ||ClientInit.toggleBinding.wasPressed() || (
+        if (client.currentScreen == null && ( Config.GSON.instance().force || (Config.GSON.instance().onStartup && !first) ||ClientInit.toggleBinding.wasPressed() || (
                 this.options.togglePerspectiveKey.isPressed() && Mod.enabled
-        )) {
+        ))) {
             if (!Config.GSON.instance().force && Mod.enabled) {
                 Mod.enabled = false;
 
@@ -457,13 +499,13 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
         if (ClientInit.zoomInBinding.wasPressed()) {
             if (Mod.enabled) {
-                Mod.zoom = Math.clamp(Mod.zoom - 0.2f, 0.5F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F),8);
+                Mod.zoom = Math.clamp(Mod.zoom - 0.2f, 0.5F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F),5);
             }
         }
 
         if (ClientInit.zoomOutBinding.wasPressed()) {
             if (Mod.enabled) {
-                Mod.zoom = Math.clamp(Mod.zoom + 0.2f,0.5F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F), 8.0F);
+                Mod.zoom = Math.clamp(Mod.zoom + 0.2f,0.5F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F), 5.0F);
             }
         }
 
@@ -478,6 +520,15 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
         }
 
         if(client.player != null && Mod.enabled) {
+            var d = 2*DragonCompat.getDragonDistanceMultiplier();
+            if( Mod.zoom < d) {
+                Mod.zoom = (float) Math.clamp(Mod.zoom + 0.05f*d, 0.5F / Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F), Math.min(15,d));
+            }
+            else if (d < Mod.zoom &&  Mod.zoom > 5){
+                Mod.zoom = (float) Math.clamp(Mod.zoom - 0.05f*(5/d), 5, zoom);
+
+            }
+
             if (this.options.attackKey.isPressed()) {
                 mouseCooldown = 40 + (int) (0.2*20F / client.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED));
             }
@@ -501,9 +552,46 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
                 }
             }
+            if((FabricLoader.getInstance().isModLoaded("bettercombat") && !bool && Config.GSON.instance().additionalMeleeAssistance &&  (mouseTarget == null ||  !mouseTarget.getType().equals(HitResult.Type.ENTITY)))){
+                Entity entity;
+                var additionMod =  player.getEntityInteractionRange();
+                List<LivingEntity> living = player.getWorld().getEntitiesByClass(LivingEntity.class,player.getBoundingBox().expand(additionMod),
+                        (target) ->{
+                            return target != player && player.canSee(target) &&  target.distanceTo(player) < additionMod
+                                    && target.getPos().subtract(player.getPos().subtract(player.getRotationVec(1.0F).multiply(additionMod))).normalize().dotProduct(player.getRotationVec(1.0F).normalize()) > 0.5F
+                                    && target.getPos().subtract(player.getPos()).normalize().dotProduct(player.getRotationVec(1.0F).normalize()) > 0;
+                        });
+                if(!living.isEmpty()) {
+                    var vec3d =  player.getPos();
+                    living.sort(Comparator.comparing((a) -> a.getPos().distanceTo(vec3d)));
+                    entity = living.get(0);
+                    if(Mod.pickedTarget != null && Mod.pickedTarget instanceof LivingEntity livingPicekdTarget  && living.contains(livingPicekdTarget) && livingPicekdTarget.isAlive()) {
 
-            if ( (!Config.GSON.instance().turnToMouse &&     !player.isFallFlying()) && (
-                !bool && (mouseCooldown <= 0 && client.player.input.getMovementInput().length() > 0.1))) {
+                        Mod.crosshairTarget = new EntityHitResult(Mod.pickedTarget,Mod.pickedTarget.getBoundingBox().getCenter());
+                        Mod.prevCrosshairTarget = new EntityHitResult(Mod.pickedTarget, Mod.pickedTarget.getBoundingBox().getCenter());
+                        Mod.targeted = Mod.pickedTarget;
+
+                    }
+                    else {
+                        Mod.crosshairTarget = new EntityHitResult(entity, living.get(0).getBoundingBox().getCenter());
+                        Mod.prevCrosshairTarget = new EntityHitResult(entity, living.get(0).getBoundingBox().getCenter());
+                        Mod.targeted = entity;
+
+
+                    }
+
+                }
+                else{
+                    Mod.targeted = null;
+                }
+
+            }
+            else{
+                Mod.targeted = null;
+
+            }
+            if ( (  (!Config.GSON.instance().turnToMouse &&     !player.isFallFlying()) && (
+                    !bool && (this.mouseCooldown <= 30 &&  client.player.input.getMovementInput().length() > 0.1)))) {
                 if (client.player.getVehicle() != null) {
                     Vec3d vec3d = movementInputToVelocity(new Vec3d(client.player.input.movementSideways, 0, client.player.input.movementForward), 1.0F, client.player.getVehicle().getYaw());
                     lookAt(client.player,EntityAnchorArgumentType.EntityAnchor.EYES, client.player.getEyePos().add(vec3d.normalize()),true);
@@ -527,7 +615,6 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                 }
                 if (Mod.crosshairTarget != null) {
 
-                    if( mouseCooldown >= 40 || mouseCooldown <= 0){
                         if (Mod.prevCrosshairTarget == null) {
                             Mod.prevCrosshairTarget = Mod.crosshairTarget;
                         }
@@ -541,7 +628,6 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                                     MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getY(), Mod.crosshairTarget.getPos().getY()),
                                     MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getZ(), Mod.crosshairTarget.getPos().getZ())));
                         }
-                    }
 
 
                 }
@@ -552,11 +638,11 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
         Mod.cooldownWas++;
         mouseCooldown--;
-        if(MinecraftClient.getInstance().world != null && MinecraftClient.getInstance().world.getTime()-Mod.dirtyTime > 20) {
+        if(MinecraftClient.getInstance().world != null && MinecraftClient.getInstance().world.getTime()-Mod.dirtyTime > 10) {
             Mod.dirty = false;
         }
         if(Mod.shouldReload){
-           Mod.endTime = 20;
+           Mod.endTime = 10;
         }
         else{
             if(Mod.endTime >= 0) {
@@ -568,7 +654,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
     @Inject(method = "hasOutline", at = @At("HEAD"), cancellable = true)
     public void hasOutlineXIV(Entity entity, CallbackInfoReturnable<Boolean> cir) {
         if(Mod.enabled &&Mod.crosshairTarget instanceof EntityHitResult hitResult){
-            if(entity.equals(hitResult.getEntity())){
+            if(entity.equals(hitResult.getEntity()) || entity.equals(targeted)){
                 if(!ClientInit.lockOn.isPressed()) {
                     cir.setReturnValue(true);
                 }

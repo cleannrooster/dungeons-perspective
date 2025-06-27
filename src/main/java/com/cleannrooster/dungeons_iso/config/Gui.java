@@ -132,6 +132,7 @@ public class Gui implements ModMenuApi {
                                             )
                                             .controller(BooleanControllerBuilder::create)
                                             .build())
+
                                     .option(Option
                                             .<Float>createBuilder()
                                             .name(Text.translatable("dungeons_iso.config.movefactor.name"))
@@ -177,6 +178,18 @@ public class Gui implements ModMenuApi {
                                                     defaults.turnToMouse,
                                                     () -> config.turnToMouse,
                                                     (value) -> config.turnToMouse = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
+                                    .option(Option
+                                            .<Boolean>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.additionalMeleeAssistance.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.additionalMeleeAssistance.description")))
+                                            .binding(
+                                                    defaults.additionalMeleeAssistance,
+                                                    () -> config.additionalMeleeAssistance,
+                                                    (value) -> config.additionalMeleeAssistance = value
                                             )
                                             .controller(BooleanControllerBuilder::create)
                                             .build())

@@ -26,6 +26,9 @@ public class Mod {
     public static boolean enabled = false;
     public static Perspective lastPerspective;
     public static HitResult crosshairTarget;
+    public static Entity pickedTarget;
+    public static Entity targeted;
+
     public static HitResult prevCrosshairTarget;
     public static Entity lockOnTarget;
     public static boolean dirty;
@@ -33,6 +36,7 @@ public class Mod {
     public static long startTime;
     public static long endTime;
     public static boolean using;
+    public static HitResult mouseTarget;
 
     public static boolean isInteractable(BlockHitResult result){
         BlockPos pos = result.getBlockPos();

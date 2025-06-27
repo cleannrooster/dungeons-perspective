@@ -7,6 +7,8 @@ import com.cleannrooster.dungeons_iso.api.WorldRendererAccessor;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.ShapeContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.RenderLayer;
@@ -14,12 +16,10 @@ import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.chunk.ChunkBuilder;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.*;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.RaycastContext;
@@ -32,6 +32,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
+
 
 @Mixin(WorldRenderer.class)
 public abstract class WorldRendererMixin implements WorldRendererAccessor {
@@ -90,6 +91,7 @@ public abstract class WorldRendererMixin implements WorldRendererAccessor {
             vertexConsumer.vertex(entry, (float)(maxX + offsetX), (float)(maxY + offsetY), (float)(maxZ + offsetZ)).color(red, green, blue, alpha).normal(entry, k, l, m);
         });
     }
+
         @Override
     public ObjectArrayList<ChunkBuilder.BuiltChunk> chunks() {
         return builtChunks;
@@ -111,23 +113,11 @@ public abstract class WorldRendererMixin implements WorldRendererAccessor {
 
     }
 
-    @Inject(method = "drawShapeOutline", at = @At("HEAD"),cancellable = true)
-    private static void drawShapeOutlineXIV(MatrixStack matrices, VertexConsumer vertexConsumer, VoxelShape shape, double offsetX, double offsetY, double offsetZ, float red, float green, float blue, float alpha, boolean colorize, CallbackInfo info) {
-        if(Mod.enabled  ) {
-            info.cancel();
-            List<Box> list = shape.getBoundingBoxes();
-            if (!list.isEmpty()) {
-                int i = colorize ? list.size() : list.size() * 8;
-                drawCuboidShapeOutlineXIV(matrices, vertexConsumer, VoxelShapes.cuboid((Box) list.get(0).expand(0.2)), offsetX, offsetY, offsetZ, red, green, blue, alpha);
-
-                for (int j = 1; j < list.size(); ++j) {
-                    Box box = (Box) list.get(j).expand(0.2);
-                    float f = (float) j / (float) i;
-                    Vec3d vec3d = shiftHueXIV(red, green, blue, f);
-                    drawCuboidShapeOutlineXIV(matrices, vertexConsumer, VoxelShapes.cuboid(box), offsetX, offsetY, offsetZ, (float) vec3d.x, (float) vec3d.y, (float) vec3d.z, alpha);
-                }
-
-            }
+    @Inject(method = "drawBlockOutline", at = @At("HEAD"),cancellable = true)
+    private void drawBlockOutlineXIV(MatrixStack matrices, VertexConsumer vertexConsumer, Entity entity, double cameraX, double cameraY, double cameraZ, BlockPos pos, BlockState state,CallbackInfo info) {
+        if(Mod.enabled && Mod.mouseTarget instanceof BlockHitResult blockHitResult ) {
+            drawCuboidShapeOutlineXIV(matrices, vertexConsumer, state.getOutlineShape(MinecraftClient.getInstance().world, pos, ShapeContext.of(entity)), (double)blockHitResult.getBlockPos().getX() - cameraX, (double)blockHitResult.getBlockPos().getY() - cameraY, (double)blockHitResult.getBlockPos().getZ() - cameraZ, 0.0F, 0.0F, 0.0F, 0.4F);
+            info.cancel();;
         }
     }
  /*   @Inject(method = "getEntitiesToRender", at = @At("TAIL"))

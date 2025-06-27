@@ -28,6 +28,7 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.*;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.*;
+import net.minecraft.world.event.BlockPositionSource;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2d;
 import org.joml.Vector3d;
@@ -294,9 +295,8 @@ public class MouseMixin implements MouseAccessor {
                     }
 
 
-
-                    Mod.crosshairTarget = hitResult;
-
+                        Mod.crosshairTarget = hitResult;
+                    Mod.mouseTarget = hitResult;
                 }
 
 

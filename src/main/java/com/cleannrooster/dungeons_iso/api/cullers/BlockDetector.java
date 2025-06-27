@@ -70,7 +70,7 @@ public class BlockDetector implements BlockCuller {
             if (camera != null && cameraEntity != null) {
 
                 var vec1 = (blockPos.toCenterPos().subtract(camera.getPos()));
-                var vec2 = cameraEntity.getPos().subtract(camera.getPos());
+                var vec2 = cameraEntity.getEyePos().subtract(camera.getPos());
                 var vec3 = blockPos.toCenterPos().subtract(cameraEntity.getPos());
 
                 if (cameraEntity instanceof PlayerEntity player) {
@@ -82,7 +82,7 @@ public class BlockDetector implements BlockCuller {
                 var calc = angleBetween(vec3, vec1);
 
                 if (!isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock()) && blockPos.toCenterPos().getY() > cameraEntity.getPos().getY() + 2 &&
-                        ((calc_theta < 15 * Math.pow(0.9, Mod.zoom)) || camera.getPos().distanceTo(blockPos.toCenterPos()) < 5)) {
+                        ((calc_theta < 3 * Math.pow(0.9, Mod.zoom)) || camera.getPos().distanceTo(blockPos.toCenterPos()) < 5)) {
                     return true;
                 } else {
                     return false;

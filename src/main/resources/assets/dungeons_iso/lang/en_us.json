@@ -49,6 +49,8 @@
   "dungeons_iso.config.zoomFactor.name": "Zoom and FOV factor",
   "dungeons_iso.config.zoomFactor.description":"Zoom and FOV factor",
   "dungeons_iso.config.rollTowardsCursor.name": "(Combat Roll Compat) Roll Towards Cursor",
-  "dungeons_iso.config.rollTowardsCursor.description":"When enabled, you will roll towards the cursor rather than in the direction you're moving."
+  "dungeons_iso.config.rollTowardsCursor.description":"When enabled, you will roll towards the cursor rather than in the direction you're moving.",
+  "dungeons_iso.config.additionalMeleeAssistance.name": "Additional Melee Assistance (Better Combat compat)",
+  "dungeons_iso.config.additionalMeleeAssistance.description":"When enabled, you will snap towards targets in your immediate frontal area of vision when holding a melee weapon. ONLY WORKS WITH BETTER COMBAT."
 
 }

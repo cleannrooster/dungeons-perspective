@@ -45,6 +45,8 @@ public class ClientInit implements ClientModInitializer {
     private static final ArrayList<Consumer<Capabilities>> capabilityListeners = new ArrayList<>();
     public static KeyBinding toggleBinding;
     public static KeyBinding isoBinding;
+
+
     public static KeyBinding lockOn;
     public static KeyBinding clickToMove;
 

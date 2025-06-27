@@ -29,10 +29,10 @@ public class RollManagerMixin {
     @Inject(at = @At("HEAD"), method = "onRoll", cancellable = true)
 
     public void onRollCleann(ClientPlayerEntity player, CallbackInfo info) {
-        if(Mod.enabled && Mod.crosshairTarget != null && Config.GSON.instance().rollTowardsCursor){
+        if(Mod.enabled && Mod.mouseTarget != null && Config.GSON.instance().rollTowardsCursor){
             var speed = player.getMovement().length();
             var vec = player.getMovement();
-            var vec2 = Mod.crosshairTarget.getPos().subtract(player.getPos());
+            var vec2 = Mod.mouseTarget.getPos().subtract(player.getPos());
             player.setVelocity(vec2.subtract(0,vec2.getY(),0).normalize().multiply(speed));
         }
     }

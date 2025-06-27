@@ -61,7 +61,7 @@ public class GameOptionsMixin {
             MinecraftClient.getInstance().worldRenderer.scheduleTerrainUpdate();
         });
 
-        fov30.setValue(Math.clamp((int) 45,30,90));
+        fov30.setValue(Math.clamp((int) 45,45,90));
         fovscale = new SimpleOption("options.fovEffectScale", SimpleOption.constantTooltip(Text.translatable("options.fovEffectScale.tooltip")), ((optionText, value) -> getPercentValueOrOffTextCleann(optionText,(double)value)), SimpleOption.DoubleSliderCallbacks.INSTANCE.withModifier(MathHelper::square, Math::sqrt), Codec.doubleRange(0.0, 1.0), 1.0, (value) -> {
         });
         fovscale.setValue(0D);
@@ -75,7 +75,7 @@ public class GameOptionsMixin {
     )
     public void getFovCleann(CallbackInfoReturnable<SimpleOption<Integer>> option) {
         if(Mod.enabled){
-            fov30.setValue((int) (90*(1-0.5*Mod.zoom/5)));
+            fov30.setValue(Math.clamp((int) (90*(1-0.5*Mod.zoom/5)),45,90));
             option.setReturnValue(fov30);
         }
     }
