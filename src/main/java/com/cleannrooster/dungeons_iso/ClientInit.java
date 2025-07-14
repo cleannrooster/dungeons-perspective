@@ -2,7 +2,6 @@ package com.cleannrooster.dungeons_iso;
 
 
 import com.cleannrooster.dungeons_iso.config.Config;
-import com.cleannrooster.dungeons_iso.mod.Mod;
 import com.cleannrooster.dungeons_iso.network.Capabilities;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
@@ -10,28 +9,19 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -53,10 +43,13 @@ public class ClientInit implements ClientModInitializer {
     public static KeyBinding moveCameraBinding;
     public static KeyBinding zoomInBinding;
     public static KeyBinding zoomOutBinding;
+    public static KeyBinding rotateToggle;
+
     public static KeyBinding cycleTargetBinding;
     public static KeyBinding rotateCounterClockwise;
-    public static KeyBinding rotateClockwase;
+    public static KeyBinding rotateClockwise;
     public static KeyBinding interact;
+    public static KeyBinding contextToggleBinding;
 
     @Nullable
     public static Capabilities capabilities;
@@ -154,7 +147,13 @@ public class ClientInit implements ClientModInitializer {
                 GLFW.GLFW_KEY_DOWN,
                 "dungeons_iso.binds.category"
         ));
-        KeyBindingHelper.registerKeyBinding(rotateClockwase = new KeyBinding(
+        KeyBindingHelper.registerKeyBinding(rotateToggle = new KeyBinding(
+                "dungeons_iso.binds.rotateToggle",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_DELETE,
+                "dungeons_iso.binds.category"
+        ));
+        KeyBindingHelper.registerKeyBinding(rotateClockwise = new KeyBinding(
                 "dungeons_iso.binds.rotateClockwise",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_RIGHT,
@@ -170,6 +169,12 @@ public class ClientInit implements ClientModInitializer {
                 "dungeons_iso.binds.rotateCounterClockwise",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_LEFT,
+                "dungeons_iso.binds.category"
+        ));
+        KeyBindingHelper.registerKeyBinding(contextToggleBinding = new KeyBinding(
+                "dungeons_iso.binds.dynCameraToggle",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_END,
                 "dungeons_iso.binds.category"
         ));
 

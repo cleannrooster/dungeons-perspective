@@ -1,5 +1,5 @@
 {
-  "dungeons_iso.binds.category": "Dungeons Perspective",
+  "dungeons_iso.binds.category": "§6Dungeons Perspective",
   "dungeons_iso.binds.toggle": "Toggle perspective",
   "dungeons_iso.binds.moveCamera": "Move camera",
   "dungeons_iso.binds.zoomIn": "Zoom in",
@@ -9,8 +9,13 @@
   "dungeons_iso.binds.rotateClockwise": "Rotate Right",
   "dungeons_iso.binds.rotateCounterClockwise": "Rotate Left",
   "dungeons_iso.binds.interact": "Interact",
+  "dungeons_iso.binds.clickToMove": "\"Click to Move\"",
+  "dungeons_iso.binds.dynCameraToggle": "Toggle Dynamic Camera",
+  "dungeons_iso.binds.rotateToggle": "Toggle Camera Rotation",
 
-  "dungeons_iso.config.title": "Dungeons Perspective",
+  "modmenu.descriptionTranslation.dungeons_iso": "Changes Minecraft's perspective to be more like Minecraft Dungeons.",
+
+  "dungeons_iso.config.title": "§6Dungeons Perspective",
   "dungeons_iso.config.category.options": "Options",
   "dungeons_iso.config.scrollWheelZoom.name": "Scroll wheel zoom",
   "dungeons_iso.config.scrollWheelZoom.description": "Zoom with scroll wheel (overrides hotbar scrolling).",
@@ -51,6 +56,7 @@
   "dungeons_iso.config.rollTowardsCursor.name": "(Combat Roll Compat) Roll Towards Cursor",
   "dungeons_iso.config.rollTowardsCursor.description":"When enabled, you will roll towards the cursor rather than in the direction you're moving.",
   "dungeons_iso.config.additionalMeleeAssistance.name": "Additional Melee Assistance (Better Combat compat)",
-  "dungeons_iso.config.additionalMeleeAssistance.description":"When enabled, you will snap towards targets in your immediate frontal area of vision when holding a melee weapon. ONLY WORKS WITH BETTER COMBAT."
-
+  "dungeons_iso.config.additionalMeleeAssistance.description":"When enabled, you will snap towards targets in your immediate frontal area of vision when holding a melee weapon. ONLY WORKS WITH BETTER COMBAT.",
+  "dungeons_iso.config.clipToSpace.name": "Zoom Effects",
+  "dungeons_iso.config.clipToSpace.description":"Automatically Zoom in and out depending on certain events."
 }

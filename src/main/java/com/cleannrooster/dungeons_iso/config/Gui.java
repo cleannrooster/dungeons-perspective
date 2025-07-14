@@ -183,6 +183,18 @@ public class Gui implements ModMenuApi {
                                             .build())
                                     .option(Option
                                             .<Boolean>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.clipToSpace.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.clipToSpace.description")))
+                                            .binding(
+                                                    defaults.clipToSpace,
+                                                    () -> config.clipToSpace,
+                                                    (value) -> config.clipToSpace = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
+                                    .option(Option
+                                            .<Boolean>createBuilder()
                                             .name(Text.translatable("dungeons_iso.config.additionalMeleeAssistance.name"))
                                             .description(OptionDescription.of(Text.translatable(
                                                     "dungeons_iso.config.additionalMeleeAssistance.description")))

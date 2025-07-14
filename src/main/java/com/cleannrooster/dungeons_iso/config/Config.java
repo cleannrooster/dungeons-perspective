@@ -30,6 +30,9 @@ public class Config {
     @SerialEntry
     public boolean turnToMouse =  true;
     @SerialEntry
+    public boolean clipToSpace =  true;
+
+    @SerialEntry
     public boolean additionalMeleeAssistance =  false;
     @SerialEntry
     public boolean forceAutoJump =  true;

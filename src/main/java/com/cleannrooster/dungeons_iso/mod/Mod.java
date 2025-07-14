@@ -12,6 +12,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
 public class Mod {
+    public static BlockState prevblock;
     public static float yaw;
     public static float pitch;
     public static double x;
@@ -36,7 +37,16 @@ public class Mod {
     public static long startTime;
     public static long endTime;
     public static boolean using;
+    public static boolean contextToggle;
+    public static boolean rotateToggle;
+
     public static HitResult mouseTarget;
+    public static long dragonTimeSince;
+    public static long dragonTime;
+    public static boolean dragonDirty;
+    public static float zoomTime;
+    public static long startZoom;
+    public static float zoomOutTime;
 
     public static boolean isInteractable(BlockHitResult result){
         BlockPos pos = result.getBlockPos();

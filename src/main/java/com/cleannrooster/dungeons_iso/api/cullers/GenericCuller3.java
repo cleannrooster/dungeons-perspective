@@ -92,11 +92,11 @@ public class GenericCuller3 implements BlockCuller {
         var theta =angleBetween(vec8, vec7)  ;
         var phi =angleBetween(vec1,  vec2)  ;
         var chi =angleBetween(vec6,  new Vec3d(0,1,0))  ;
-        var factor = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,Mod.endTime)))*45*Math.pow(0.9,Mod.zoom);
-        var factor2 = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,Mod.endTime)))*45*Math.pow(0.9,Mod.zoom);
+        var factor = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*45*Math.pow(0.9,Mod.zoom);
+        var factor2 = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*45*Math.pow(0.9,Mod.zoom);
 
         if(!isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock()) && blockPos.toCenterPos().getY() > cameraEntity.getPos().getY() + 1 &&
-                (((  theta < factor  ) && chi < 60 ) ||(  camera.getPos().distanceTo(blockPos.toCenterPos()) < 5))){
+                (((  theta < factor  ) && chi < 60 && phi < 45 ) ||(  camera.getPos().distanceTo(blockPos.toCenterPos()) < 5))){
             return true;
         }
         else {

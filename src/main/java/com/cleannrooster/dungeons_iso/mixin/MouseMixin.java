@@ -150,7 +150,7 @@ public class MouseMixin implements MouseAccessor {
         boolean spell = false;
 
         if (Mod.enabled && cameraEntity != null && client.player != null) {
-                if (client.options.pickItemKey.isPressed()||ClientInit.moveCameraBinding.isPressed()) {
+                if (client.options.pickItemKey.isPressed()||ClientInit.moveCameraBinding.isPressed() || Mod.rotateToggle) {
                     if (lastX == null || lastY == null) {
                         InputUtil.setCursorParameters(client.getWindow().getHandle(), InputUtil.GLFW_CURSOR_DISABLED,
                                 x, y

@@ -70,7 +70,6 @@ import static com.cleannrooster.dungeons_iso.mod.Mod.*;
 
 @Mixin(MinecraftClient.class)
 public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
-    public boolean shouldRebuild;
     private boolean canUseItem;
 
 @Shadow
@@ -164,8 +163,12 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
                     SodiumCompat.run();
 
-
-
+            if(ClientInit.contextToggleBinding.wasPressed()){
+                contextToggle = !contextToggle;
+            }
+            if(ClientInit.rotateToggle.wasPressed()){
+                rotateToggle = !rotateToggle;
+            }
             if(  ClientInit.clickToMove.isPressed() && Config.GSON.instance().clickToMove) {
 
                 if (  (Mod.crosshairTarget instanceof BlockHitResult hit &&  isInteractable(hit))){
@@ -363,6 +366,28 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
             Mod.crosshairTarget = null;
             Mod.prevCrosshairTarget = null;
         }
+
+            if(MinecraftClient.getInstance().world != null && MinecraftClient.getInstance().world.getTime()-Mod.dirtyTime > 40) {
+                if(Mod.dirty) {
+                    endTime = 0;
+                    zoomOutTime = 0;
+                }
+                Mod.dirty = false;
+
+            }
+            if(shouldReload){
+
+            }
+            else if(Mod.endTime < 10) {
+                Mod.endTime++;
+            }
+            if(shouldReload){
+
+            }
+            else if(zoomOutTime < 10) {
+                zoomOutTime++;
+            }
+
     }
     private  void lookAt(LivingEntity living, EntityAnchorArgumentType.EntityAnchor anchorPoint, Vec3d target) {
         lookAt(living,anchorPoint,target,false);
@@ -520,14 +545,10 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
         }
 
         if(client.player != null && Mod.enabled) {
-            var d = 2*DragonCompat.getDragonDistanceMultiplier();
-            if( Mod.zoom < d) {
-                Mod.zoom = (float) Math.clamp(Mod.zoom + 0.05f*d, 0.5F / Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F), Math.min(15,d));
-            }
-            else if (d < Mod.zoom &&  Mod.zoom > 5){
-                Mod.zoom = (float) Math.clamp(Mod.zoom - 0.05f*(5/d), 5, zoom);
 
-            }
+
+            DragonCompat.getDragonDistanceMultiplier();
+
 
             if (this.options.attackKey.isPressed()) {
                 mouseCooldown = 40 + (int) (0.2*20F / client.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED));
@@ -638,17 +659,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
         Mod.cooldownWas++;
         mouseCooldown--;
-        if(MinecraftClient.getInstance().world != null && MinecraftClient.getInstance().world.getTime()-Mod.dirtyTime > 10) {
-            Mod.dirty = false;
-        }
-        if(Mod.shouldReload){
-           Mod.endTime = 10;
-        }
-        else{
-            if(Mod.endTime >= 0) {
-                Mod.endTime--;
-            }
-        }
+
     }
 
     @Inject(method = "hasOutline", at = @At("HEAD"), cancellable = true)
