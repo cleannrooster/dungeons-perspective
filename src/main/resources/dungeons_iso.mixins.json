@@ -32,7 +32,6 @@
     "compat.sodium.AbstractRenderContextMixin",
     "compat.sodium.RenderSectionManagerMixin"
 
-
   ],
   "server": [
     "server.PlayerEntityMixin"

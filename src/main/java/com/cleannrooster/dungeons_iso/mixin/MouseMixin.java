@@ -240,7 +240,7 @@ public class MouseMixin implements MouseAccessor {
                             camera.getPos(),
                             end,
                             CustomShapeTypes.CULLED,
-                            RaycastContext.ShapeType.COLLIDER,
+                            RaycastContext.ShapeType.OUTLINE,
                             RaycastContext.FluidHandling.NONE,
                             cameraEntity
                     ),(innerContext, pos) -> {

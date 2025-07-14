@@ -95,10 +95,10 @@ public class GenericCuller3 implements BlockCuller {
         var phi =angleBetween(vec1,  vec2)  ;
         var chi =angleBetween(vec6,  new Vec3d(0,1,0))  ;
         var factor = 0.05*(Math.min(20,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime,Mod.endTime)))*45*Math.pow(0.9,Mod.zoom);
-        var factor2 = 0.05*(Math.min(20,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime,Mod.endTime)))*90*Math.pow(0.9,Mod.zoom);
+        var factor2 = 0.05*(Math.min(20,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime,Mod.endTime)))*45*Math.pow(0.9,Mod.zoom);
 
         if(!isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock()) && blockPos.toCenterPos().getY() > cameraEntity.getPos().getY() + 1 &&
-                (((  theta < factor && phi < factor2 ) ) ||(  camera.getPos().distanceTo(blockPos.toCenterPos()) < 5))){
+                (((  theta < factor && chi < 60 ) ) ||(  camera.getPos().distanceTo(blockPos.toCenterPos()) < 5))){
             return true;
         }
         else {
@@ -172,12 +172,7 @@ public class GenericCuller3 implements BlockCuller {
     }
     @Override
     public boolean shouldIgnoreBlockPick(BlockPos blockPos, Camera camera, Entity cameraEntity) {
-        if(!(isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) && blockPos != null && (cameraEntity instanceof PlayerEntity player && blockPos.toCenterPos().distanceTo(cameraEntity.getEyePos()) > 4.5)
-                && blockPos.toCenterPos().getY() > cameraEntity.getY()+1){
-            if(new Vec3d(0,1,0).dotProduct(blockPos.toCenterPos().subtract(cameraEntity.getPos()).normalize())>0.5F) {
-                return true;
-            }
-        }
+
         return false;
     }
 

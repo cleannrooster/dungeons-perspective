@@ -83,7 +83,8 @@ public abstract class CameraMixin implements CameraAccessor {
     )
     public void a(Args args) {
         if (Mod.enabled) {
-            args.setAll(Mod.yaw, Mod.pitch);
+            args.set(0,Mod.yaw);
+            args.set(1, Mod.pitch);
         }
     }
 
