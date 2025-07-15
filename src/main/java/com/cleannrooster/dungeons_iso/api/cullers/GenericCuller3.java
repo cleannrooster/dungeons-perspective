@@ -98,7 +98,7 @@ public class GenericCuller3 implements BlockCuller {
         var factor2 = 0.05*(Math.min(20,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime,Mod.endTime)))*45*Math.pow(0.9,Mod.zoom);
 
         if(!isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock()) && blockPos.toCenterPos().getY() > cameraEntity.getPos().getY() + 1 &&
-                (((  theta < factor && chi < 60 ) ) ||(  camera.getPos().distanceTo(blockPos.toCenterPos()) < 5))){
+                (((  theta < factor && chi < 60  && phi < 45) ) ||(  camera.getPos().distanceTo(blockPos.toCenterPos()) < 5))){
             return true;
         }
         else {

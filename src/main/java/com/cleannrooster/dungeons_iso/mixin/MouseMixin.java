@@ -268,7 +268,7 @@ public class MouseMixin implements MouseAccessor {
                     );
                     BlockHitResult scanDown = client.player.getWorld().raycast(
                             new RaycastContext(
-                                    scanUp.getPos(),end, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE,client.player)
+                                    scanUp.getPos(),scanUp.getPos().add(hitResult0.getPos().subtract(scanUp.getPos()).normalize().multiply(renderer.getFarPlaneDistance()*2)), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE,client.player)
 
                     );
 
