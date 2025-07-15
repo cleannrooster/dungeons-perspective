@@ -36,6 +36,7 @@ public class ClientInit implements ClientModInitializer {
     public static KeyBinding toggleBinding;
     public static KeyBinding isoBinding;
 
+    public static KeyBinding verticalBinding;
 
     public static KeyBinding lockOn;
     public static KeyBinding clickToMove;
@@ -128,7 +129,12 @@ public class ClientInit implements ClientModInitializer {
                 GLFW.GLFW_KEY_H,
                 "dungeons_iso.binds.category"
         ));
-
+        KeyBindingHelper.registerKeyBinding(verticalBinding = new KeyBinding(
+                "dungeons_iso.binds.verticalBinding",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_RIGHT_ALT,
+                "dungeons_iso.binds.category"
+        ));
         KeyBindingHelper.registerKeyBinding(clickToMove = new KeyBinding(
                 "dungeons_iso.binds.clickToMove",
                 InputUtil.Type.MOUSE,

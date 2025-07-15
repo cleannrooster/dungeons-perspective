@@ -1,6 +1,7 @@
 package com.cleannrooster.dungeons_iso.api;
 
 import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
+import com.cleannrooster.dungeons_iso.mod.Mod;
 import net.minecraft.block.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
@@ -44,6 +45,15 @@ public enum CustomShapeTypes implements RaycastContext.ShapeProvider {
             return VoxelShapes.cuboid(0,0,0,1,Math.max(0,((MinecraftClient.getInstance().cameraEntity.getY()*16) % 16F)/16F),1);
         }
 
+    }),
+    VERTICAL((state, world, pos, context) -> {
+        if(pos.getX()== Mod.horizontalTarget.getBlockPos().getX() || pos.getY() ==Mod.horizontalTarget.getBlockPos().getZ()) {
+
+            return VoxelShapes.cuboid(0, 0, 0, 1, Math.max(0, ((MinecraftClient.getInstance().cameraEntity.getY() * 16) % 16F) / 16F), 1);
+        }
+        else{
+            return VoxelShapes.empty();
+        }
     });
 
     private CustomShapeTypes(final RaycastContext.ShapeProvider provider) {

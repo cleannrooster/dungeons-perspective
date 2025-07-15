@@ -21,6 +21,7 @@ import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
@@ -173,12 +174,16 @@ public class MouseMixin implements MouseAccessor {
                                 lastX != null ? lastX : x,
                                 lastY != null ? lastY : y
                         );
-                        x = lastX;
+
+                            x = lastX;
                         y = lastY;
                         lastX = null;
                         lastY = null;
                     }
+                    if(Mod.horizontalTarget != null){
+                        Mod.horizontalTarget = new BlockHitResult(Mod.horizontalTarget.getPos().add(0, ((-j*k)/40),0),Mod.horizontalTarget.getSide(),BlockPos.ofFloored(Mod.horizontalTarget.getPos().add(0, ((-j*k)/40),0)),true);
 
+                    }
                     Vector2d res = new Vector2d(window.getFramebufferWidth(), window.getFramebufferHeight());
                     double aspect = res.x / res.y;
                     Vector2d coords = new Vector2d(mouse.getX(), mouse.getY()).div(res).mul(2.0).sub(new Vector2d(1.0));
@@ -196,6 +201,8 @@ public class MouseMixin implements MouseAccessor {
                             .stretch(rayDir.multiply(renderer.getFarPlaneDistance()*2))
                             .expand(1.0, 1.0, 1.0);
                     Vec3d end = camera.getPos().add(rayDir.multiply(renderer.getFarPlaneDistance()));
+                    HitResult hitVertical = null;
+
                     if(cameraEntity instanceof PlayerEntity player && player.isFallFlying()){
 
 
@@ -267,7 +274,7 @@ public class MouseMixin implements MouseAccessor {
                     );
                     BlockHitResult scanDown = client.player.getWorld().raycast(
                             new RaycastContext(
-                                    scanUp.getPos(),end, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE,client.player)
+                                    scanUp.getPos(),scanUp.getPos().add(hitResult0.getPos().subtract(scanUp.getPos()).normalize().multiply(renderer.getFarPlaneDistance()*2)), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE,client.player)
 
                     );
 
@@ -294,9 +301,16 @@ public class MouseMixin implements MouseAccessor {
                         }
                     }
 
+                    if(ClientInit.verticalBinding.wasPressed()){
+                        Mod.verticalMode = !Mod.verticalMode;
+                        Mod.horizontalTarget = Mod.verticalMode ? scanDown : null;
+                        if(Mod.verticalMode){
+                            client.player.sendMessage(Text.translatable("Vertical look mode activated (Default Keybind: RIGHT ALT)"), true);
+                        }
+                    }
 
-                        Mod.crosshairTarget = hitResult;
-                    Mod.mouseTarget = hitResult;
+                    Mod.crosshairTarget = Mod.horizontalTarget != null ? Mod.horizontalTarget :  hitResult;
+                    Mod.mouseTarget = Mod.horizontalTarget != null ? Mod.horizontalTarget : hitResult;
                 }
 
 

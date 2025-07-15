@@ -41,12 +41,16 @@ public class Mod {
     public static boolean rotateToggle;
 
     public static HitResult mouseTarget;
+
+    public static BlockHitResult horizontalTarget;
+
     public static long dragonTimeSince;
     public static long dragonTime;
     public static boolean dragonDirty;
     public static float zoomTime;
     public static long startZoom;
     public static float zoomOutTime;
+    public static boolean verticalMode;
 
     public static boolean isInteractable(BlockHitResult result){
         BlockPos pos = result.getBlockPos();
