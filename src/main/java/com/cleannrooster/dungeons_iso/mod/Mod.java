@@ -35,6 +35,9 @@ public class Mod {
     public static long startTime;
     public static long endTime;
     public static boolean using;
+    public static boolean verticalMode;
+    public static BlockHitResult horizontalTarget;
+    public static BlockHitResult lastVertical;
 
     public static boolean isInteractable(BlockHitResult result){
         BlockPos pos = result.getBlockPos();

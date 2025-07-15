@@ -9,6 +9,7 @@
   "dungeons_iso.binds.rotateClockwise": "Rotate Right",
   "dungeons_iso.binds.rotateCounterClockwise": "Rotate Left",
   "dungeons_iso.binds.interact": "Interact",
+  "dungeons_iso.binds.verticalBinding": "Vertical Look Toggle",
 
   "dungeons_iso.config.title": "Dungeons Perspective",
   "dungeons_iso.config.category.options": "Options",

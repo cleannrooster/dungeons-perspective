@@ -21,6 +21,7 @@ import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
@@ -167,6 +168,19 @@ public class MouseMixin implements MouseAccessor {
 
                     Mod.crosshairTarget = null;
                 } else {
+                    if(Mod.horizontalTarget != null){
+                        if (lastX == null || lastY == null) {
+
+                            lastX = x;
+                            lastY = y;
+                        }
+                        if(lastY != null) {
+                            Mod.horizontalTarget = new BlockHitResult(Mod.lastVertical.getPos().add(0, ((-(y - lastY) * k) / 40), 0), Mod.lastVertical.getSide(), BlockPos.ofFloored(Mod.lastVertical.getPos().add(0, ((-(y - lastY) * k) / 40), 0)), true);
+
+                        }
+
+                    }
+                    else
                     if (lastX != null && lastY != null) {
                         InputUtil.setCursorParameters(
                                 client.getWindow().getHandle(),
@@ -294,10 +308,19 @@ public class MouseMixin implements MouseAccessor {
                             hitResult = new BlockHitResult(new Vec3d(scanDown.getPos().getX(), player.getEyeY(), scanDown.getPos().getZ()), scanDown.getSide(),BlockPos.ofFloored(scanDown.getPos().getX(), cameraEntity.getEyeY(), scanDown.getPos().getZ()),false);
                         }
                     }
+                    if(ClientInit.verticalBinding.wasPressed()){
+                        Mod.verticalMode = !Mod.verticalMode;
+                        Mod.horizontalTarget = Mod.verticalMode ? scanDown : null;
+                        Mod.lastVertical = Mod.verticalMode ? scanDown : null;
+
+                        if(Mod.verticalMode){
+                            client.player.sendMessage(Text.translatable("Vertical look mode activated (Default Keybind: RIGHT ALT)"), true);
+                        }
+                    }
 
 
 
-                    Mod.crosshairTarget = hitResult;
+                    Mod.crosshairTarget = Mod.horizontalTarget != null ? Mod.horizontalTarget :  hitResult;
 
                 }
 

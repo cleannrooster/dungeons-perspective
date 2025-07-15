@@ -32,7 +32,7 @@ public class ClientInit implements ClientModInitializer {
     public static KeyBinding rotateCounterClockwise;
     public static KeyBinding rotateClockwase;
     public static KeyBinding interact;
-
+    public static KeyBinding verticalBinding;
 
 
     public static boolean isConnectedToServer() {
@@ -89,6 +89,12 @@ public class ClientInit implements ClientModInitializer {
                 "dungeons_iso.binds.zoomOut",
                 InputUtil.Type.MOUSE,
                 GLFW.GLFW_KEY_DOWN,
+                "dungeons_iso.binds.category"
+        ));
+        KeyBindingHelper.registerKeyBinding(verticalBinding = new KeyBinding(
+                "dungeons_iso.binds.verticalBinding",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_RIGHT_ALT,
                 "dungeons_iso.binds.category"
         ));
         KeyBindingHelper.registerKeyBinding(rotateClockwase = new KeyBinding(
