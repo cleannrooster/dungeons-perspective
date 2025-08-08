@@ -32,7 +32,8 @@
     "compat.sodium.SodiumWorldRendererMixin",
     "compat.sodium.AbstractRenderContextMixin",
     "compat.sodium.FluidRendererMixin",
-    "compat.sodium.RenderSectionManagerMixin"
+    "compat.sodium.RenderSectionManagerMixin",
+    "compat.midnightcontrols.MovementHandlerMixin"
 
 
   ],

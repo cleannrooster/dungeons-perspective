@@ -1,7 +1,9 @@
 package com.cleannrooster.dungeons_iso.mixin;
 
 import com.cleannrooster.dungeons_iso.api.*;
+import com.cleannrooster.dungeons_iso.compat.MidnightControlsCompat;
 import com.llamalad7.mixinextras.sugar.Local;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.DoorBlock;
 import net.minecraft.block.TrapdoorBlock;
@@ -132,7 +134,8 @@ public class MouseMixin implements MouseAccessor {
             InputUtil.setCursorParameters(client.getWindow().getHandle(), GLFW.GLFW_CURSOR_NORMAL, x, y);
         }
     }
-
+    int lasti;
+    int timeGone = 0;
 
     @Inject(
             method = "updateMouse",
@@ -151,6 +154,28 @@ public class MouseMixin implements MouseAccessor {
         boolean spell = false;
 
         if (Mod.enabled && cameraEntity != null && client.player != null) {
+            boolean isController = false;
+            if (FabricLoader.getInstance().isModLoaded("midnightcontrols")) {
+                isController = MidnightControlsCompat.isEnabled();
+            }
+            if(isController) {
+                if (timeGone > 40) {
+                    InputUtil.setCursorParameters(client.getWindow().getHandle(), InputUtil.GLFW_CURSOR_DISABLED,
+                            x, y
+                    );
+                    Mod.noMouse = true;
+                }
+                if (i == lasti) {
+                    timeGone++;
+                } else {
+                    if (timeGone > 40) {
+                        timeGone = 0;
+                        InputUtil.setCursorParameters(client.getWindow().getHandle(), InputUtil.GLFW_CURSOR_NORMAL,
+                                x, y
+                        );
+                    }
+                }
+            }
                 if (client.options.pickItemKey.isPressed()||ClientInit.moveCameraBinding.isPressed() || Mod.rotateToggle) {
                     if (lastX == null || lastY == null) {
                         InputUtil.setCursorParameters(client.getWindow().getHandle(), InputUtil.GLFW_CURSOR_DISABLED,
@@ -322,8 +347,8 @@ public class MouseMixin implements MouseAccessor {
                         }
                     }
 
-                    Mod.crosshairTarget = Mod.horizontalTarget != null ? Mod.horizontalTarget :  hitResult;
-                    Mod.mouseTarget = Mod.horizontalTarget != null ? Mod.horizontalTarget : hitResult;
+                    Mod.crosshairTarget =  Mod.horizontalTarget != null ? Mod.horizontalTarget : hitResult;
+                    Mod.mouseTarget =  Mod.horizontalTarget != null ? Mod.horizontalTarget : hitResult;
                 }
 
 
@@ -438,10 +463,7 @@ public class MouseMixin implements MouseAccessor {
                 lockontime = 0;
             }
             lockontime = Math.min(160,lockontime);
-            return new EntityHitResult(entity2, ClientInit.lockOn.isPressed() ? vec3d : new Vec3d(
-                    MathHelper.lerp((double)lockontime/160D,entity2.getBoundingBox().getCenter().getX(),entity2.getX()),
-                    MathHelper.lerp((double)lockontime/160D,entity2.getBoundingBox().getCenter().getY(), Math.min(entity2.getY() + entity2.getHeight(), entity2.getY() + entity2.getHeight()/2 + 0.1*entity2.getHeight()*Math.log(Math.max(1,entity.distanceTo(entity2))))),
-                    MathHelper.lerp((double)lockontime/160D,entity2.getBoundingBox().getCenter().getZ(),entity2.getZ())));
+            return new EntityHitResult(entity2, ClientInit.lockOn.isPressed() ? vec3d : entity2.getEyePos());
         }
     }
     @Inject(

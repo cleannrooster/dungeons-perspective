@@ -13,6 +13,8 @@
   "dungeons_iso.binds.dynCameraToggle": "Toggle Dynamic Camera",
   "dungeons_iso.binds.rotateToggle": "Toggle Camera Rotation",
   "dungeons_iso.binds.verticalBinding": "Vertical Look Toggle",
+  "dungeons_iso.binds.cycleTargetBinding": "Cycle Target Binding",
+  "dungeons_iso.binds.openLootMenu": "Open Loot Menu",
 
   "modmenu.descriptionTranslation.dungeons_iso": "Changes Minecraft's perspective to be more like Minecraft Dungeons.",
 

@@ -47,6 +47,8 @@ public class ClientInit implements ClientModInitializer {
     public static KeyBinding rotateToggle;
 
     public static KeyBinding cycleTargetBinding;
+    public static KeyBinding openLootMenu;
+
     public static KeyBinding rotateCounterClockwise;
     public static KeyBinding rotateClockwise;
     public static KeyBinding interact;
@@ -183,9 +185,19 @@ public class ClientInit implements ClientModInitializer {
                 GLFW.GLFW_KEY_END,
                 "dungeons_iso.binds.category"
         ));
+        KeyBindingHelper.registerKeyBinding(cycleTargetBinding = new KeyBinding(
+                "dungeons_iso.binds.cycleTargetBinding",
+                InputUtil.Type.MOUSE,
+                GLFW.GLFW_MOUSE_BUTTON_4,
+                "dungeons_iso.binds.category"
+        ));
 
-
-
+        KeyBindingHelper.registerKeyBinding(openLootMenu = new KeyBinding(
+                "dungeons_iso.binds.openLootMenu",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_Z,
+                "dungeons_iso.binds.category"
+        ));
 
         // Client side stuff
 

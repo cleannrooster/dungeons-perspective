@@ -46,6 +46,8 @@ public class Config {
     @SerialEntry
     public float zoomFactor = 1F;
     @SerialEntry
+    public boolean ortho = false;
+    @SerialEntry
 
     public boolean clickToMove = false;
 

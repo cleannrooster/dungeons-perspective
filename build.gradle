@@ -27,6 +27,7 @@ repositories {
             includeGroup 'maven.modrinth'
         }
     }
+    maven { url 'https://maven.wispforest.io' }
 
     maven {
         name = "Ladysnake Libs"
@@ -56,6 +57,11 @@ dependencies {
     modApi(modApi "me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
         exclude(group: "net.fabricmc.fabric-api")
     }
+    modImplementation "io.wispforest:owo-lib:${project.owo_version}"
+    // only if you plan to use owo-config
+    annotationProcessor "io.wispforest:owo-lib:${project.owo_version}"
+    modCompileOnly fileTree(dir: "run/mods", includes: ['*.jar'])
+
     modImplementation "maven.modrinth:sodium:${rootProject.sodium_version}-fabric"
 }
 
@@ -105,6 +111,7 @@ modrinth {
     uploadFile = remapJar // With Loom, this MUST be set to `remapJar` instead of `jar`!
     gameVersions = [project.minecraft_version] // Must be an array, even with only one version
     loaders = ["fabric"] // Must also be an array - no need to specify this if you're using Loom or ForgeGradle
+
     dependencies { // A special DSL for creating dependencies
         // scope.type
         // The scope can be `required`, `optional`, `incompatible`, or `embedded`

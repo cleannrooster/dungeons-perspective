@@ -143,21 +143,7 @@ public abstract class CameraMixin implements CameraAccessor {
 
             }
 
-            boolean bool = Config.GSON.instance().clipToSpace && Mod.shouldReload;
-                if ( bool   ){
-
-                    args.set(0, (float) args.get(0) * ( Math.min(2F,((float) 1F + ((DragonCompat.bool ?(float)(Math.max(0F,(float)MinecraftClient.getInstance().world.getTime()- (float)Mod.dragonTimeSince +MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta())) : Math.max(0F,20F-(float)MinecraftClient.getInstance().world.getTime() + (float)Mod.dragonTime -MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta()) ))/20F)))*(0.5F + 0.5F * ((float) Math.max(Mod.zoomTime , 0F))) * Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom);
-                } else {
-
-                    if(   Config.GSON.instance().clipToSpace ) {
-                        args.set(0, (float) args.get(0) * ( Math.min(2F,((float) 1F + ((DragonCompat.bool ?(float)(Math.max(0F,(float)MinecraftClient.getInstance().world.getTime()- (float)Mod.dragonTimeSince +MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta())) : Math.max(0F,20F-(float)MinecraftClient.getInstance().world.getTime() + (float)Mod.dragonTime -MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta()) ))/20F))) * (0.5F + 0.5F * Math.min(1F,((float) Mod.endTime+MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta()) / 10F)) * Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom);
-
-                    }
-                    else {
-                        args.set(0, (float) args.get(0) * Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom);
-
-                    }
-                }
+            args.set(0, (float) args.get(0) * getZoom());
 
 
 
