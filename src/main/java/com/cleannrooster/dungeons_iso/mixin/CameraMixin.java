@@ -109,7 +109,7 @@ public abstract class CameraMixin implements CameraAccessor {
                 }
 
             }
-
+            Mod.zoomMetric = args.get(0);
                 args.set(0, (double) args.get(0) * MathHelper.clamp(Config.GSON.instance().zoomFactor,1F,1.5F)*Mod.zoom);
         }
     }

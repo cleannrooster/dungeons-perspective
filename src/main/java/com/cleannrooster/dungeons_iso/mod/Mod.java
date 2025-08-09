@@ -10,6 +10,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
 
 public class Mod {
     public static float yaw;
@@ -23,8 +24,14 @@ public class Mod {
     public static double z;
     public static int cooldownIs;
     public static int cooldownWas;
+    public static double zoomMetric;
+
     public static double getZoom(){
         return zoom * (double)0.05 * (double)(Math.min((double)20, (double)Math.min((double)MinecraftClient.getInstance().world.getTime() - (double)Mod.startTime, (double)Mod.endTime)));
+    }
+
+    public static double multiplyByZoom(float f){
+        return f*1.5;
     }
 
     public static float zoom = 5.0F;
