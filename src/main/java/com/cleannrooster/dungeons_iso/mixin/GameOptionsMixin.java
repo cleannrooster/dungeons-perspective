@@ -75,7 +75,7 @@ public class GameOptionsMixin {
     )
     public void getFovCleann(CallbackInfoReturnable<SimpleOption<Integer>> option) {
         if(Mod.enabled){
-            fov30.setValue((int) (90*(1-0.5*Mod.zoom/5)));
+            fov30.setValue(Config.GSON.instance ().ortho  ? 50 : (int) (90 * (1 - 0.5 * Mod.zoom / 5)));
             option.setReturnValue(fov30);
         }
     }

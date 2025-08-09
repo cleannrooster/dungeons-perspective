@@ -44,5 +44,6 @@ public class Config {
     @SerialEntry
 
     public boolean clickToMove = false;
-
+    @SerialEntry
+    public boolean ortho = false;
 }

@@ -50,6 +50,8 @@
   "dungeons_iso.config.zoomFactor.name": "Zoom and FOV factor",
   "dungeons_iso.config.zoomFactor.description":"Zoom and FOV factor",
   "dungeons_iso.config.rollTowardsCursor.name": "(Combat Roll Compat) Roll Towards Cursor",
-  "dungeons_iso.config.rollTowardsCursor.description":"When enabled, you will roll towards the cursor rather than in the direction you're moving."
+  "dungeons_iso.config.rollTowardsCursor.description":"When enabled, you will roll towards the cursor rather than in the direction you're moving.",
+  "dungeons_iso.config.ortho.name": "Orthogonal Mode (NOT ADVISED FOR UNDERGROUND)",
+  "dungeons_iso.config.ortho.description":"When enabled, you will roll towards the cursor rather than in the direction you're moving."
 
 }

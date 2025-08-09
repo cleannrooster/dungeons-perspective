@@ -175,7 +175,18 @@ public class Gui implements ModMenuApi {
                                             )
                                             .controller(FloatFieldControllerBuilder::create)
                                             .build())
-
+                                    .option(Option
+                                            .<Boolean>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.ortho.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.ortho.description")))
+                                            .binding(
+                                                    defaults.ortho,
+                                                    () -> config.ortho,
+                                                    (value) -> config.ortho = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
 
 
 

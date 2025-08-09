@@ -23,6 +23,9 @@ public class Mod {
     public static double z;
     public static int cooldownIs;
     public static int cooldownWas;
+    public static double getZoom(){
+        return zoom * (double)0.05 * (double)(Math.min((double)20, (double)Math.min((double)MinecraftClient.getInstance().world.getTime() - (double)Mod.startTime, (double)Mod.endTime)));
+    }
 
     public static float zoom = 5.0F;
     public static boolean enabled = false;

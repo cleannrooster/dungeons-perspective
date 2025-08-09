@@ -210,7 +210,7 @@ public class MouseMixin implements MouseAccessor {
                     Box box = Box.of(camera.getPos(),2,2,2)
                             .stretch(rayDir.multiply(renderer.getFarPlaneDistance()*2))
                             .expand(1.0, 1.0, 1.0);
-                    Vec3d end = camera.getPos().add(rayDir.multiply(renderer.getFarPlaneDistance()));
+                    Vec3d end = camera.getPos().add(rayDir.multiply(renderer.getFarPlaneDistance()*2));
                     if(cameraEntity instanceof PlayerEntity player && player.isFallFlying()){
 
 
@@ -297,16 +297,32 @@ public class MouseMixin implements MouseAccessor {
                             entity -> !entity.isSpectator() && entity.canHit(),
                             renderer.getFarPlaneDistance()*2
                     ,0.5F);
+                    HitResult hitResult2 = raycastExpanded(
+                            cameraEntity,
+                            camera.getPos(),
+                            end,
+                            box,
+                            entity -> !entity.isSpectator() && entity.canHit(),
+                            renderer.getFarPlaneDistance()*2
+                            ,0.5F);
                     if (!(hitResult instanceof EntityHitResult result && result.getType().equals(HitResult.Type.ENTITY))) {
+                        if ( !(hitResult2 instanceof EntityHitResult result2 && result2.getType().equals(HitResult.Type.ENTITY) && cameraEntity instanceof PlayerEntity player2 && player2.canSee(((EntityHitResult) hitResult2).getEntity()))) {
 
                             hitResult = scanDown;
-
-                        if(cameraEntity instanceof PlayerEntity player && hitResult.getPos().distanceTo(cameraEntity.getEyePos()) > 4.5 && cameraEntity.getWorld().getBlockEntity(BlockPos.ofFloored(hitResult.getPos())) == null
-                    && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof WallMountedBlock)
-                                && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof DoorBlock)
-                                && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof TrapdoorBlock)) {
-                            hitResult = new BlockHitResult(new Vec3d(scanDown.getPos().getX(), player.getEyeY(), scanDown.getPos().getZ()), scanDown.getSide(),BlockPos.ofFloored(scanDown.getPos().getX(), cameraEntity.getEyeY(), scanDown.getPos().getZ()),false);
+                            if(cameraEntity instanceof PlayerEntity player && hitResult.getPos().distanceTo(cameraEntity.getEyePos()) > 4.5 && cameraEntity.getWorld().getBlockEntity(BlockPos.ofFloored(hitResult.getPos())) == null
+                                    && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof WallMountedBlock)
+                                    && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof DoorBlock)
+                                    && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof TrapdoorBlock)) {
+                                hitResult = new BlockHitResult(new Vec3d(scanDown.getPos().getX(), player.getEyeY(), scanDown.getPos().getZ()), scanDown.getSide(),BlockPos.ofFloored(scanDown.getPos().getX(), cameraEntity.getEyeY(), scanDown.getPos().getZ()),false);
+                            }
                         }
+                        else{
+                            if(hitResult2 != null) {
+                                hitResult = hitResult2;
+                            }
+
+                        }
+
                     }
                     if(ClientInit.verticalBinding.wasPressed()){
                         Mod.verticalMode = !Mod.verticalMode;
