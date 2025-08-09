@@ -53,7 +53,7 @@ public class GameOptionsMixin {
             }
             return var10000;
 
-        }, new SimpleOption.ValidatingIntSliderCallbacks(0, 120), Codec.DOUBLE.xmap((value) -> {
+        }, new SimpleOption.ValidatingIntSliderCallbacks(0, 180), Codec.DOUBLE.xmap((value) -> {
             return (int)(value * 40.0 + 70.0);
         }, (value) -> {
             return ((double)value - 70.0) / 40.0;
@@ -76,9 +76,9 @@ public class GameOptionsMixin {
     public void getFovCleann(CallbackInfoReturnable<SimpleOption<Integer>> option) {
         if(Mod.enabled){
             int fov = fov30.getValue();
-            fov30.setValue(Config.GSON.instance().ortho ? 50 :Math.clamp((int) (fov30.getValue()  + 90F*(1F-Math.log10(4F*Mod.getZoom()+1)))+4,Config.GSON.instance().ortho ? 45 :  45,120));
+            fov30.setValue(Math.clamp((int) (fov30.getValue()  + 90F*(1F-Math.log10(4F*Mod.getZoom()+1)))+4, 45,120));
             option.setReturnValue(fov30);
-            fov30.setValue(Config.GSON.instance().ortho ? fov30.getValue() :fov);
+            fov30.setValue(fov);
         }
     }
     @Inject(

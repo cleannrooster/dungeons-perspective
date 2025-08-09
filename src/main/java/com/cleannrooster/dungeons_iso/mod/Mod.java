@@ -26,6 +26,8 @@ public class Mod {
 
     public static int useTimer;
     public static boolean noMouse;
+    public static float zoomMetric;
+
     public static float getZoom() {
         float modifier;
         boolean bool = Config.GSON.instance().clipToSpace && Mod.shouldReload;

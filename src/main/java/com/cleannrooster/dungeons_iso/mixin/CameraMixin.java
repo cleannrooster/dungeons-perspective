@@ -65,7 +65,7 @@ public abstract class CameraMixin implements CameraAccessor {
     )
     public void getPitch45(CallbackInfoReturnable<Float> ci) {
         if(Mod.enabled) {
-            ci.setReturnValue( Mod.enabled ? 45 : this.pitch);
+            ci.setReturnValue(enabled ? (float) (Config.GSON.instance().ortho ? 70.53 : 45) : this.pitch);
         }
     }
 
@@ -90,7 +90,7 @@ public abstract class CameraMixin implements CameraAccessor {
     public void b(Args args) {
         if (Mod.enabled) {
             if(ClientInit.isoBinding.wasPressed()){
-                this.setRotation((float) (Math.ceil(Mod.yaw / 90) * 90 - 45),45);
+                this.setRotation((float) (Math.ceil(Mod.yaw / 90) * 90 - 45), Config.GSON.instance().ortho ? (float) 70.53 : 45);
 
                 Mod.yaw = this.yaw;
                 Mod.pitch = this.pitch;
@@ -142,7 +142,9 @@ public abstract class CameraMixin implements CameraAccessor {
                 Mod.zoomTime =  ((1000F - (System.currentTimeMillis() -  Mod.startZoom))/1000F)-(10-zoomOutTime)/10F;
 
             }
+            Mod.zoomMetric = args.get(0);
 
+            Mod.zoomMetric = args.get(0);
             args.set(0, (float) args.get(0) * getZoom());
 
 
@@ -163,10 +165,10 @@ public abstract class CameraMixin implements CameraAccessor {
 
 
             if(camera.getPitch() != 45){
-                this.setRotation(this.yaw,45);
+                this.setRotation(this.yaw,  45);
             }
             Mod.yaw = this.yaw;
-            Mod.pitch = 45;
+            Mod.pitch = Config.GSON.instance().ortho ? (float) 70.53 : 45;
             ClientPlayerEntity f = (MinecraftClient.getInstance().player);
 
             if (Mod.enabled ) {

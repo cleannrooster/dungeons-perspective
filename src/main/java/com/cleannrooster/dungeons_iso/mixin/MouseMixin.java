@@ -12,6 +12,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.sound.ElytraSoundInstance;
 import net.minecraft.client.util.InputUtil;
@@ -33,6 +34,8 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.*;
 import net.minecraft.world.event.BlockPositionSource;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector2d;
 import org.joml.Vector3d;
 import org.lwjgl.glfw.GLFW;
@@ -137,6 +140,8 @@ public class MouseMixin implements MouseAccessor {
     int lasti;
     int timeGone = 0;
 
+
+
     @Inject(
             method = "updateMouse",
             at = @At(value = "INVOKE", target = "net/minecraft/client/tutorial/TutorialManager.onUpdateMouse(DD)V")
@@ -187,7 +192,7 @@ public class MouseMixin implements MouseAccessor {
                     float yaw1 = (float) (Mod.yaw + i / 8.0D);
                     float pitch1 = (float) (Mod.pitch + j * k / 8.0D);
                     Mod.yaw = yaw1;
-                    Mod.pitch = 45;
+                    Mod.pitch = Config.GSON.instance().ortho ? (float) 70.53 : 45;
 
 
                     Mod.crosshairTarget = null;
@@ -211,29 +216,32 @@ public class MouseMixin implements MouseAccessor {
                     }
                     Vector2d res = new Vector2d(window.getFramebufferWidth(), window.getFramebufferHeight());
                     double aspect = res.x / res.y;
-                    Vector2d coords = new Vector2d(mouse.getX(), mouse.getY()).div(res).mul(2.0).sub(new Vector2d(1.0));
+                    Vector2d coords = new Vector2d(mouse.getX(), mouse.getY()).div(res).mul(  2.0).sub(new Vector2d(1.0));
                     double fov2 =
                             Math.toRadians(((GameRendererAccessor) renderer).callGetFov(camera, tickDelta, true)) / 2.0;
                     coords.x *= aspect;
                     coords.y = -coords.y;
-                    Vector2d offsets = coords.mul(Math.tan(fov2));
+                    Vector2d offsets = coords.mul( Math.tan(fov2));
                     Vector3d forward = camera.getRotation().transform(new Vector3d(0.0, 0.0, -1.0));
                     Vector3d right = camera.getRotation().transform(new Vector3d(1.0, 0.0, 0.0));
                     Vector3d up = camera.getRotation().transform(new Vector3d(0.0, 1.0, 0.0));
-                    Vector3d dir = forward.add(right.mul(offsets.x).add(up.mul(offsets.y))).normalize();
-                    Vec3d rayDir = new Vec3d(dir.x, dir.y, dir.z);
-                    Box box = Box.of(camera.getPos(),2,2,2)
+                    Vector3d dir =  forward.add(right.mul(offsets.x).add(up.mul(offsets.y))).normalize();
+                    Vector3d orth =  camera.getRotation().transform(new Vector3d(0.0, 0.0, -1.0)).normalize();
+                    Vec3d rayDir =  Config.GSON.instance().ortho ? new Vec3d(orth.x,orth.y,orth.z):new Vec3d(dir.x, dir.y, dir.z);
+                    Quaternionf quaternionf = camera.getRotation().conjugate(new Quaternionf());
+                    Matrix4f matrix4f2 = (new Matrix4f()).rotation(quaternionf);
+                    Frustum frustum = new Frustum(matrix4f2,Ortho.createOrthoMatrix(tickDelta,20));
+                    Box box = Box.of((Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos()),2,2,2)
                             .stretch(rayDir.multiply(renderer.getFarPlaneDistance()*2))
                             .expand(1.0, 1.0, 1.0);
-                    Vec3d end = camera.getPos().add(rayDir.multiply(renderer.getFarPlaneDistance()));
-                    HitResult hitVertical = null;
-
+                    Vec3d end =                             (Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos()).add(rayDir.multiply(renderer.getFarPlaneDistance()));
+                    Vec3d vec3d5= camera.getProjection().getPosition(-2f*(float)(i-0.5)*(float)aspect,-2f*(float)(j-0.5));
                     if(cameraEntity instanceof PlayerEntity player && player.isFallFlying()){
 
 
                         if(((CameraAccessor)camera).getPosBeforeModulation() != null){
-                            HitResult hitResult0 = raycast(camera.getPos(),end,new RaycastContextCull(
-                                    camera.getPos(),
+                            HitResult hitResult0 = raycast(Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(),end,new RaycastContextCull(
+                                    Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(),
                                     end,
                                     CustomShapeTypes.AIR_AT_LEVEL,
                                     RaycastContext.ShapeType.OUTLINE,
@@ -267,8 +275,8 @@ public class MouseMixin implements MouseAccessor {
                     }
 
 
-                    HitResult hitResult0 = raycast(camera.getPos(),end,new RaycastContextCull(
-                            camera.getPos(),
+                    HitResult hitResult0 = raycast(Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(),end,new RaycastContextCull(
+                            Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(),
                             end,
                             CustomShapeTypes.CULLED,
                             RaycastContext.ShapeType.OUTLINE,
@@ -294,7 +302,7 @@ public class MouseMixin implements MouseAccessor {
                     });
                     BlockHitResult scanUp = client.player.getWorld().raycast(
                             new RaycastContext(
-                                    hitResult0.getPos(),camera.getPos(), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE,client.player)
+                                    hitResult0.getPos(),Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE,client.player)
 
                     );
                     BlockHitResult scanDown = client.player.getWorld().raycast(
@@ -309,14 +317,14 @@ public class MouseMixin implements MouseAccessor {
                     HitResult hitResult = raycastExpanded(
                             cameraEntity,
                             scanDown.getPos(),
-                            camera.getPos(),
+                            Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(),
                             box,
                             entity -> !entity.isSpectator() && entity.canHit(),
                             renderer.getFarPlaneDistance()*2
                     ,0.5F);
                     HitResult hitResult2 = raycastExpanded(
                             cameraEntity,
-                            camera.getPos(),
+                            Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(),
                             end,
                             box,
                             entity -> !entity.isSpectator() && entity.canHit(),
