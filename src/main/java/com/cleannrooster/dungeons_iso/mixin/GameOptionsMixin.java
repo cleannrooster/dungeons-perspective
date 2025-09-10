@@ -53,7 +53,7 @@ public class GameOptionsMixin {
             }
             return var10000;
 
-        }, new SimpleOption.ValidatingIntSliderCallbacks(0, 180), Codec.DOUBLE.xmap((value) -> {
+        }, new SimpleOption.ValidatingIntSliderCallbacks(45, 90), Codec.DOUBLE.xmap((value) -> {
             return (int)(value * 40.0 + 70.0);
         }, (value) -> {
             return ((double)value - 70.0) / 40.0;
@@ -61,7 +61,7 @@ public class GameOptionsMixin {
             MinecraftClient.getInstance().worldRenderer.scheduleTerrainUpdate();
         });
 
-        fov30.setValue(Math.clamp((int) 70,0,120));
+        fov30.setValue(Math.clamp((int) 70,45,90));
         fovscale = new SimpleOption("options.fovEffectScale", SimpleOption.constantTooltip(Text.translatable("options.fovEffectScale.tooltip")), ((optionText, value) -> getPercentValueOrOffTextCleann(optionText,(double)value)), SimpleOption.DoubleSliderCallbacks.INSTANCE.withModifier(MathHelper::square, Math::sqrt), Codec.doubleRange(0.0, 1.0), 1.0, (value) -> {
         });
         fovscale.setValue(0D);
@@ -76,7 +76,7 @@ public class GameOptionsMixin {
     public void getFovCleann(CallbackInfoReturnable<SimpleOption<Integer>> option) {
         if(Mod.enabled){
             int fov = fov30.getValue();
-            fov30.setValue(Math.clamp((int) (fov30.getValue()  + 90F*(1F-Math.log10(4F*Mod.getZoom()+1)))+4, 45,120));
+            fov30.setValue(Math.clamp((int) (fov30.getValue()),  45,90));
             option.setReturnValue(fov30);
             fov30.setValue(fov);
         }

@@ -6,11 +6,18 @@ import net.minecraft.block.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.server.world.ChunkTicketManager;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3d;
+import org.joml.Vector2f;
+
+import java.util.Objects;
 
 public class Mod {
     public static BlockState prevblock;
@@ -23,30 +30,57 @@ public class Mod {
     public static double z;
     public static int cooldownIs;
     public static int cooldownWas;
-
+    public static Vector2f unModMovement = new Vector2f();
     public static int useTimer;
     public static boolean noMouse;
     public static float zoomMetric;
+    public static float factor;
+    public static float factorScale = 0.5F;
+    public static int zoomOutTimeNoDelay;
+    public static float zoomTimeNoDelay;
+    public static float factor2;
+    public static long startZoomNoDelay;
+    public static boolean isBlocked;
+    public static float relativeYaw;
+    public static float clipMetric = 0;
+    public static int blockedTime;
+    public static BlockHitResult hit;
+    public static boolean forward;
+    public static boolean notmoving;
+    public static Vec3d preMod = Vec3d.ZERO;
+
+    public static float getScaledFactor() {
+        return factor;
+    }
 
     public static float getZoom() {
-        float modifier;
+        float modifier = 1F;
+
         boolean bool = Config.GSON.instance().clipToSpace && Mod.shouldReload;
-        if ( bool   ){
-            modifier =  ( Math.min(2F,((float) 1F + ((DragonCompat.bool ?(float)(Math.max(0F,(float)MinecraftClient.getInstance().world.getTime()- (float)Mod.dragonTimeSince +MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta())) : Math.max(0F,20F-(float)MinecraftClient.getInstance().world.getTime() + (float)Mod.dragonTime -MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta()) ))/20F)))*(0.5F + 0.5F * ((float) Math.max(Mod.zoomTime , 0F))) * Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom;
+        if (MinecraftClient.getInstance().world != null) {
 
-        } else {
+            if (bool) {
+                modifier = (Math.min(2F, ((float) 1F + ((DragonCompat.bool ? (float) (Math.max(0F, (float) MinecraftClient.getInstance().world.getTime() - (float) Mod.dragonTimeSince + MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta())) : Math.max(0F, 20F - (float) MinecraftClient.getInstance().world.getTime() + (float) Mod.dragonTime + MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta()))) / 20F)))  * Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom;
 
-            if(   Config.GSON.instance().clipToSpace ) {
-                modifier=  ( Math.min(2F,((float) 1F + ((DragonCompat.bool ?(float)(Math.max(0F,(float)MinecraftClient.getInstance().world.getTime()- (float)Mod.dragonTimeSince +MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta())) : Math.max(0F,20F-(float)MinecraftClient.getInstance().world.getTime() + (float)Mod.dragonTime -MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta()) ))/20F))) * (0.5F + 0.5F * Math.min(1F,((float) Mod.endTime+MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta()) / 10F)) * Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom;
+            } else {
 
+                if (Config.GSON.instance().clipToSpace) {
+                    modifier = (Math.min(2F, ((float) 1F + ((DragonCompat.bool ? (float) (Math.max(0F, (float) MinecraftClient.getInstance().world.getTime() - (float) Mod.dragonTimeSince + MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta())) : Math.max(0F, 20F - (float) MinecraftClient.getInstance().world.getTime() + (float) Mod.dragonTime + MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta()))) / 20F))) * Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom;
+
+                } else {
+                    modifier = Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom;
+
+                }
             }
-            else {
-                modifier =  Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom;
 
+            if (MinecraftClient.getInstance().cameraEntity instanceof LivingEntity living) {
+                modifier *= living.getScale();
             }
         }
-
-        return modifier*0.8F;
+        if(Objects.isNull(hit)){
+            return 1f*modifier;
+        }
+        return (float) Math.max(0.5F*modifier*((Math.clamp((Mod.clipMetric+(Mod.notmoving ? 0 :  Mod.forward ? 0.4F: -1.0F)*MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta()),16,32))/(32)),2F);
     }
 
     public static float zoom = 5.0F;
@@ -124,4 +158,7 @@ public class Mod {
         ) && MinecraftClient.getInstance().player.getPos().distanceTo(result.toCenterPos())<
                 MinecraftClient.getInstance().player.getBlockInteractionRange());
     }
+    public static int frustrumZoom;
+    public static int cooldown;
+
 }

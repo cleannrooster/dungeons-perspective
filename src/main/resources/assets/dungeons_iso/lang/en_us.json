@@ -60,6 +60,12 @@
   "dungeons_iso.config.rollTowardsCursor.description":"When enabled, you will roll towards the cursor rather than in the direction you're moving.",
   "dungeons_iso.config.additionalMeleeAssistance.name": "Additional Melee Assistance (Better Combat compat)",
   "dungeons_iso.config.additionalMeleeAssistance.description":"When enabled, you will snap towards targets in your immediate frontal area of vision when holding a melee weapon. ONLY WORKS WITH BETTER COMBAT.",
-  "dungeons_iso.config.clipToSpace.name": "Zoom Effects",
-  "dungeons_iso.config.clipToSpace.description":"Automatically Zoom in and out depending on certain events."
+  "dungeons_iso.config.clipToSpace.name": "Additional Zoom Effects",
+  "dungeons_iso.config.clipToSpace.description":"Additonal Automatic Zoom in and out depending on certain events.",
+  "dungeons_iso.config.ortho.name": "Orthographic Mode",
+  "dungeons_iso.config.ortho.description":"Makes all blocks the same size regardless of distance. RTS-Like.",
+  "dungeons_iso.config.frustumCulling.name": "Frustum Culling",
+  "dungeons_iso.config.frustumCulling.description":"Adds a frustum shape that culls blocks before it, making traversing through caves easier. Improves performance, but can be distracting. May make buildings look weird."
+
+
 }

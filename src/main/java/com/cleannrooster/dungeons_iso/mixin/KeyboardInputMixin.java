@@ -16,6 +16,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import net.spell_engine.client.SpellEngineClient;
 import org.joml.Matrix2f;
@@ -79,6 +80,7 @@ public abstract class KeyboardInputMixin extends Input {
 
                    movement.mul(new Matrix2f().rotate((float) Math.toRadians(yaw)));
                    movement.mul(new Matrix2f().rotate((float) Math.toRadians(+client.player.getYaw(tickDelta))));
+                   Mod.unModMovement = new Vector2f(1.0F,0F).mul(new Matrix2f().rotate((float) Math.toRadians(+MinecraftClient.getInstance().gameRenderer.getCamera().getYaw())));
 
                    this.movementForward = movement.x;
                    this.movementSideways = movement.y;
@@ -96,6 +98,7 @@ public abstract class KeyboardInputMixin extends Input {
                 movementSideways=0;
             }
             if(Config.GSON.instance().cameraRelative) {
+                Mod.relativeYaw = yaw;
                 movement.mul(new Matrix2f().rotate((float) Math.toRadians(-yaw)));
             }
 

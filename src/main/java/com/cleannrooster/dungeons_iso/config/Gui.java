@@ -5,7 +5,10 @@ import com.terraformersmc.modmenu.api.ModMenuApi;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
 import dev.isxander.yacl3.api.controller.FloatFieldControllerBuilder;
+import dev.isxander.yacl3.api.controller.FloatSliderControllerBuilder;
+import dev.isxander.yacl3.api.controller.SliderControllerBuilder;
 import dev.isxander.yacl3.gui.YACLScreen;
+import dev.isxander.yacl3.impl.controller.FloatSliderControllerBuilderImpl;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -122,6 +125,18 @@ public class Gui implements ModMenuApi {
                                             .build())
                                     .option(Option
                                             .<Boolean>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.frustumCulling.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.frustumCulling.description")))
+                                            .binding(
+                                                    defaults.frustumCulling,
+                                                    () -> config.frustumCulling,
+                                                    (value) -> config.frustumCulling = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
+                                    .option(Option
+                                            .<Boolean>createBuilder()
                                             .name(Text.translatable("dungeons_iso.config.dynamic_camera.name"))
                                             .description(OptionDescription.of(Text.translatable(
                                                     "dungeons_iso.config.dynamic_camera.description")))
@@ -143,7 +158,7 @@ public class Gui implements ModMenuApi {
                                                     () -> config.moveFactor_v3,
                                                     (value) -> config.moveFactor_v3 = value
                                             )
-                                            .controller(FloatFieldControllerBuilder::create)
+                                            .controller(floatOption ->  new FloatSliderControllerBuilderImpl(floatOption).range(0F,4F).step(0.001F))
                                             .build())
                                     .option(Option
                                             .<Boolean>createBuilder()
@@ -215,7 +230,7 @@ public class Gui implements ModMenuApi {
                                                     () -> config.zoomFactor,
                                                     (value) -> config.zoomFactor = value
                                             )
-                                            .controller(FloatFieldControllerBuilder::create)
+                                            .controller(floatOption ->  new FloatSliderControllerBuilderImpl(floatOption).range(1F,1.5F).step(0.001F))
                                             .build())
                                     .option(Option
                                             .<Boolean>createBuilder()
@@ -228,6 +243,18 @@ public class Gui implements ModMenuApi {
                                                     (value) -> config.ortho = value
                                             )
                                             .controller(BooleanControllerBuilder::create)
+                                            .build())
+                                    .option(Option
+                                            .<Float>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.zNearFactor.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.zNearFactor.description")))
+                                            .binding(
+                                                    defaults.zNearFactor,
+                                                    () -> config.zNearFactor,
+                                                    (value) -> config.zNearFactor = value
+                                            )
+                                            .controller(floatOption ->  new FloatSliderControllerBuilderImpl(floatOption).range(0F,1F).step(0.001F))
                                             .build())
 
 

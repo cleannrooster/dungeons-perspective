@@ -4,6 +4,7 @@ import com.cleannrooster.dungeons_iso.api.BuiltChunkAccessor;
 import com.cleannrooster.dungeons_iso.api.ChunkDataAccessor;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
 import com.cleannrooster.dungeons_iso.api.WorldRendererAccessor;
+import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
@@ -11,6 +12,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.WorldRenderer;
@@ -104,14 +106,6 @@ public abstract class WorldRendererMixin implements WorldRendererAccessor {
     @Shadow
     private  ObjectArrayList<ChunkBuilder.BuiltChunk> builtChunks;
 
-    @Inject(method = "renderLayer", at = @At("HEAD"),cancellable = true)
-    private void renderLayerDungeons(RenderLayer renderLayer, double x, double y, double z, Matrix4f matrix4f, Matrix4f positionMatrix, CallbackInfo callbackInfo) {
-        if(Mod.enabled ){
-
-
-        }
-
-    }
 
     @Inject(method = "drawBlockOutline", at = @At("HEAD"),cancellable = true)
     private void drawBlockOutlineXIV(MatrixStack matrices, VertexConsumer vertexConsumer, Entity entity, double cameraX, double cameraY, double cameraZ, BlockPos pos, BlockState state,CallbackInfo info) {
@@ -120,40 +114,5 @@ public abstract class WorldRendererMixin implements WorldRendererAccessor {
             info.cancel();;
         }
     }
- /*   @Inject(method = "getEntitiesToRender", at = @At("TAIL"))
-    void getEntitiesToRender(Camera camera, Frustum frustum, List<Entity> output, CallbackInfoReturnable<Boolean> cir) {
-        PlayerEntity player = MinecraftClient.getInstance().player;
 
-        if (player != null && Mod.enabled && Config.GSON.instance().lockOnTargeting
-                && ClientInit.cycleTargetBinding.wasPressed()) {
-            // Wrap around if we're already targeting, but we don't hit anything
-            int wrapAround = Mod.lockOnTarget != null ? 1 : 0;
-            do {
-                Mod.lockOnTarget = output
-                        .stream()
-                        .filter(
-                                entity -> {
-                                    if (entity == player) return false;
-                                    if (!entity.isAttackable()) return false;
-                                    if (entity.isInvisibleTo(player)) return false;
-                                    if (Mod.lockOnTarget != null &&
-                                            player.distanceTo(entity) <= player.distanceTo(Mod.lockOnTarget)) {
-                                        return false;
-                                    }
-
-                                    // No blocks in the way
-                                    return player.getWorld().raycast(new RaycastContext(
-                                            camera.getPos(),
-                                            entity.getEyePos(),
-                                            RaycastContext.ShapeType.OUTLINE,
-                                            RaycastContext.FluidHandling.NONE,
-                                            player
-                                    )).getType() == HitResult.Type.MISS;
-                                }
-                        )
-                        .min(Comparator.comparingDouble(player::distanceTo))
-                        .orElse(null);
-            } while (Mod.lockOnTarget == null && wrapAround-- > 0);
-        }
-    }*/
 }

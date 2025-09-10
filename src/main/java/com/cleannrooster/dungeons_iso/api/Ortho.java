@@ -14,7 +14,18 @@ public class Ortho {
         return new Matrix4f().setOrtho(
                 -width, width,
                 -height, height,
-                -Mod.getZoom(), 1000
+                Mod.factor+1, 1000
+        );
+    }
+    public static Matrix4f createOrthoMatrixFrustum(float delta, float minScale) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        float width = Math.max(minScale, Mod.getZoom()*2
+                * client.getWindow().getFramebufferWidth() / client.getWindow().getFramebufferHeight());
+        float height = Math.max(minScale, Mod.getZoom()*2);
+        return new Matrix4f().setOrtho(
+                -width, width,
+                -height, height,
+                Mod.factor+1, 1000
         );
     }
 }

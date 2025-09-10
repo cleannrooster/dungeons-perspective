@@ -15,62 +15,25 @@ import java.util.List;
 
 public class SodiumCompat {
     public static List<BlockCuller> blockCullers = new ArrayList<>();
+    public static List<BlockCuller> blockCullersShapes = new ArrayList<>();
+
     public static BlockCuller detector = new BlockDetector();
     public static LinkedHashMap<BlockPos,BlockCuller.TransparentBlock> transparentBlocks;
 
     static{
+
         blockCullers.addAll(List.of(new GenericCuller3()));
+        blockCullersShapes.add(new GenericCuller3());
+
         transparentBlocks = new LinkedHashMap<>();
     }
 
 
     public static void run(){
         Box box = new Box(MinecraftClient.getInstance().player.getEyePos(),MinecraftClient.getInstance().gameRenderer.getCamera().getPos()).expand(1,0,1);
-        double dub = 1*MinecraftClient.getInstance().player.getPos().distanceTo(MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
+        double dub = 2*MinecraftClient.getInstance().player.getPos().distanceTo(MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
         box.stretch(dub,dub,dub);
-            SodiumWorldRenderer.instance().scheduleRebuildForBlockArea((int) box.minX, (int) box.minY, (int) box.minZ, (int) box.maxX, (int) box.maxY, (int) box.maxZ, true);
+        SodiumWorldRenderer.instance().scheduleRebuildForBlockArea((int) box.minX, (int) box.minY, (int) box.minZ, (int) box.maxX, (int) box.maxY, (int) box.maxZ, true);
 
-/*        if(MinecraftClient.getInstance() != null  && Mod.enabled && ((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild()) {
-            if (MinecraftClient.getInstance().cameraEntity != null && MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera) {
-
-        for(BlockPos pos: BlockPos.iterate(
-                BlockPos.ofFloored((int) box.minX - 8*2, (int) box.minY - 8*2, (int) box.minZ - 8*2),
-                BlockPos.ofFloored((int) box.maxX + 8*2, (int) box.maxY + 8*2, (int) box.maxZ + 8*2))){
-
-                    for (BlockCuller culler : SodiumCompat.blockCullers) {
-                        if(culler.cullBlocks(pos, camera, MinecraftClient.getInstance().cameraEntity)){
-                            BlockCuller.TransparentBlock block =  SodiumCompat.transparentBlocks.get(pos);
-                            if( block != null) {
-                                block.tickTransparency();
-                            }
-
-
-
-                        }
-                        else{
-                            BlockCuller.TransparentBlock block =  SodiumCompat.transparentBlocks.get(pos);
-                            if( block != null) {
-                                block.tickOpacity();
-                            }
-
-                        }
-
-
-
-                    }
-
-                }
-            }
-        }*/
-
-
-
-        for(BlockCuller culler :blockCullers) {
-            if(MinecraftClient.getInstance().player.age % culler.frequency() == 0) {
-                culler.resetCulledBlocks();
-            }
-
-
-        }
     }
 }

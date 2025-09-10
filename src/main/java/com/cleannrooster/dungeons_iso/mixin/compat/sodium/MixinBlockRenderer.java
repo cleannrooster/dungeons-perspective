@@ -116,7 +116,7 @@ private  Vector3f posOffset ;
 
                 boolean bool = false;
                 for (BlockCuller culler : SodiumCompat.blockCullers) {
-                    if ((culler.shouldForceCull() && !bool) || (bool && culler.shouldForceNonCull())) {
+                    if (pos.toCenterPos().distanceTo(MinecraftClient.getInstance().cameraEntity.getPos()) <= 16 && ((culler.shouldForceCull() && !bool) || (bool && culler.shouldForceNonCull()))) {
                         bool = culler.shouldCull(pos, MinecraftClient.getInstance().gameRenderer.getCamera(), MinecraftClient.getInstance().cameraEntity);
 
                     }

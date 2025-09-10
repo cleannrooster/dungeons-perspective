@@ -10,11 +10,11 @@ public class Config {
             .createBuilder(Config.class)
             .serializer(config -> GsonConfigSerializerBuilder
                     .create(config)
-                    .setPath(YACLPlatform.getConfigDir().resolve("dungeons_iso.json"))
+                    .setPath(YACLPlatform.getConfigDir().resolve("dungeons_iso_v3.json"))
                     .build())
             .build();
     @SerialEntry
-    public boolean onStartup =  false;
+    public boolean onStartup =  true;
     @SerialEntry
     public boolean force =  false;
 
@@ -28,9 +28,9 @@ public class Config {
     public boolean cameraRelative =  true;
 
     @SerialEntry
-    public boolean turnToMouse =  true;
+    public boolean turnToMouse =  false;
     @SerialEntry
-    public boolean clipToSpace =  true;
+    public boolean clipToSpace =  false;
 
     @SerialEntry
     public boolean additionalMeleeAssistance =  false;
@@ -44,11 +44,18 @@ public class Config {
     @SerialEntry
     public float fov = 45.0F;
     @SerialEntry
-    public float zoomFactor = 1F;
+    public float zoomFactor = 1.5F;
+    @SerialEntry
+    public float zNearFactor = 1F;
+
     @SerialEntry
     public boolean ortho = false;
     @SerialEntry
 
     public boolean clickToMove = false;
+
+    @SerialEntry
+
+    public boolean frustumCulling = true;
 
 }

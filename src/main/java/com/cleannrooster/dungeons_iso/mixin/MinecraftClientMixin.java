@@ -48,6 +48,7 @@ import net.minecraft.world.RaycastContext;
 import net.minecraft.world.entity.EntityLookup;
 import net.minecraft.world.event.BlockPositionSource;
 import net.minecraft.world.gen.chunk.DebugChunkGenerator;
+import org.apache.logging.log4j.core.appender.rolling.action.IfAll;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
@@ -65,6 +66,7 @@ import com.cleannrooster.dungeons_iso.util.Util;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -110,6 +112,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
     }
     @Shadow
     abstract void doItemUse();
+
 
     @Shadow
     @Final
@@ -428,7 +431,17 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
             }
 
+            if(player.getVehicle() != null){
+                player.setHeadYaw(MathHelper.clampAngle(player.headYaw, player.getVehicle().getYaw() , (float) ( 135)));
+                player.prevHeadYaw = player.headYaw;
 
+                player.setYaw( MathHelper.clampAngle(player.headYaw, player.getVehicle().getYaw() , (float) ( 135)));
+                player.bodyYaw = player.getYaw();
+
+                player.prevYaw = player.getYaw();
+               player.prevBodyYaw = player.getYaw();
+
+            }
                 /*
 
                 double d = Mod.crosshairTarget.getPos().x - vec3d.x;
@@ -460,17 +473,38 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
             Mod.dirty = false;
 
         }
+        if(isBlocked){
+            Mod.frustrumZoom++;
+
+        }
+        else{
+            Mod.frustrumZoom--;
+
+        }
         if(shouldReload){
 
         }
         else if(Mod.endTime < 10) {
             Mod.endTime++;
         }
-        if(shouldReload){
+        if(shouldReload ){
+
+
+            Mod.blockedTime++;
 
         }
+
         else if(zoomOutTime < 10) {
+            Mod.frustrumZoom--;
             zoomOutTime++;
+            blockedTime = 0;
+        }
+        else{
+            blockedTime = 0;
+
+        }
+       if(zoomTimeNoDelay < 10) {
+            Mod.zoomOutTimeNoDelay++;
         }
 
     }
@@ -616,13 +650,13 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
         if (ClientInit.zoomInBinding.wasPressed()) {
             if (Mod.enabled) {
-                Mod.zoom = Math.clamp(Mod.zoom - 0.2f, 0.5F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F),5);
+                Mod.zoom = Math.clamp(Mod.zoom - 0.2f, 2F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F),5);
             }
         }
 
         if (ClientInit.zoomOutBinding.wasPressed()) {
             if (Mod.enabled) {
-                Mod.zoom = Math.clamp(Mod.zoom + 0.2f,0.5F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F), 5.0F);
+                Mod.zoom = Math.clamp(Mod.zoom + 0.2f,2F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F), 5.0F);
             }
         }
 
@@ -839,8 +873,57 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                 lookAt(client.player, EntityAnchorArgumentType.EntityAnchor.EYES, result.getPos(),true);
 
             }
-        }
 
+            if(player.getVehicle() != null){
+                player.setHeadYaw(MathHelper.clampAngle(player.headYaw, player.getVehicle().getYaw() , (float) ( 135)));
+                player.prevHeadYaw = player.headYaw;
+
+                player.setYaw( MathHelper.clampAngle(player.headYaw, player.getVehicle().getYaw() , (float) ( 135)));
+                player.bodyYaw = player.getYaw();
+
+                player.prevYaw = player.getYaw();
+                player.prevBodyYaw = player.getYaw();
+
+            }
+            if(Objects.nonNull(hit)) {
+                notmoving = false;
+                if (hit.getType().equals(HitResult.Type.BLOCK)) {
+                    double toadd = -1.0F;
+                    Mod.forward = false;
+
+                    if( cooldown <= 0){
+                        toadd = -1.0F;
+
+                        Mod.forward = false;
+                        blockedTime = 0;
+
+                    }
+                    clipMetric =  (float) clipMetric+(float) toadd;
+
+                    if(clipMetric < 8){
+                        clipMetric = 8;
+                    }
+
+
+                } else {
+                    if (!shouldReload) {
+                        Mod.clipMetric += 0.4F;
+                        Mod.forward = true;
+                        cooldown = 20;
+                    }
+                    else{
+
+                        Mod.notmoving = true;
+                    }
+                    if (Mod.clipMetric > 32) {
+                        clipMetric = 32;
+                    }
+                }
+                //clipMetric = (float) Math.clamp(clipMetric,Math.min(16F,player.getHeight()),Math.max(Math.min(16F,player.getHeight()),16));
+
+            }
+        }
+        Mod.cooldown--;
         Mod.cooldownWas++;
         mouseCooldown--;
 

@@ -39,17 +39,6 @@ import java.util.SortedSet;
 
 @Mixin(SodiumWorldRenderer.class)
 public abstract class SodiumWorldRendererMixin  implements SodiumWorldRendererAccessor {
-    @Shadow
-    private RenderSectionManager renderSectionManager;
 
-    @Override
-    public RenderSectionManager sectionManager() {
-        return renderSectionManager;
-    }
-    @Inject(at = @At("HEAD"), method = "renderBlockEntity", cancellable = true,remap = false)
-
-    private static void renderBlockEntityCleann(MatrixStack matrices, BufferBuilderStorage bufferBuilders, Long2ObjectMap<SortedSet<BlockBreakingInfo>> blockBreakingProgressions, float tickDelta, VertexConsumerProvider.Immediate immediate, double x, double y, double z, BlockEntityRenderDispatcher dispatcher, BlockEntity entity, ClientPlayerEntity player, LocalBooleanRef isGlowing, CallbackInfo ci) {
-
-    }
 
 }

@@ -35,6 +35,13 @@ public abstract class CameraMixin implements CameraAccessor {
         this.pos = pos;
     }
 
+
+    @Shadow
+    private BlockView area;
+
+    @Shadow
+    private  Vector3f horizontalPlane;
+
     @SuppressWarnings("unused")
     @Shadow
     private float yaw;
@@ -44,6 +51,9 @@ public abstract class CameraMixin implements CameraAccessor {
     @Shadow
 
     private Vec3d pos;
+    @Shadow
+    private Entity focusedEntity;
+
     private Vec3d posBeforeModulation;
 
     @Override
@@ -65,7 +75,7 @@ public abstract class CameraMixin implements CameraAccessor {
     )
     public void getPitch45(CallbackInfoReturnable<Float> ci) {
         if(Mod.enabled) {
-            ci.setReturnValue(enabled ? (float) (Config.GSON.instance().ortho ? 70.53 : 45) : this.pitch);
+            ci.setReturnValue( (float)  45);
         }
     }
 
@@ -90,7 +100,7 @@ public abstract class CameraMixin implements CameraAccessor {
     public void b(Args args) {
         if (Mod.enabled) {
             if(ClientInit.isoBinding.wasPressed()){
-                this.setRotation((float) (Math.ceil(Mod.yaw / 90) * 90 - 45), Config.GSON.instance().ortho ? (float) 70.53 : 45);
+                this.setRotation((float) (Math.ceil(Mod.yaw / 90) * 90 - 45),  45);
 
                 Mod.yaw = this.yaw;
                 Mod.pitch = this.pitch;
@@ -104,12 +114,19 @@ public abstract class CameraMixin implements CameraAccessor {
                 }
 
             }
+            float g = 0.1F;
+            float f = args.get(0);
+
             Vector3f vector3f = (new Vector3f(0, 0, (float)((float) args.get(0) * Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom))).rotate(MinecraftClient.getInstance().gameRenderer.getCamera().getRotation());
             Vec3d vec = (new Vec3d(this.pos.x + (double)vector3f.x, this.pos.y + (double)vector3f.y, this.pos.z + (double)vector3f.z));
+            Mod.preMod = vec;
             BlockHitResult result = MinecraftClient.getInstance().cameraEntity.getWorld().raycast(new RaycastContext(MinecraftClient.getInstance().cameraEntity.getEyePos(), vec, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.NONE, MinecraftClient.getInstance().cameraEntity));
+            Mod.hit = this.area.raycast(new RaycastContext(this.focusedEntity.getEyePos(),vec, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.NONE, this.focusedEntity));
 
             if (result.getType().equals(HitResult.Type.BLOCK) ) {
+                Mod.isBlocked = true;
                 Mod.shouldReload = true;
+                Mod.startZoomNoDelay = System.currentTimeMillis();
 
                 if(!dirty) {
                     Mod.startTime = (MinecraftClient.getInstance().world.getTime());
@@ -126,9 +143,18 @@ public abstract class CameraMixin implements CameraAccessor {
                     Mod.zoomTime =  ((1000F - (System.currentTimeMillis() -  Mod.startZoom))/1000F)-(10-zoomOutTime)/10F;
 
                 }
+                if(zoomOutTimeNoDelay >= 10){
+                    zoomTimeNoDelay =  ((1000F - (System.currentTimeMillis() -  startZoomNoDelay))/1000F)-(10-zoomOutTimeNoDelay)/10F;
+
+                }
+                else{
+
+                    zoomTimeNoDelay =  ((1000F - (System.currentTimeMillis() -  Mod.startZoomNoDelay))/1000F)-(10-zoomOutTimeNoDelay)/10F;
+
+                }
+                zoomOutTimeNoDelay = 0;
 
                 Mod.dirty = true;
-
                 Mod.dirtyTime = MinecraftClient.getInstance().world.getTime();
 
                 prevblock = MinecraftClient.getInstance().world.getBlockState(result.getBlockPos());
@@ -136,15 +162,18 @@ public abstract class CameraMixin implements CameraAccessor {
 
 
             } else {
+                Mod.isBlocked = false;
                 if (!Mod.dirty) {
                     Mod.shouldReload = false;
                 }
+
                 Mod.zoomTime =  ((1000F - (System.currentTimeMillis() -  Mod.startZoom))/1000F)-(10-zoomOutTime)/10F;
+                Mod.zoomTimeNoDelay =  ((1000F - (System.currentTimeMillis() -  Mod.startZoom))/1000F)-(10-zoomOutTimeNoDelay)/10F;
 
             }
-            Mod.zoomMetric = args.get(0);
+            frustrumZoom = Math.clamp(frustrumZoom,0,20);
 
-            Mod.zoomMetric = args.get(0);
+            zoomMetric = args.get(0);
             args.set(0, (float) args.get(0) * getZoom());
 
 
@@ -164,11 +193,9 @@ public abstract class CameraMixin implements CameraAccessor {
                 callbackInfoReturnable.setReturnValue(a);
 
 
-            if(camera.getPitch() != 45){
-                this.setRotation(this.yaw,  45);
-            }
+
             Mod.yaw = this.yaw;
-            Mod.pitch = Config.GSON.instance().ortho ? (float) 70.53 : 45;
+            Mod.pitch =  45;
             ClientPlayerEntity f = (MinecraftClient.getInstance().player);
 
             if (Mod.enabled ) {

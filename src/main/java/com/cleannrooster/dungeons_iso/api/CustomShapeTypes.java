@@ -13,7 +13,7 @@ import net.minecraft.world.RaycastContext;
 public enum CustomShapeTypes implements RaycastContext.ShapeProvider {
 
     CULLED((state, world, pos, context) -> {
-        for(BlockCuller culler : SodiumCompat.blockCullers){
+        for(BlockCuller culler : SodiumCompat.blockCullersShapes){
             if(MinecraftClient.getInstance().gameRenderer.getCamera() != null && MinecraftClient.getInstance().cameraEntity != null)
             {
                 if (culler.shouldCull(pos, MinecraftClient.getInstance().gameRenderer.getCamera(), MinecraftClient.getInstance().cameraEntity)) {
@@ -29,7 +29,7 @@ public enum CustomShapeTypes implements RaycastContext.ShapeProvider {
 
     }),
     AIR_AT_LEVEL((state, world, pos, context) -> {
-        for(BlockCuller culler : SodiumCompat.blockCullers){
+        for(BlockCuller culler : SodiumCompat.blockCullersShapes){
             if(MinecraftClient.getInstance().gameRenderer.getCamera() != null && MinecraftClient.getInstance().cameraEntity != null) {
                 if (culler.shouldCull(pos, MinecraftClient.getInstance().gameRenderer.getCamera(), MinecraftClient.getInstance().cameraEntity)) {
                     return VoxelShapes.empty();
