@@ -8,16 +8,19 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 public interface BlockCuller {
     boolean cullBlocks( BlockPos blockPos, Camera camera, Entity cameraEntity);
-    List<BlockPos> getCulledBlocks();
+    default List<BlockPos> getCulledBlocks(BlockPos blockPos, Camera camera, Entity cameraEntity){
+        return List.of();
+    };
     void resetCulledBlocks();
     default int frequency(){
         return 5;
     }
     default boolean isCulled(BlockPos pos){
-        return getCulledBlocks().contains(pos);
+        return false;
     }
      boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity);
     boolean shouldIgnoreBlockPick(BlockPos blockPos, Camera camera, Entity cameraEntity);

@@ -29,7 +29,7 @@ public class GenericCuller3 implements BlockCuller {
 
     @Override
     public boolean shouldForceNonCull() {
-        return true;
+        return false;
     }
 
     @Override
@@ -181,7 +181,7 @@ public class GenericCuller3 implements BlockCuller {
         return false;
     }
 
-    List<Class<? extends Block>> ignoredTypes = List.of(WallMountedBlock.class, DoorBlock.class, CarpetBlock.class, SnowBlock.class);
+    List<Class<? extends Block>> ignoredTypes = List.of(WallMountedBlock.class, DoorBlock.class);
     public boolean isIgnoredType(Block block){
         for(Class<? extends Block> ignoredType : ignoredTypes){
             if(ignoredType.isInstance(block)){
@@ -195,10 +195,6 @@ public class GenericCuller3 implements BlockCuller {
         return 01;
     }
 
-    @Override
-    public List<BlockPos> getCulledBlocks() {
-        return culledBlocks;
-    }
 
     @Override
     public void resetCulledBlocks() {

@@ -109,10 +109,6 @@ public class GenericBlockCuller implements BlockCuller {
         return 01;
     }
 
-    @Override
-    public List<BlockPos> getCulledBlocks() {
-        return culledBlocks;
-    }
 
     @Override
     public void resetCulledBlocks() {
