@@ -190,10 +190,11 @@ public class MouseMixin implements MouseAccessor {
                         lastY = y;
                     }
                     float yaw1 = (float) (Mod.yaw + i / 8.0D);
-                    float pitch1 = (float) (Mod.pitch + j * k / 8.0D);
+                    float zoom = (float) ( j * k / 8.0D)/45F;
                     Mod.yaw = yaw1;
                     Mod.pitch =  45;
-
+                    Mod.zoom += zoom;
+                    Mod.zoom = Math.clamp(Mod.zoom,1F,10F);
 
                     Mod.crosshairTarget = null;
                 } else {
@@ -498,7 +499,7 @@ public class MouseMixin implements MouseAccessor {
             if (Mod.enabled && Config.GSON.instance().scrollWheelZoom ) {
 
 
-                Mod.zoom = (Math.clamp(Mod.zoom - (float) scrollAmount * 0.2f,2F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F),5.0F));
+                Mod.zoom = (Math.clamp(Mod.zoom - (float) scrollAmount * 0.2f,2F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F),10.0F));
 
             } else {
 

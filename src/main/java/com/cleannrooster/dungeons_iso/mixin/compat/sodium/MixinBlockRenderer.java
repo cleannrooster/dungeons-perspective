@@ -2,6 +2,7 @@ package com.cleannrooster.dungeons_iso.mixin.compat.sodium;
 
 import com.cleannrooster.dungeons_iso.api.BlockCuller;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
+import com.cleannrooster.dungeons_iso.api.cullers.FloodCuller;
 import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import dev.kosmx.playerAnim.core.util.Vec3f;
@@ -116,9 +117,11 @@ private  Vector3f posOffset ;
 
                 boolean bool = false;
                 for (BlockCuller culler : SodiumCompat.blockCullers) {
-                    if (pos.toCenterPos().distanceTo(MinecraftClient.getInstance().cameraEntity.getPos()) <= 16 && ((culler.shouldForceCull() && !bool) || (bool && culler.shouldForceNonCull()))) {
+                    if(culler instanceof FloodCuller floodCuller &&((culler.shouldForceCull() && !bool) || (bool && culler.shouldForceNonCull()))){
+                        bool = floodCuller.isAboveFlood(pos, MinecraftClient.getInstance().gameRenderer.getCamera(), MinecraftClient.getInstance().cameraEntity, SodiumCompat.stream.stream());
+                    }
+                    else if ((culler.shouldForceCull() && !bool) || (bool && culler.shouldForceNonCull())) {
                         bool = culler.shouldCull(pos, MinecraftClient.getInstance().gameRenderer.getCamera(), MinecraftClient.getInstance().cameraEntity);
-
                     }
                 }
 

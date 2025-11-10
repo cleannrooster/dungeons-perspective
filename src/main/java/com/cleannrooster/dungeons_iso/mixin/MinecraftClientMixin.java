@@ -143,6 +143,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
             spell = SpellEngineCompat.isCasting();
         }
         boolean isController = false;
+        Mod.zoom = Math.clamp(Mod.zoom,1F,10F);
 
         if (FabricLoader.getInstance().isModLoaded("midnightcontrols")) {
             isController = MidnightControlsCompat.isEnabled();
@@ -519,10 +520,19 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
         double e = target.y - vec3d.y;
         double f = target.z - vec3d.z;
         double g = Math.sqrt(d * d + f * f);
+        double d1 = living.getVelocity().x;
+        double e1 = living.getVelocity().y;
+        double f1 = living.getVelocity().z;
+        double g1 = Math.sqrt(d1 * d1 + f1 * f1);
         living.setPitch(MathHelper.wrapDegrees((float)(-(MathHelper.atan2(e, g) * 57.2957763671875))));
         living.setHeadYaw(MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F));
         living.prevHeadYaw = living.headYaw;
-        living.setYaw( MathHelper.clampAngle(living.getYaw(), living.headYaw, (float) (this.isUse ? 0 : 5)));
+        boolean spell = false;
+        if (FabricLoader.getInstance().isModLoaded("spell_engine")) {
+
+            spell = SpellEngineCompat.isCasting();
+        }
+        living.setYaw( MathHelper.clampAngle(MathHelper.wrapDegrees((float)(MathHelper.atan2(f1, d1) * 57.2957763671875) - 90.0F), living.getHeadYaw(), (float) (living.isUsingItem() || (this.options.useKey.isPressed()) || spell || (living.getMainHandStack().getItem() instanceof CrossbowItem && CrossbowItem.isCharged(living.getMainHandStack())) ? 0 : 35)));
         living.prevYaw = (living.getYaw());
         living.bodyYaw = (living.getYaw());
         living.prevBodyYaw = (living.bodyYaw);
@@ -598,7 +608,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
         if (this.player == null) {
             return;
         }
-
+        Mod.zoom = Math.clamp(Mod.zoom,1F,10F);
 
         if(Mod.enabled && client.worldRenderer != null ){
             ((WorldRendererAccessor)client.worldRenderer).chunks().forEach(builtChunk -> {{
@@ -650,13 +660,13 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
         if (ClientInit.zoomInBinding.wasPressed()) {
             if (Mod.enabled) {
-                Mod.zoom = Math.clamp(Mod.zoom - 0.2f, 2F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F),5);
+                Mod.zoom = Math.clamp(Mod.zoom - 0.2f, 2F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F),10.0F);
             }
         }
 
         if (ClientInit.zoomOutBinding.wasPressed()) {
             if (Mod.enabled) {
-                Mod.zoom = Math.clamp(Mod.zoom + 0.2f,2F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F), 5.0F);
+                Mod.zoom = Math.clamp(Mod.zoom + 0.2f,2F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F), 10.0F);
             }
         }
 

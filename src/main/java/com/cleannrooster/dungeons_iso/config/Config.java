@@ -10,7 +10,7 @@ public class Config {
             .createBuilder(Config.class)
             .serializer(config -> GsonConfigSerializerBuilder
                     .create(config)
-                    .setPath(YACLPlatform.getConfigDir().resolve("dungeons_iso_v3.json"))
+                    .setPath(YACLPlatform.getConfigDir().resolve("dungeons_iso_v5.json"))
                     .build())
             .build();
     @SerialEntry

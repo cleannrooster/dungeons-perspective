@@ -4,57 +4,40 @@ import com.cleannrooster.dungeons_iso.api.BlockCuller;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
 import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.mod.Mod;
-import net.minecraft.block.Block;
-import net.minecraft.block.DoorBlock;
-import net.minecraft.block.WallMountedBlock;
+import net.minecraft.block.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Stack;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
-public class GenericBlockCuller2 implements BlockCuller {
-    public  List<BlockPos> culledBlocks = new ArrayList<>(1000);
+public class FloodCuller implements BlockCuller {
+    public Stream<BlockPos> culledBlocks = Stream.empty();
 
     @Override
     public boolean shouldForceCull() {
-        return false;
-    }
-    @Override
-    public boolean shouldForceNonCull() {
         return true;
     }
+
+    @Override
+    public boolean shouldForceNonCull() {
+        return false;
+    }
+
     @Override
     public boolean cullBlocks(  BlockPos blockPos, Camera camera, Entity cameraEntity) {
 
-        if( this.shouldCull(blockPos,camera,cameraEntity)){
-            if(culledBlocks.size() < 1000) {
-                culledBlocks.add(blockPos);
-                TransparentBlock block = new TransparentBlock(blockPos, 0);
-                SodiumCompat.transparentBlocks.put(blockPos, SodiumCompat.transparentBlocks.getOrDefault(blockPos, block));
-            }
-            else{
-                culledBlocks = new ArrayList<>(1000);
-                SodiumCompat.transparentBlocks = new LinkedHashMap<>();
-                culledBlocks.add(blockPos);
-                TransparentBlock block = new TransparentBlock(blockPos, 0);
-                SodiumCompat.transparentBlocks.put(blockPos, SodiumCompat.transparentBlocks.getOrDefault(blockPos, block));
-
-            }
-
-            return true;
-        }
-        else{
-            return false;
-        }
+        return false;
     }
 
     @Override
@@ -66,34 +49,19 @@ public class GenericBlockCuller2 implements BlockCuller {
         double angle = Math.acos(cosineTheta) * 57.29577951308232;
         return Double.isNaN(angle) ? 0.0 : angle;
     }
+    public final Vec3d getRotationVec(net.minecraft.entity.Entity entity, float tickDelta) {
+        float f = entity.getPitch(tickDelta) * 0.017453292F;
+        float g = -entity.getHeadYaw() * 0.017453292F;
+        float h = MathHelper.cos(g);
+        float i = MathHelper.sin(g);
+        float j = MathHelper.cos(f);
+        float k = MathHelper.sin(f);
+        return new Vec3d((double)(i * j), (double)(-k), (double)(h * j));    }
 
     public boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity){
-        if( camera != null && cameraEntity != null) {
+            return cameraEntity.getWorld().getBlockState(blockPos).getCameraCollisionShape(cameraEntity.getWorld(), blockPos, ShapeContext.of(cameraEntity)).isEmpty();
 
-        var vec1 = (blockPos.toCenterPos().subtract(camera.getPos())) ;
-        var vec2 = cameraEntity.getPos().subtract(camera.getPos());
-        var vec3 = blockPos.toCenterPos().subtract(cameraEntity.getPos());
 
-        if(cameraEntity instanceof PlayerEntity player){
-
-            vec1 = vec1.add(player.getMovement().normalize().multiply(2));
-        }
-        var calc_theta =angleBetween(vec2, vec1)  ;
-        var calc_phi =angleBetween(vec3, new Vec3d(0,1,0))  ;
-        var calc =angleBetween(vec3, vec1)  ;
-
-        if(!isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock()) && blockPos.toCenterPos().getY() > cameraEntity.getPos().getY() + 1 &&
-                ( (calc_theta < 90*Math.pow(0.9,Mod.zoom)   )|| camera.getPos().distanceTo(blockPos.toCenterPos()) < 5)){
-            return true;
-        }
-        else {
-            return false;
-
-        }
-        }
-        else{
-            return false;
-        }
     }
     private static <T, C> T raycast(Vec3d start, Vec3d end, C context, BiFunction<C, BlockPos, T> blockHitFactory, Function<C, T> missFactory) {
         if (start.equals(end)) {
@@ -157,12 +125,7 @@ public class GenericBlockCuller2 implements BlockCuller {
     }
     @Override
     public boolean shouldIgnoreBlockPick(BlockPos blockPos, Camera camera, Entity cameraEntity) {
-        if(!(isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) && blockPos != null && (cameraEntity instanceof PlayerEntity player && blockPos.toCenterPos().distanceTo(cameraEntity.getEyePos()) > player.getBlockInteractionRange())
-                && blockPos.toCenterPos().getY() > cameraEntity.getY()+1){
-            if(new Vec3d(0,1,0).dotProduct(blockPos.toCenterPos().subtract(cameraEntity.getPos()).normalize())>0.5F) {
-                return true;
-            }
-        }
+
         return false;
     }
 
@@ -180,9 +143,63 @@ public class GenericBlockCuller2 implements BlockCuller {
         return 01;
     }
 
+    @Override
+    public List<BlockPos> getCulledBlocks(BlockPos blockPos, Camera camera, Entity cameraEntity) {
+
+
+
+        LinkedHashMap<BlockPos,Boolean> visited = new LinkedHashMap<BlockPos,Boolean>();
+        Stack<BlockPos> stack = new Stack<>();
+        stack.push(cameraEntity.getBlockPos().up());
+        List<BlockPos> builder = new ArrayList<>(List.of());
+        while (!stack.isEmpty()  ) {
+            BlockPos p = stack.pop();
+            int x = p.getX();
+            int z = p.getZ();
+            builder.add(p);
+
+            if(p.isWithinDistance(cameraEntity.getBlockPos(), 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*16)) {
+                if (!visited.containsKey(p.north())  ) {
+                    if(this.shouldCull(p.north(), camera, cameraEntity)) {
+                        stack.push(p.north());
+                        visited.put(p.north(), true);
+                        builder.add(p.north());
+                    }
+                }
+                if (!visited.containsKey(p.east()) ) {
+                    if( this.shouldCull(p.east(), camera, cameraEntity)) {
+                        stack.push(p.east());
+                        visited.put(p.east(), true);
+                        builder.add(p.east());
+                    }
+
+                }
+                if (!visited.containsKey(p.west())  ) {
+                    if(this.shouldCull(p.west(), camera, cameraEntity)) {
+                        stack.push(p.west());
+                        visited.put(p.west(), true);
+                        builder.add(p.west());
+                    }
+
+                }
+                if (!visited.containsKey(p.south())  ) {
+                    if(this.shouldCull(p.south(), camera, cameraEntity)) {
+                        stack.push(p.south());
+                        visited.put(p.south(), true);
+                        builder.add(p.south());
+                    }
+
+                }
+            }
+        }
+
+        return builder;
+    }
 
     @Override
     public void resetCulledBlocks() {
     }
-
+    public boolean isAboveFlood(BlockPos  blockPos, Camera camera, Entity cameraEntity , Stream<BlockPos> stream) {
+        return stream.anyMatch(pos ->{ return blockPos.getX() == pos.getX() && blockPos.getY() > pos.getY() && blockPos.getZ() == pos.getZ();});
+    }
 }

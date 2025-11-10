@@ -6,6 +6,6 @@ import net.minecraft.client.MinecraftClient;
 
 public class MidnightControlsCompat {
     public static boolean isEnabled(){
-        return MidnightControlsConfig.controlsMode.equals(ControlsMode.CONTROLLER);
+        return false;
     }
 }

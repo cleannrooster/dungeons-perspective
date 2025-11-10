@@ -1,7 +1,10 @@
 package com.cleannrooster.dungeons_iso.mixin.compat.sodium;
 
+import com.cleannrooster.dungeons_iso.api.BlockCuller;
 import com.cleannrooster.dungeons_iso.api.BlockCullerUser;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
+import com.cleannrooster.dungeons_iso.api.cullers.FloodCuller;
+import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import net.caffeinemc.mods.sodium.api.util.ColorARGB;
@@ -54,10 +57,8 @@ public abstract class AbstractRenderContextMixin implements BlockCullerUser {
         if(MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player != null && Mod.enabled && !(state.getBlock() instanceof TranslucentBlock) && Mod.shouldReload) {
                     if( direction != null && MinecraftClient.getInstance().cameraEntity != null){
                         VoxelShape selfShape = state.getCullingFace(MinecraftClient.getInstance().world, pos, direction);
-                        boolean bool = pos.toCenterPos().getY() > MinecraftClient.getInstance().cameraEntity.getEyeY();
-                        boolean boo3 = pos.toCenterPos().distanceTo(Mod.preMod) < Mod.getZoom()*Mod.zoomMetric;
-                        boolean bool2 = MinecraftClient.getInstance().gameRenderer.getCamera().getPos().subtract(MinecraftClient.getInstance().cameraEntity.getPos()).dotProduct(pos.toCenterPos().subtract(MinecraftClient.getInstance().cameraEntity.getPos())) >0 ;
-                        ci.setReturnValue(selfShape.isEmpty() || (bool2 && bool && boo3 )  );
+
+                        ci.setReturnValue(selfShape.isEmpty()   );
 
                     }
 

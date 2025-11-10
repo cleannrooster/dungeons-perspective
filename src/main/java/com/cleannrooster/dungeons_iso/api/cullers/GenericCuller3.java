@@ -30,7 +30,7 @@ public class GenericCuller3 implements BlockCuller {
 
     @Override
     public boolean shouldForceNonCull() {
-        return true;
+        return false;
     }
 
     @Override
@@ -92,7 +92,7 @@ public class GenericCuller3 implements BlockCuller {
         var theta =angleBetween(vec8, vec7)  ;
         var phi =angleBetween(vec1,  vec2)  ;
         var chi =angleBetween(vec6,  new Vec3d(0,1,0))  ;
-        var factor = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*45*Math.pow(0.9,Mod.zoom);
+        var factor = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*45;
         var factor2 = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*45*Math.pow(0.9,Mod.zoom);
 
         if(!isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock()) && blockPos.toCenterPos().getY() > cameraEntity.getPos().getY() + 1 &&
@@ -193,10 +193,7 @@ public class GenericCuller3 implements BlockCuller {
         return 01;
     }
 
-    @Override
-    public List<BlockPos> getCulledBlocks() {
-        return culledBlocks;
-    }
+
 
     @Override
     public void resetCulledBlocks() {

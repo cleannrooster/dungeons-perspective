@@ -63,7 +63,7 @@ dependencies {
     modImplementation "io.wispforest:owo-lib:${project.owo_version}"
     // only if you plan to use owo-config
     annotationProcessor "io.wispforest:owo-lib:${project.owo_version}"
-    modCompileOnly fileTree(dir: "run/mods", includes: ['*.jar'])
+    modCompileOnly fileTree(dir: "run/mods/compile", includes: ['*.jar'])
 
     modImplementation "maven.modrinth:sodium:${rootProject.sodium_version}-fabric"
 }
