@@ -24,7 +24,7 @@ public class SodiumCompat {
     public static FloodCuller floodCuller = new FloodCuller();
     public static List<BlockPos> stream = List.of();
     static{
-        blockCullers.addAll(List.of( new GenericCuller3(),floodCuller));
+        blockCullers.addAll(List.of( new GenericCuller3(),floodCuller) );
         transparentBlocks = new LinkedHashMap<>();
         blockCullersShapes.add(new GenericCuller3());
 

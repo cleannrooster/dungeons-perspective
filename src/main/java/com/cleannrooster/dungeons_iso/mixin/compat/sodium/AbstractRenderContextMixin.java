@@ -55,10 +55,24 @@ public abstract class AbstractRenderContextMixin implements BlockCullerUser {
     @Inject(at = @At("RETURN"), method = "isFaceCulled", cancellable = true)
     protected final void isFaceCulledDungeons(@Nullable Direction direction, CallbackInfoReturnable<Boolean> ci) {
         if(MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player != null && Mod.enabled && !(state.getBlock() instanceof TranslucentBlock) && Mod.shouldReload) {
-                    if( direction != null && MinecraftClient.getInstance().cameraEntity != null){
-                        VoxelShape selfShape = state.getCullingFace(MinecraftClient.getInstance().world, pos, direction);
+                    if(  MinecraftClient.getInstance().cameraEntity != null){
+                        boolean bool = pos.toCenterPos().getY() > MinecraftClient.getInstance().cameraEntity.getBlockPos().up().getY();
+                        boolean boo3 = pos.toCenterPos().distanceTo(Mod.preMod) < Mod.getZoom()*Mod.zoomMetric*1.25F;
+                        boolean bool3 = false;
 
-                        ci.setReturnValue(selfShape.isEmpty()   );
+                        if(bool && boo3) {
+
+
+                        }
+                        VoxelShape selfShape = direction != null ?  state.getCullingFace(MinecraftClient.getInstance().world, pos, direction) : null;
+
+                        boolean bool2 = Mod.preMod.subtract(MinecraftClient.getInstance().cameraEntity.getPos()).dotProduct(pos.toCenterPos().subtract(MinecraftClient.getInstance().cameraEntity.getPos())) >0 ;
+
+
+
+
+
+                        ci.setReturnValue(selfShape != null && selfShape.isEmpty()  );
 
                     }
 

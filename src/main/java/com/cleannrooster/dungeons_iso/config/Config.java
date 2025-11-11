@@ -14,6 +14,9 @@ public class Config {
                     .build())
             .build();
     @SerialEntry
+    public boolean XIV =  false;
+
+    @SerialEntry
     public boolean onStartup =  true;
     @SerialEntry
     public boolean force =  false;
@@ -28,7 +31,7 @@ public class Config {
     public boolean cameraRelative =  true;
 
     @SerialEntry
-    public boolean turnToMouse =  false;
+    public boolean turnToMouse =  true;
     @SerialEntry
     public boolean clipToSpace =  false;
 
@@ -56,6 +59,6 @@ public class Config {
 
     @SerialEntry
 
-    public boolean frustumCulling = true;
+    public boolean frustumCulling = false;
 
 }

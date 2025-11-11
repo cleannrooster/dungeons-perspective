@@ -20,6 +20,11 @@
 
   "dungeons_iso.config.title": "§6Dungeons Perspective",
   "dungeons_iso.config.category.options": "Options",
+  "dungeons_iso.config.xiv.name": "XIV Mode",
+  "dungeons_iso.config.xiv.description": "While enabled, dragging the mouse up and down while holding Move Camera adjusts the Pitch instead of the Zoom.",
+  "dungeons_iso.config.scrollWheelZoom.name": "Scroll wheel zoom",
+  "dungeons_iso.config.scrollWheelZoom.description": "Zoom with scroll wheel (overrides hotbar scrolling).",
+
   "dungeons_iso.config.scrollWheelZoom.name": "Scroll wheel zoom",
   "dungeons_iso.config.scrollWheelZoom.description": "Zoom with scroll wheel (overrides hotbar scrolling).",
   "dungeons_iso.config.cameraRelative.name": "Camera-relative movement",

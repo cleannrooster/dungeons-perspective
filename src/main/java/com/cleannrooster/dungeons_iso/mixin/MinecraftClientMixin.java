@@ -532,7 +532,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
             spell = SpellEngineCompat.isCasting();
         }
-        living.setYaw( MathHelper.clampAngle(MathHelper.wrapDegrees((float)(MathHelper.atan2(f1, d1) * 57.2957763671875) - 90.0F), living.getHeadYaw(), (float) (living.isUsingItem() || (this.options.useKey.isPressed()) || spell || (living.getMainHandStack().getItem() instanceof CrossbowItem && CrossbowItem.isCharged(living.getMainHandStack())) ? 0 : 35)));
+        living.setYaw( MathHelper.clampAngle(MathHelper.wrapDegrees((float)(MathHelper.atan2(f1, d1) * 57.2957763671875) - 90.0F), living.getHeadYaw(), (float) (living.isUsingItem() || (this.options.useKey.isPressed()) || spell || (living.getMainHandStack().getItem() instanceof CrossbowItem && CrossbowItem.isCharged(living.getMainHandStack())) || mouseCooldown >= 40 ? 0 : 35)));
         living.prevYaw = (living.getYaw());
         living.bodyYaw = (living.getYaw());
         living.prevBodyYaw = (living.bodyYaw);

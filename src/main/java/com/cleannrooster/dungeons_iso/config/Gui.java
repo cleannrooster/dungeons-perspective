@@ -53,6 +53,18 @@ public class Gui implements ModMenuApi {
                                     .name(Text.translatable("dungeons_iso.config.category.options"))
                                     .option(Option
                                             .<Boolean>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.xiv.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.xiv.description")))
+                                            .binding(
+                                                    defaults.XIV,
+                                                    () -> config.XIV,
+                                                    (value) -> config.XIV = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
+                                    .option(Option
+                                            .<Boolean>createBuilder()
                                             .name(Text.translatable("dungeons_iso.config.force.name"))
                                             .description(OptionDescription.of(Text.translatable(
                                                     "dungeons_iso.config.force.description")))

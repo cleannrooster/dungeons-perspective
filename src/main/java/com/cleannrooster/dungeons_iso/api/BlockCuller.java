@@ -21,6 +21,10 @@ public interface BlockCuller {
         return false;
     }
      boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity);
+    default boolean shouldCullAlt(BlockPos blockPos,BlockPos fromPos, Camera camera, Entity cameraEntity){
+        return false;
+    }
+
     boolean shouldIgnoreBlockPick(BlockPos blockPos, Camera camera, Entity cameraEntity);
     boolean shouldForceCull();
     boolean shouldForceNonCull();

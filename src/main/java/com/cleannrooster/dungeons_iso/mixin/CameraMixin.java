@@ -74,7 +74,7 @@ public abstract class CameraMixin implements CameraAccessor {
             cancellable = true
     )
     public void getPitch45(CallbackInfoReturnable<Float> ci) {
-        if(Mod.enabled) {
+        if(Mod.enabled && !Config.GSON.instance().XIV) {
             ci.setReturnValue( (float)  45);
         }
     }
@@ -117,7 +117,7 @@ public abstract class CameraMixin implements CameraAccessor {
             float g = 0.1F;
             float f = args.get(0);
 
-            Vector3f vector3f = (new Vector3f(0, 0, (float)((float) args.get(0) * Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom))).rotate(MinecraftClient.getInstance().gameRenderer.getCamera().getRotation());
+            Vector3f vector3f = (new Vector3f(0, 0, (float)((float) args.get(0) * Mod.getZoom()))).rotate(MinecraftClient.getInstance().gameRenderer.getCamera().getRotation());
             Vec3d vec = (new Vec3d(this.pos.x + (double)vector3f.x, this.pos.y + (double)vector3f.y, this.pos.z + (double)vector3f.z));
             Mod.preMod = vec;
             BlockHitResult result = MinecraftClient.getInstance().cameraEntity.getWorld().raycast(new RaycastContext(MinecraftClient.getInstance().cameraEntity.getEyePos(), vec, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.NONE, MinecraftClient.getInstance().cameraEntity));
@@ -195,7 +195,9 @@ public abstract class CameraMixin implements CameraAccessor {
 
 
             Mod.yaw = this.yaw;
+            if(!Config.GSON.instance().XIV){
             Mod.pitch =  45;
+            }
             ClientPlayerEntity f = (MinecraftClient.getInstance().player);
 
             if (Mod.enabled ) {

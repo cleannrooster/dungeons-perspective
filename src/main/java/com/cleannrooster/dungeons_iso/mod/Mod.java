@@ -22,7 +22,7 @@ import java.util.Objects;
 public class Mod {
     public static BlockState prevblock;
     public static float yaw;
-    public static float pitch;
+    public static float pitch = 45;
     public static double x;
     public static boolean shouldReload;
     public static double flyingYAddition;

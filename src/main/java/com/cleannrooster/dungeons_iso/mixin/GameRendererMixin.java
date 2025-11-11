@@ -94,7 +94,7 @@ public abstract class GameRendererMixin {
             Mod.factor = Math.max(0F,( 1F-Math.max(Mod.zoomTime , 0F)))*(float) ((float) Mod.getZoom()*Mod.zoomMetric - Math.max(MinecraftClient.getInstance().cameraEntity.getHeight(),result.getPos().distanceTo(MinecraftClient.getInstance().cameraEntity.getEyePos())));
             Mod.factor2 = Math.clamp((Mod.frustrumZoom+(Mod.shouldReload ?1F : -1F )*MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta())/20F,0.1F,1F) *(float) ((float) Mod.getZoom()*Mod.zoomMetric-Mod.clipMetric -0.15F );
 
-            cir.setReturnValue( matrix4f.perspective((float) (fov * 0.01745329238474369) , (float)MinecraftClient.getInstance().getWindow().getFramebufferWidth() / (float)MinecraftClient.getInstance().getWindow().getFramebufferHeight(),Math.max(2,Math.clamp((Mod.frustrumZoom+(Mod.isBlocked ?1F : -1F )*MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta())/20F,0.05F,1F) *((Mod.zoomMetric*Mod.getZoom())-0.5F*Mod.clipMetric)), MinecraftClient.getInstance().gameRenderer.getFarPlaneDistance()));
+            cir.setReturnValue( matrix4f.perspective((float) (fov * 0.01745329238474369) , (float)MinecraftClient.getInstance().getWindow().getFramebufferWidth() / (float)MinecraftClient.getInstance().getWindow().getFramebufferHeight(),((0.25F*Mod.clipMetric)), MinecraftClient.getInstance().gameRenderer.getFarPlaneDistance()));
         }
     }
     @Shadow
