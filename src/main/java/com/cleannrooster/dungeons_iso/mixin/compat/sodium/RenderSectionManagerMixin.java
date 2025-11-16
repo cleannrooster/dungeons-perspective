@@ -27,27 +27,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(RenderSectionManager.class)
 public abstract class RenderSectionManagerMixin {
-    @Shadow
-    private @Nullable BlockPos cameraBlockPos;
 
-
-
-    @Inject(at = @At("HEAD"), method = "shouldPrioritizeTask", cancellable = true,remap = false)
-
-    private void shouldPrioritizeTaskXIV(RenderSection section, float distance,CallbackInfoReturnable<Boolean> cir) {
-        if(Mod.enabled && cameraBlockPos != null &&  MinecraftClient.getInstance().player != null) {
-            cir.setReturnValue(section.getSquaredDistance(cameraBlockPos) < 64*64);
-
-        }
-    }
-    @ModifyArg(at = @At(value = "INVOKE", target = "findVisible"), method = "createTerrainRenderList", remap = false, index = 1)
-    private Viewport adjViewport(Viewport viewport) {
-        Vec3d vec = MinecraftClient.getInstance().gameRenderer.getCamera().getPos();
-        return new Viewport(new SimpleFrustum(new FrustumIntersection()),new Vector3d(vec.getX(),vec.getY(),vec.getZ()));
-
-    }
-
-    @Shadow
-      abstract RenderSection getRenderSection(int x, int y, int z);
 
 }

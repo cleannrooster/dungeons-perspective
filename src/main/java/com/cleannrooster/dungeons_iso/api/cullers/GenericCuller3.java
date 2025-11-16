@@ -13,6 +13,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.spell_engine.utils.VectorHelper;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -117,18 +118,19 @@ public class GenericCuller3 implements BlockCuller {
         var posBehindPlayerUp = cameraEntity.getEyePos().subtract(getRotationVec(cameraEntity,camera.getLastTickDelta()).multiply(-4)).add(0,blockPos.getY()-cameraEntity.getEyeY(),0) ;
             var vec7 = (blockPos.toCenterPos().subtract(Mod.preMod).normalize()) ;
             var vec8 = cameraEntity.getPos().subtract(Mod.preMod).normalize();
-        var vec1 = blockPos.toCenterPos().subtract(cameraEntity.getPos()).normalize();
+        var vec1 = blockPos.toCenterPos().subtract(cameraEntity.getPos().add(vec8.multiply(4)));
         var vec4 = blockPos.toCenterPos().subtract(Mod.preMod).normalize().multiply(-1);
         var vec6 = blockPos.toCenterPos().subtract(cameraEntity.getPos()).normalize();
-        var vec2 = Mod.preMod.subtract(cameraEntity.getPos()).normalize();
+        var vec2 = Mod.preMod.subtract(cameraEntity.getPos());
         var theta =angleBetween(vec8, vec7)  ;
         var phi =angleBetween(vec1,  vec2)  ;
         var chi =angleBetween(vec6,  new Vec3d(0,1,0))  ;
-        var factor = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*45;
+            var proj = vec2.multiply(vec1.dotProduct(vec2)/(vec2.length()*vec2.length()));
+        var factor = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*30*Math.max(1,90/(Math.toDegrees(Math.atan(proj.length()))));
         var factor2 = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*45*Math.pow(0.9,Mod.zoom);
 
         if(!isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock()) && blockPos.toCenterPos().getY() > cameraEntity.getPos().getY() + 1 &&
-                (((  theta < factor  )  && phi < 45 ) ||(  Mod.preMod.distanceTo(blockPos.toCenterPos()) < 5))){
+                (((  theta < factor  )  && phi < 30 && Mod.preMod.distanceTo(cameraEntity.getEyePos()) > Mod.preMod.distanceTo(blockPos.toCenterPos()) ) ||(  Mod.preMod.distanceTo(blockPos.toCenterPos()) < 5))){
             return true;
         }
         else {
