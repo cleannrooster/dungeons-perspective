@@ -159,6 +159,7 @@ public class MouseMixin implements MouseAccessor {
         boolean spell = false;
 
         if (Mod.enabled && cameraEntity != null && client.player != null) {
+
             boolean isController = false;
             if (FabricLoader.getInstance().isModLoaded("midnightcontrols")) {
                 isController = MidnightControlsCompat.isEnabled();
@@ -362,7 +363,7 @@ public class MouseMixin implements MouseAccessor {
                             client.player.sendMessage(Text.translatable("Vertical look mode activated (Default Keybind: RIGHT ALT)"), true);
                         }
                     }
-
+                    Mod.prevCrosshairTarget = Mod.crosshairTarget != null ? Mod.crosshairTarget : Mod.horizontalTarget != null ? Mod.horizontalTarget : hitResult ;
                     Mod.crosshairTarget =  Mod.horizontalTarget != null ? Mod.horizontalTarget : hitResult;
                     Mod.mouseTarget =  Mod.horizontalTarget != null ? Mod.horizontalTarget : hitResult;
                 }

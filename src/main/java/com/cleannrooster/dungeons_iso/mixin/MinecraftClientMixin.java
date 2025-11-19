@@ -401,20 +401,13 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 /*
                     if( mouseCooldown >= 40 || mouseCooldown <= 0){
 */
-                        if (Mod.prevCrosshairTarget == null) {
-                            Mod.prevCrosshairTarget = Mod.crosshairTarget;
-                        }
-                        Mod.prevCrosshairTarget = Mod.crosshairTarget;
 
                         if(Mod.targeted != null){
                             EntityHitResult result = new EntityHitResult(targeted,targeted.getEyePos());
                             lookAt(client.player, EntityAnchorArgumentType.EntityAnchor.EYES, result.getPos(),true);
 
                         }else {
-                            lookAt(client.player, EntityAnchorArgumentType.EntityAnchor.EYES, new Vec3d(
-                                    MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getX(), Mod.crosshairTarget.getPos().getX()),
-                                    MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getY(), Mod.crosshairTarget.getPos().getY()),
-                                    MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getZ(), Mod.crosshairTarget.getPos().getZ())));
+                            lookAt(client.player, EntityAnchorArgumentType.EntityAnchor.EYES, crosshairTarget.getPos(),true);
                         }
 
                         /*
@@ -434,13 +427,11 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
             if(player.getVehicle() != null){
                 player.setHeadYaw(MathHelper.clampAngle(player.headYaw, player.getVehicle().getYaw() , (float) ( 135)));
-                player.prevHeadYaw = player.headYaw;
 
                 player.setYaw( MathHelper.clampAngle(player.headYaw, player.getVehicle().getYaw() , (float) ( 135)));
                 player.bodyYaw = player.getYaw();
 
-                player.prevYaw = player.getYaw();
-               player.prevBodyYaw = player.getYaw();
+
 
             }
                 /*
@@ -520,22 +511,51 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
         double e = target.y - vec3d.y;
         double f = target.z - vec3d.z;
         double g = Math.sqrt(d * d + f * f);
+        double d3 = prevCrosshairTarget.getPos().x - vec3d.x;
+        double e3 = prevCrosshairTarget.getPos().y - vec3d.y;
+        double f3 = prevCrosshairTarget.getPos().z - vec3d.z;
+        double g3 = Math.sqrt(d * d + f * f);
         double d1 = living.getVelocity().x;
         double e1 = living.getVelocity().y;
         double f1 = living.getVelocity().z;
         double g1 = Math.sqrt(d1 * d1 + f1 * f1);
+        Mod.livingPitch = living.getPitch();
+        Mod.livingBodyYaw = living.bodyYaw;
+        Mod.livingYaw = living.getYaw();
+        Mod.livingHeadYaw = living.getHeadYaw();
+        double headyaw = MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F);
+        while(headyaw - living.prevHeadYaw < -180.0F) {
+            living.prevHeadYaw -= 360.0F;
+        }
+
+        while(headyaw - living.prevHeadYaw >= 180.0F) {
+            living.prevHeadYaw += 360.0F;
+        }
+        living.setHeadYaw(MathHelper.lerp(0.25F, living.prevHeadYaw,MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F)));
+
+        double bodyyaw =MathHelper.clampAngle(MathHelper.wrapDegrees((float)(MathHelper.atan2(f1, d1) * 57.2957763671875) - 90.0F), living.getHeadYaw(), (float) 35);
+
+        while(bodyyaw - living.prevBodyYaw < -180.0F) {
+            living.prevBodyYaw -= 360.0F;
+        }
+
+        while(bodyyaw - living.prevBodyYaw >= 180.0F) {
+            living.prevBodyYaw += 360.0F;
+        }
+
+
         living.setPitch(MathHelper.wrapDegrees((float)(-(MathHelper.atan2(e, g) * 57.2957763671875))));
-        living.setHeadYaw(MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F));
-        living.prevHeadYaw = living.headYaw;
+
         boolean spell = false;
         if (FabricLoader.getInstance().isModLoaded("spell_engine")) {
 
             spell = SpellEngineCompat.isCasting();
         }
-        living.setYaw( MathHelper.clampAngle(MathHelper.wrapDegrees((float)(MathHelper.atan2(f1, d1) * 57.2957763671875) - 90.0F), living.getHeadYaw(), (float) (living.isUsingItem() || (this.options.useKey.isPressed()) || spell || (living.getMainHandStack().getItem() instanceof CrossbowItem && CrossbowItem.isCharged(living.getMainHandStack())) || mouseCooldown >= 40 ? 0 : 35)));
-        living.prevYaw = (living.getYaw());
-        living.bodyYaw = (living.getYaw());
-        living.prevBodyYaw = (living.bodyYaw);
+        //living.prevBodyYaw = (MathHelper.clampAngle(MathHelper.wrapDegrees((float)(MathHelper.atan2(f1, d1) * 57.2957763671875) - 90.0F), living.prevHeadYaw, (float) 35));
+
+        living.setYaw(MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F));
+        living.bodyYaw = (MathHelper.lerp(0.25F,living.prevBodyYaw,MathHelper.clampAngle(MathHelper.wrapDegrees((float)(MathHelper.atan2(f1, d1) * 57.2957763671875) - 90.0F), living.getHeadYaw(), (float) 35)));
+
     }
     private static <T, C> T raycast(Vec3d start, Vec3d end, C context, BiFunction<C, BlockPos, T> blockHitFactory, Function<C, T> missFactory) {
         if (start.equals(end)) {
@@ -604,7 +624,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
     @Inject(method = "tick", at = @At("TAIL"))
     public void tickXIV(CallbackInfo ci) {
-        MinecraftClient client =  (MinecraftClient)  (Object) this;
+       MinecraftClient client =  (MinecraftClient)  (Object) this;
         if (this.player == null) {
             return;
         }
@@ -727,7 +747,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
                 }
             }
-            if((FabricLoader.getInstance().isModLoaded("bettercombat") && mouseCooldown > 0 && !bool2  && Config.GSON.instance().additionalMeleeAssistance )){
+         /*   if((FabricLoader.getInstance().isModLoaded("bettercombat") && mouseCooldown > 0 && !bool2  && Config.GSON.instance().additionalMeleeAssistance )){
                 Entity entity = null;
                 var additionMod =  player.getEntityInteractionRange() * 1.25;
                 List<LivingEntity> living = player.getWorld().getEntitiesByClass(LivingEntity.class,player.getBoundingBox().expand(additionMod),
@@ -813,8 +833,8 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                 pickedTarget = null;
 
 
-            }
-
+            }*/
+/*
             if (  (  (!Config.GSON.instance().turnToMouse &&     !player.isFallFlying()) && (
                        (!(bool ) && !using && mouseCooldown <= 0  && !(player.getMainHandStack().getItem() instanceof CrossbowItem item ) &&  client.player.input.getMovementInput().length() > 0.1)))) {
                 if(Mod.targeted != null){
@@ -832,7 +852,6 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                     }
                 }
                 lookingTime = client.world.getTime();
-                Mod.prevCrosshairTarget = MinecraftClient.getInstance().crosshairTarget;
 
 
                 //client.player.getVehicle().lookAt(EntityAnchorArgumentType.EntityAnchor.EYES,client.player.getVehicle().getEyePos().add(vec3d.normalize()));
@@ -841,9 +860,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                 GameRenderer renderer = client.gameRenderer;
                 Camera camera = renderer.getCamera();
                 float tickDelta = camera.getLastTickDelta();
-                if (      player.isFallFlying()){
-                    Mod.prevCrosshairTarget = Mod.crosshairTarget;
-                }
+
                 if (targeted != null) {
 
 
@@ -860,18 +877,11 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                 else
                 if (Mod.crosshairTarget != null) {
 
-                    if (Mod.prevCrosshairTarget == null) {
-                        Mod.prevCrosshairTarget = Mod.crosshairTarget;
-                    }
-                    Mod.prevCrosshairTarget = Mod.crosshairTarget;
 
 
                     if (!player.isFallFlying()) {
 
-                        lookAt(client.player,EntityAnchorArgumentType.EntityAnchor.EYES, new Vec3d(
-                                MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getX(), Mod.crosshairTarget.getPos().getX()),
-                                MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getY(), Mod.crosshairTarget.getPos().getY()),
-                                MathHelper.lerp((Math.min(10, client.world.getTime() - lookingTime + tickDelta)) / 10D, Mod.prevCrosshairTarget.getPos().getZ(), Mod.crosshairTarget.getPos().getZ())),true);
+                        lookAt(client.player,EntityAnchorArgumentType.EntityAnchor.EYES, crosshairTarget.getPos(),true);
                     }
 
 
@@ -886,31 +896,29 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
             if(player.getVehicle() != null){
                 player.setHeadYaw(MathHelper.clampAngle(player.headYaw, player.getVehicle().getYaw() , (float) ( 135)));
-                player.prevHeadYaw = player.headYaw;
 
                 player.setYaw( MathHelper.clampAngle(player.headYaw, player.getVehicle().getYaw() , (float) ( 135)));
                 player.bodyYaw = player.getYaw();
 
-                player.prevYaw = player.getYaw();
-                player.prevBodyYaw = player.getYaw();
 
             }
+            */
             if(Objects.nonNull(hit)) {
                 notmoving = false;
                 if (hit.getType().equals(HitResult.Type.BLOCK)) {
                     double toadd = -1.0F;
                     Mod.forward = false;
 
-                    if( cooldown <= 0){
+                    if (cooldown <= 0) {
                         toadd = -1.0F;
 
                         Mod.forward = false;
                         blockedTime = 0;
 
                     }
-                    clipMetric =  (float) clipMetric+(float) toadd;
+                    clipMetric = (float) clipMetric + (float) toadd;
 
-                    if(clipMetric < 8){
+                    if (clipMetric < 8) {
                         clipMetric = 8;
                     }
 
@@ -920,8 +928,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                         Mod.clipMetric += 0.4F;
                         Mod.forward = true;
                         cooldown = 20;
-                    }
-                    else{
+                    } else {
 
                         Mod.notmoving = true;
                     }
@@ -930,6 +937,11 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                     }
                 }
                 //clipMetric = (float) Math.clamp(clipMetric,Math.min(16F,player.getHeight()),Math.max(Math.min(16F,player.getHeight()),16));
+
+                client.player.prevYaw = (livingYaw);
+                client.player.prevPitch = (livingPitch);
+                client.player.prevHeadYaw = (livingHeadYaw);
+                client.player.prevBodyYaw = (livingBodyYaw);
 
             }
         }

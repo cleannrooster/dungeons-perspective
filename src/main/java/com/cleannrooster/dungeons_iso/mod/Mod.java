@@ -48,6 +48,10 @@ public class Mod {
     public static boolean forward;
     public static boolean notmoving;
     public static Vec3d preMod = Vec3d.ZERO;
+    public static float livingPitch;
+    public static float livingBodyYaw;
+    public static float livingYaw;
+    public static float livingHeadYaw;
 
     public static float getScaledFactor() {
         return factor;
