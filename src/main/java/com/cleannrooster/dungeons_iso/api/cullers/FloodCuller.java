@@ -13,10 +13,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -145,46 +142,46 @@ public class FloodCuller implements BlockCuller {
 
     @Override
     public List<BlockPos> getCulledBlocks(BlockPos blockPos, Camera camera, Entity cameraEntity) {
-
-
-
-        LinkedHashMap<BlockPos,Boolean> visited = new LinkedHashMap<BlockPos,Boolean>();
-        Stack<BlockPos> stack = new Stack<>();
-        stack.push(cameraEntity.getBlockPos().up());
+        LinkedHashMap<BlockPos, Boolean> visited = new LinkedHashMap<BlockPos, Boolean>();
+        ArrayDeque<int[]> stack = new ArrayDeque<>();
+        BlockPos pos = cameraEntity.getBlockPos().up();
+        int[] primInt = new int[]{pos.getX(), pos.getY(), pos.getZ()};
+        stack.push(primInt);
         List<BlockPos> builder = new ArrayList<>(List.of());
-        while (!stack.isEmpty()  ) {
-            BlockPos p = stack.pop();
+        while (!stack.isEmpty()) {
+            int[] prim = stack.pop();
+            BlockPos p = new BlockPos(prim[0], prim[1], prim[2]);
             int x = p.getX();
             int z = p.getZ();
             builder.add(p);
 
-            if(p.isWithinDistance(cameraEntity.getBlockPos(), 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*8)) {
-                if (!visited.containsKey(p.north())  ) {
-                    if(this.shouldCull(p.north(), camera, cameraEntity)) {
-                        stack.push(p.north());
+            if (p.isWithinDistance(cameraEntity.getBlockPos(),  0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*16F)) {
+                if (!visited.containsKey(p.north())) {
+                    if (this.shouldCull(p.north(), camera, cameraEntity)) {
+                        stack.push(new int[]{p.north().getX(), p.north().getY(), p.north().getZ()});
                         visited.put(p.north(), true);
                         builder.add(p.north());
                     }
                 }
-                if (!visited.containsKey(p.east()) ) {
-                    if( this.shouldCull(p.east(), camera, cameraEntity)) {
-                        stack.push(p.east());
+                if (!visited.containsKey(p.east())) {
+                    if (this.shouldCull(p.east(), camera, cameraEntity)) {
+                        stack.push(new int[]{p.east().getX(), p.east().getY(), p.east().getZ()});
                         visited.put(p.east(), true);
                         builder.add(p.east());
                     }
 
                 }
-                if (!visited.containsKey(p.west())  ) {
-                    if(this.shouldCull(p.west(), camera, cameraEntity)) {
-                        stack.push(p.west());
+                if (!visited.containsKey(p.west())) {
+                    if (this.shouldCull(p.west(), camera, cameraEntity)) {
+                        stack.push(new int[]{p.west().getX(), p.west().getY(), p.west().getZ()});
                         visited.put(p.west(), true);
                         builder.add(p.west());
                     }
 
                 }
-                if (!visited.containsKey(p.south())  ) {
-                    if(this.shouldCull(p.south(), camera, cameraEntity)) {
-                        stack.push(p.south());
+                if (!visited.containsKey(p.south())) {
+                    if (this.shouldCull(p.south(), camera, cameraEntity)) {
+                        stack.push(new int[]{p.south().getX(), p.south().getY(), p.south().getZ()});
                         visited.put(p.south(), true);
                         builder.add(p.south());
                     }
@@ -192,11 +189,11 @@ public class FloodCuller implements BlockCuller {
                 }
             }
         }
-
         return builder;
+
     }
 
-    @Override
+        @Override
     public void resetCulledBlocks() {
     }
     public boolean isAboveFlood(BlockPos  blockPos, Camera camera, Entity cameraEntity , Stream<BlockPos> stream) {

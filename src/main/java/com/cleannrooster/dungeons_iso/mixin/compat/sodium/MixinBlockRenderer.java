@@ -120,7 +120,7 @@ private  Vector3f posOffset ;
                     if(culler instanceof FloodCuller floodCuller &&((culler.shouldForceCull() && !bool) || (bool && culler.shouldForceNonCull()))){
                         bool = floodCuller.isAboveFlood(pos, MinecraftClient.getInstance().gameRenderer.getCamera(), MinecraftClient.getInstance().cameraEntity, SodiumCompat.stream.stream());
                     }
-                    else if ((culler.shouldForceCull() && !bool) || (bool && culler.shouldForceNonCull())) {
+                    else if (MinecraftClient.getInstance().cameraEntity != null &&pos.toCenterPos().distanceTo (MinecraftClient.getInstance().cameraEntity.getPos()) < Mod.preMod.distanceTo(MinecraftClient.getInstance().cameraEntity.getPos()) && ((culler.shouldForceCull() && !bool) || (bool && culler.shouldForceNonCull()))) {
                         bool = culler.shouldCull(pos, MinecraftClient.getInstance().gameRenderer.getCamera(), MinecraftClient.getInstance().cameraEntity);
                     }
                 }
