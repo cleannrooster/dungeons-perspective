@@ -2,18 +2,26 @@ package com.cleannrooster.dungeons_iso;
 
 
 import com.cleannrooster.dungeons_iso.config.Config;
+import com.cleannrooster.dungeons_iso.mod.Mod;
 import com.cleannrooster.dungeons_iso.network.Capabilities;
+import io.wispforest.owo.ui.hud.Hud;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.loader.impl.gui.FabricGuiEntry;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.navigation.GuiNavigation;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.VertexConsumer;
@@ -22,12 +30,15 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.shape.VoxelShape;
+import net.spell_engine.client.gui.HudRenderHelper;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.function.Consumer;
+
+import static com.cleannrooster.dungeons_iso.compat.SodiumCompat.fogOfWar;
 
 @Environment(EnvType.CLIENT)
 public class ClientInit implements ClientModInitializer {
@@ -105,6 +116,7 @@ public class ClientInit implements ClientModInitializer {
     public void onInitializeClient() {
         instance = this;
         Config.GSON.load();
+
 
         KeyBindingHelper.registerKeyBinding(toggleBinding = new KeyBinding(
                 "dungeons_iso.binds.toggle",

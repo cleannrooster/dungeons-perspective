@@ -1,7 +1,6 @@
 package com.cleannrooster.dungeons_iso.mixin;
 
 import com.cleannrooster.dungeons_iso.api.ClientBossBarAccessor;
-import com.cleannrooster.dungeons_iso.api.WorldRendererAccessor;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;

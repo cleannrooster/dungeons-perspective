@@ -56,7 +56,7 @@ public class FloodCuller implements BlockCuller {
         return new Vec3d((double)(i * j), (double)(-k), (double)(h * j));    }
 
     public boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity){
-            return cameraEntity != null && Mod.isBlocked &&  cameraEntity.getWorld().getBlockState(blockPos).getCameraCollisionShape(cameraEntity.getWorld(), blockPos, ShapeContext.of(cameraEntity)).isEmpty();
+            return cameraEntity != null && Mod.shouldReload &&  cameraEntity.getWorld().getBlockState(blockPos).getCameraCollisionShape(cameraEntity.getWorld(), blockPos, ShapeContext.of(cameraEntity)).isEmpty();
 
 
     }
@@ -155,7 +155,7 @@ public class FloodCuller implements BlockCuller {
             int z = p.getZ();
             builder.add(p);
 
-            if (p.isWithinDistance(cameraEntity.getBlockPos(),  0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*16F)) {
+            if (p.isWithinDistance(cameraEntity.getBlockPos(), 16) && p.isWithinDistance(cameraEntity.getBlockPos(),  0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*Mod.getZoom()*Mod.zoomMetric)) {
                 if (!visited.containsKey(p.north())) {
                     if (this.shouldCull(p.north(), camera, cameraEntity)) {
                         stack.push(new int[]{p.north().getX(), p.north().getY(), p.north().getZ()});

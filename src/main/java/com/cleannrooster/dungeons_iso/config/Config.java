@@ -20,6 +20,8 @@ public class Config {
     public boolean onStartup =  true;
     @SerialEntry
     public boolean force =  false;
+    @SerialEntry
+    public boolean fogOfWar =  false;
 
     @SerialEntry
     public boolean scrollWheelZoom = true;
@@ -33,7 +35,7 @@ public class Config {
     @SerialEntry
     public boolean turnToMouse =  true;
     @SerialEntry
-    public boolean clipToSpace =  false;
+    public boolean clipToSpace =  true;
 
     @SerialEntry
     public boolean additionalMeleeAssistance =  false;

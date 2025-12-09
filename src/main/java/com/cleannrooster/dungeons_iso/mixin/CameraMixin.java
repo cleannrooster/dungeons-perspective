@@ -119,9 +119,12 @@ public abstract class CameraMixin implements CameraAccessor {
 
             Vector3f vector3f = (new Vector3f(0, 0, (float)((float) args.get(0) * Mod.getZoom()))).rotate(MinecraftClient.getInstance().gameRenderer.getCamera().getRotation());
             Vec3d vec = (new Vec3d(this.pos.x + (double)vector3f.x, this.pos.y + (double)vector3f.y, this.pos.z + (double)vector3f.z));
+            Vector3f vector3f2 = (new Vector3f(0, 0, (float)((float) args.get(0) * zoom))).rotate(MinecraftClient.getInstance().gameRenderer.getCamera().getRotation());
+            Vec3d vec2 = (new Vec3d(this.pos.x + (double)vector3f.x, this.pos.y + (double)vector3f.y, this.pos.z + (double)vector3f.z));
+
             Mod.preMod = vec;
             BlockHitResult result = MinecraftClient.getInstance().cameraEntity.getWorld().raycast(new RaycastContext(MinecraftClient.getInstance().cameraEntity.getEyePos(), vec, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.NONE, MinecraftClient.getInstance().cameraEntity));
-            Mod.hit = this.area.raycast(new RaycastContext(this.focusedEntity.getEyePos(),vec, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.NONE, this.focusedEntity));
+            Mod.hit = this.area.raycast(new RaycastContext(this.focusedEntity.getEyePos(),vec2, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.NONE, this.focusedEntity));
 
             if (result.getType().equals(HitResult.Type.BLOCK) ) {
                 Mod.isBlocked = true;

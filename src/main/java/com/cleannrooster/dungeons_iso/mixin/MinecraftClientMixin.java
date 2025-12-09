@@ -74,7 +74,7 @@ import java.util.stream.Stream;
 import static com.cleannrooster.dungeons_iso.mod.Mod.*;
 
 
-@Mixin(MinecraftClient.class)
+@Mixin(value = MinecraftClient.class,priority = 0 )
 public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
     private boolean canUseItem;
 
@@ -259,6 +259,12 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                 }*/
 
             }
+           /* if (this.options.attackKey.wasPressed()) {
+                if(crosshairTarget instanceof EntityHitResult entityHitResult){
+                    targeted = entityHitResult.getEntity();
+                    pickCooldown = 20;
+                }
+            }*/
             if(this.options.attackKey.isPressed() ){
                 mouseCooldown =  40+(int)(0.2F*20F/client.player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED));
             }
@@ -281,93 +287,11 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
             ){
                 bool2 = true;
             }
-            if(FabricLoader.getInstance().isModLoaded("bettercombat") && mouseCooldown > 0 &&  !bool2   && Config.GSON.instance().additionalMeleeAssistance ){
-                Entity entity = null;
-                var additionMod =  player.getEntityInteractionRange() * 1.25;
-                List<LivingEntity> living = player.getWorld().getEntitiesByClass(LivingEntity.class,player.getBoundingBox().expand(additionMod),
-                        (target) ->{
-                            return target != player && player.canSee(target) &&  target.distanceTo(player) < additionMod
-                                    && target.getPos().subtract(player.getPos().subtract(player.getRotationVec(1.0F).multiply(additionMod))).normalize().dotProduct(player.getRotationVec(1.0F).normalize()) > 0.5F
-                                    && target.getPos().subtract(player.getPos()).normalize().dotProduct(player.getRotationVec(1.0F).normalize()) > 0;
-                        });
-                if(!living.isEmpty()) {
-                    var vec3d =  player.getPos();
-                    living.sort(Comparator.comparing((a) -> a.getPos().distanceTo(vec3d)));
-                    if (crosshairTarget instanceof EntityHitResult result) {
-                        pickedTarget = result.getEntity();
-                    }
-                    else if(!disableTargeting) {
-                        entity = living.get(0);
-                    }
+            if(Mod.targeted != null && !targeted.isInvisibleTo(client.player) && client.player.canSee(targeted)) {
+                EntityHitResult result = new EntityHitResult(targeted,targeted.getEyePos());
+                lookAt(client.player, EntityAnchorArgumentType.EntityAnchor.EYES, result.getPos(),true);
 
-
-                    else{
-                        pickedTarget = null;
-                    }
-                    if(ClientInit.cycleTargetBinding.wasPressed()) {
-
-                        if(disableTargeting) {
-                            if (!living.isEmpty()) {
-                                pickedTarget = living.get(0);
-                                disableTargeting = false;
-                            }
-                        }
-                        else if(pickedTarget == null ) {
-                            if (!living.isEmpty()) {
-                                pickedTarget = living.get(0);
-                            }
-                        }
-                        else {
-                            if (living.contains(pickedTarget)) {
-
-                                if (living.size() > living.indexOf(pickedTarget) + 1) {
-                                    pickedTarget = living.get(living.indexOf(pickedTarget) + 1);
-                                    disableTargeting = false;
-
-                                } else {
-                                    disableTargeting = true;
-                                    pickedTarget = null;
-
-                                    player.sendMessage(Text.translatable("Disabled Targeting"));
-
-                                }
-                            } else {
-                                disableTargeting = true;
-                                pickedTarget = null;
-                                player.sendMessage(Text.translatable("Disabled Targeting"));
-
-                            }
-                        }
-                    }
-                    if(Mod.pickedTarget != null && Mod.pickedTarget instanceof LivingEntity livingPicekdTarget  && living.contains(livingPicekdTarget) && livingPicekdTarget.isAlive()) {
-
-                        Mod.crosshairTarget = new EntityHitResult(Mod.pickedTarget,Mod.pickedTarget.getEyePos());
-                        Mod.prevCrosshairTarget = new EntityHitResult(Mod.pickedTarget, Mod.pickedTarget.getEyePos());
-                        Mod.targeted = Mod.pickedTarget;
-
-                    }
-                    else {
-                        Mod.crosshairTarget = entity != null ?  new EntityHitResult(entity, living.get(0).getEyePos()) : crosshairTarget;
-                        Mod.prevCrosshairTarget = entity != null ? new EntityHitResult(entity, living.get(0).getEyePos()) : prevCrosshairTarget;
-                        Mod.targeted = entity;
-
-
-                    }
-
-                }
-                else{
-                    Mod.targeted = null;
-                    pickedTarget = null;
-
-                }
-
-            }
-            else{
-                Mod.targeted = null;
-                pickedTarget = null;
-
-
-            }
+            }else
                 if (((!Config.GSON.instance().turnToMouse && !player.isFallFlying()) && (
                          !(bool ) && !using && mouseCooldown <= 0 && !(player.getMainHandStack().getItem() instanceof CrossbowItem item )&& ( client.player.input.getMovementInput().length() > 0.1)))) {
                     if(Mod.targeted != null){
@@ -419,11 +343,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
                 }
 
-            if(Mod.targeted != null){
-                EntityHitResult result = new EntityHitResult(targeted,targeted.getEyePos());
-                lookAt(client.player, EntityAnchorArgumentType.EntityAnchor.EYES, result.getPos(),true);
 
-            }
 
             if(player.getVehicle() != null){
                 player.setHeadYaw(MathHelper.clampAngle(player.headYaw, player.getVehicle().getYaw() , (float) ( 135)));
@@ -630,11 +550,11 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
         }
         Mod.zoom = Math.clamp(Mod.zoom,1F,10F);
 
-        if(Mod.enabled && client.worldRenderer != null ){
+        /*if(Mod.enabled && client.worldRenderer != null ){
             ((WorldRendererAccessor)client.worldRenderer).chunks().forEach(builtChunk -> {{
                 builtChunk.scheduleRebuild(true);
             }});
-        }
+        }*/
         boolean isController = false;
 
         if (FabricLoader.getInstance().isModLoaded("midnightcontrols")) {
@@ -945,10 +865,13 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
             }
         }
+        if(pickCooldown <= 0){
+            targeted = null;
+        }
         Mod.cooldown--;
         Mod.cooldownWas++;
         mouseCooldown--;
-
+        pickCooldown--;
     }
 
     @Inject(method = "hasOutline", at = @At("HEAD"), cancellable = true)
@@ -965,8 +888,13 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
         }
         if(Mod.enabled && player != null && entity == player ){
-
-
+/*
+            if (M) {
+                if(crosshairTarget instanceof EntityHitResult entityHitResult){
+                    targeted = entityHitResult.getEntity();
+                    pickCooldown = 20;
+                }
+            }*/
             if(  player.getWorld().raycast(new RaycastContext(
                     MinecraftClient.getInstance().gameRenderer.getCamera().getPos(),
                     entity.getEyePos(),
@@ -985,6 +913,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
     }
     private int mouseCooldown = 40;
 
+    private int pickCooldown = 20;
 
 
     public int getMouseCooldown() {
@@ -998,5 +927,14 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
     @Inject(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V", at = @At("HEAD"))
     public void disconnectPre(Screen screen, CallbackInfo ci) {
         ClientInit.capabilities = null;
+    }
+
+    @Inject(method = "doAttack", at = @At("HEAD"), cancellable = true)
+
+    private void doAttackXIV(CallbackInfoReturnable<Boolean> ci) {
+            if (Config.GSON.instance().additionalMeleeAssistance && crosshairTarget instanceof EntityHitResult entityHitResult) {
+                targeted = entityHitResult.getEntity();
+                pickCooldown = 20;
+            }
     }
 }

@@ -20,6 +20,9 @@
 
   "dungeons_iso.config.title": "§6Dungeons Perspective",
   "dungeons_iso.config.category.options": "Options",
+  "dungeons_iso.config.fogOfWar.name": "Fog of War",
+  "dungeons_iso.config.fogOfWar.description": "While enabled, things you shouldn't be able to see will be obscured by a fog of war.",
+
   "dungeons_iso.config.xiv.name": "XIV Mode",
   "dungeons_iso.config.xiv.description": "While enabled, dragging the mouse up and down while holding Move Camera adjusts the Pitch instead of the Zoom.",
   "dungeons_iso.config.scrollWheelZoom.name": "Scroll wheel zoom",
@@ -63,8 +66,8 @@
   "dungeons_iso.config.zoomFactor.description":"Zoom and FOV factor",
   "dungeons_iso.config.rollTowardsCursor.name": "(Combat Roll Compat) Roll Towards Cursor",
   "dungeons_iso.config.rollTowardsCursor.description":"When enabled, you will roll towards the cursor rather than in the direction you're moving.",
-  "dungeons_iso.config.additionalMeleeAssistance.name": "Additional Melee Assistance (Better Combat compat)",
-  "dungeons_iso.config.additionalMeleeAssistance.description":"When enabled, you will snap towards targets in your immediate frontal area of vision when holding a melee weapon. ONLY WORKS WITH BETTER COMBAT.",
+  "dungeons_iso.config.additionalMeleeAssistance.name": "Look at clicked target for 1 second after click",
+  "dungeons_iso.config.additionalMeleeAssistance.description":"When enabled, you will snap towards targets you click for 1 second after the click. Helps with melee.",
   "dungeons_iso.config.clipToSpace.name": "Additional Zoom Effects",
   "dungeons_iso.config.clipToSpace.description":"Additonal Automatic Zoom in and out depending on certain events.",
   "dungeons_iso.config.ortho.name": "Orthographic Mode",

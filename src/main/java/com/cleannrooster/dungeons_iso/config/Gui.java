@@ -77,6 +77,18 @@ public class Gui implements ModMenuApi {
                                             .build())
                                     .option(Option
                                             .<Boolean>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.fogOfWar.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.fogOfWar.description")))
+                                            .binding(
+                                                    defaults.force,
+                                                    () -> config.fogOfWar,
+                                                    (value) -> config.fogOfWar = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
+                                    .option(Option
+                                            .<Boolean>createBuilder()
                                             .name(Text.translatable("dungeons_iso.config.forceAutoJump.name"))
                                             .description(OptionDescription.of(Text.translatable(
                                                     "dungeons_iso.config.forceAutoJump.description")))

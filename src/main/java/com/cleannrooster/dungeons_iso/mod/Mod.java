@@ -72,7 +72,7 @@ public class Mod {
                     modifier = (Math.min(2F, ((float) 1F + ((DragonCompat.bool ? (float) (Math.max(0F, (float) MinecraftClient.getInstance().world.getTime() - (float) Mod.dragonTimeSince + MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta())) : Math.max(0F, 20F - (float) MinecraftClient.getInstance().world.getTime() + (float) Mod.dragonTime + MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta()))) / 20F))) * Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom;
 
                 } else {
-                    modifier = Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom;
+                    modifier =  Mod.zoom;
 
                 }
             }
@@ -81,8 +81,8 @@ public class Mod {
                 modifier *= living.getScale();
             }
         }
-        if(Objects.isNull(hit)){
-            return 1f*modifier;
+        if(Objects.isNull(hit) || !Config.GSON.instance().clipToSpace) {
+            return modifier;
         }
         return (float) Math.max(0.5F*modifier*((Math.clamp((Mod.clipMetric+(Mod.notmoving ? 0 :  Mod.forward ? 0.4F: -1.0F)*MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta()),16,32))/(32)),2F);
     }
