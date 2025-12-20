@@ -3,6 +3,7 @@ package com.cleannrooster.dungeons_iso.mixin;
 import com.cleannrooster.dungeons_iso.api.*;
 import com.cleannrooster.dungeons_iso.compat.DragonCompat;
 import com.cleannrooster.dungeons_iso.compat.MidnightControlsCompat;
+import com.cleannrooster.dungeons_iso.compat.ShoulderSurfingCompat;
 import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.ui.LootUI;
@@ -627,6 +628,9 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                 Mod.enabled = false;
 
                 options.setPerspective(Mod.lastPerspective);
+                if (FabricLoader.getInstance().isModLoaded("shouldersurfing")) {
+                    ShoulderSurfingCompat.onModDisabled();
+                }
                 Util.debug("Disabled Minecraft XIV");
                 if(client.currentScreen == null) {
                     InputUtil.setCursorParameters(client.getWindow().getHandle(), GLFW.GLFW_CURSOR_DISABLED,client.mouse.getX(), client.mouse.getY());
@@ -642,6 +646,9 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
                 Mod.enabled = true;
 
                 Mod.lastPerspective = this.options.getPerspective();
+                if (FabricLoader.getInstance().isModLoaded("shouldersurfing")) {
+                    ShoulderSurfingCompat.onModEnabled();
+                }
                 this.options.setPerspective(Perspective.THIRD_PERSON_BACK);
                 if (Mod.lastPerspective == Perspective.THIRD_PERSON_FRONT) {
                     Mod.yaw = ((180 + this.player.getYaw() + 180) % 360) - 180;

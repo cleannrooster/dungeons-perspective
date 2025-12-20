@@ -37,6 +37,7 @@ repositories {
 
     maven { url 'https://maven.kosmx.dev/' }
     maven{ url"https://maven.bawnorton.com/releases"}
+    maven { url("https://raw.githubusercontent.com/Fuzss/modresources/main/maven/") }
 }
 
 dependencies {
@@ -66,6 +67,8 @@ dependencies {
     modCompileOnly fileTree(dir: "run/mods/compile", includes: ['*.jar'])
 
     modImplementation "maven.modrinth:sodium:${rootProject.sodium_version}-fabric"
+    modImplementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${rootProject.forge_config_api_port_version}"
+    modImplementation "maven.modrinth:shoulder-surfing-reloaded:${rootProject.shoulder_surfing_reloaded_version}+fabric"
 }
 
 processResources {
