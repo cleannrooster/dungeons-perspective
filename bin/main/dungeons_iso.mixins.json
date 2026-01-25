@@ -19,8 +19,7 @@
     "AbstractHorseEntityMixin",
     "LightmapTextureManagerMixin",
     "BackgroundRendererMixin",
-    "LightingProviderMixin",
-    "WrapperProtoChunkMixin",
+
     "WorldMixin",
     "ClientWorldMixin",
     "ChunkDataMixin",

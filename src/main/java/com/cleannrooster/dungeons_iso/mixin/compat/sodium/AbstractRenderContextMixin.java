@@ -41,6 +41,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.List;
+import java.util.Map;
+
 @Mixin(AbstractBlockRenderContext.class)
 public abstract class AbstractRenderContextMixin implements BlockCullerUser {
     @Shadow    protected BlockPos pos;
@@ -51,7 +54,21 @@ public abstract class AbstractRenderContextMixin implements BlockCullerUser {
     protected LightPipelineProvider lighters;
 @Shadow
     protected  QuadLightData quadLightData ;
+/*    @Inject(at = @At("HEAD"), method = "shadeQuad", cancellable = true,remap = false)
+    protected void shadeQuadXIV(MutableQuadViewImpl quad, LightMode lightMode, boolean emissive, ShadeMode shadeMode, CallbackInfo info) {
+        if(Mod.enabled && Config.GSON.instance().fogOfWar && SodiumCompat.fogOfWar != null) {
+            for(HitResult result :
+                    SodiumCompat.fogOfWar.realPoints){
+                if(result.getPos().distanceTo(pos.toCenterPos()) < 4){
+                    info.cancel();
+                    break;
+                }
+            }
+            return;
 
+        }
+
+    }*/
     @Inject(at = @At("RETURN"), method = "isFaceCulled", cancellable = true)
     protected final void isFaceCulledDungeons(@Nullable Direction direction, CallbackInfoReturnable<Boolean> ci) {
         try {

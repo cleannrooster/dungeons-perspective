@@ -7,12 +7,16 @@ import com.cleannrooster.dungeons_iso.api.cullers.FloodCuller;
 import com.cleannrooster.dungeons_iso.api.cullers.GenericCuller3;
 import com.cleannrooster.dungeons_iso.api.cullers.GenericBlockCuller2;
 import com.cleannrooster.dungeons_iso.config.Config;
+import com.cleannrooster.dungeons_iso.mod.Mod;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.Camera;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
+import org.joml.Vector3d;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,6 +45,8 @@ public class SodiumCompat {
 
 
     public static void run(){
+        Camera camera = MinecraftClient.getInstance().gameRenderer.getCamera();
+
         if(fogOfWar == null){
             fogOfWar = new FogOfWar();
         }
@@ -50,6 +56,7 @@ public class SodiumCompat {
         }
         else{
             fogOfWar.map = null;
+            fogOfWar.realPoints = null;
             fogOfWar.points = null;
         }
 
@@ -59,8 +66,9 @@ public class SodiumCompat {
             stream = floodCuller.getCulledBlocks(MinecraftClient.getInstance().player.getBlockPos().up(), MinecraftClient.getInstance().gameRenderer.getCamera(), MinecraftClient.getInstance().cameraEntity);
         }
         //System.out.println(stream.toArray().length);
-        double dub = 1*MinecraftClient.getInstance().player.getPos().distanceTo(MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
-        box.stretch(dub,dub,dub);
+        double dub = 4*Mod.getZoom()*Mod.zoomMetric;
+        var vec = camera.getRotation().transform(new Vector3d(1,1,-1));
+        box.expand(dub,dub,dub);
         SodiumWorldRenderer.instance().scheduleRebuildForBlockArea((int) box.minX, (int) box.minY, (int) box.minZ, (int) box.maxX, (int) box.maxY, (int) box.maxZ, true);
 
         for(BlockCuller culler :blockCullers) {

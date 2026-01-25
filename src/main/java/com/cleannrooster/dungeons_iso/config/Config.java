@@ -22,7 +22,8 @@ public class Config {
     public boolean force =  false;
     @SerialEntry
     public boolean fogOfWar =  false;
-
+    @SerialEntry
+    public float cullAngle = 20.0F;
     @SerialEntry
     public boolean scrollWheelZoom = true;
     @SerialEntry
@@ -43,6 +44,7 @@ public class Config {
     public boolean forceAutoJump =  true;
     @SerialEntry
     public boolean rollTowardsCursor =  true;
+
     @SerialEntry
 
     public float moveFactor_v3 = 0.5F;

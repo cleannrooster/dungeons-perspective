@@ -345,15 +345,15 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
 
 
-            if(player.getVehicle() != null){
-                player.setHeadYaw(MathHelper.clampAngle(player.headYaw, player.getVehicle().getYaw() , (float) ( 135)));
+            // if(player.getVehicle() != null){
+            //     player.setHeadYaw(MathHelper.clampAngle(player.headYaw, player.getVehicle().getYaw() , (float) ( 135)));
 
-                player.setYaw( MathHelper.clampAngle(player.headYaw, player.getVehicle().getYaw() , (float) ( 135)));
-                player.bodyYaw = player.getYaw();
+            //     player.setYaw( MathHelper.clampAngle(player.headYaw, player.getVehicle().getYaw() , (float) ( 135)));
+            //     player.bodyYaw = player.getYaw();
 
 
 
-            }
+            // }
                 /*
 
                 double d = Mod.crosshairTarget.getPos().x - vec3d.x;
@@ -431,9 +431,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
         double e = target.y - vec3d.y;
         double f = target.z - vec3d.z;
         double g = Math.sqrt(d * d + f * f);
-        double d3 = prevCrosshairTarget.getPos().x - vec3d.x;
-        double e3 = prevCrosshairTarget.getPos().y - vec3d.y;
-        double f3 = prevCrosshairTarget.getPos().z - vec3d.z;
+
         double g3 = Math.sqrt(d * d + f * f);
         double d1 = living.getVelocity().x;
         double e1 = living.getVelocity().y;
@@ -451,7 +449,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
         while(headyaw - living.prevHeadYaw >= 180.0F) {
             living.prevHeadYaw += 360.0F;
         }
-        living.setHeadYaw(MathHelper.lerp(0.25F, living.prevHeadYaw,MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F)));
+        living.setHeadYaw(MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F));
 
         double bodyyaw =MathHelper.clampAngle(MathHelper.wrapDegrees((float)(MathHelper.atan2(f1, d1) * 57.2957763671875) - 90.0F), living.getHeadYaw(), (float) 35);
 

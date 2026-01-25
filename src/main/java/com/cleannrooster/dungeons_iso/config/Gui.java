@@ -171,7 +171,18 @@ public class Gui implements ModMenuApi {
                                             )
                                             .controller(BooleanControllerBuilder::create)
                                             .build())
-
+                                    .option(Option
+                                            .<Float>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.cullangle.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.cullangle.description")))
+                                            .binding(
+                                                    defaults.cullAngle,
+                                                    () -> config.cullAngle,
+                                                    (value) -> config.cullAngle = value
+                                            )
+                                            .controller(floatOption ->  new FloatSliderControllerBuilderImpl(floatOption).range(3F,30F).step(0.001F))
+                                            .build())
                                     .option(Option
                                             .<Float>createBuilder()
                                             .name(Text.translatable("dungeons_iso.config.movefactor.name"))
@@ -183,6 +194,18 @@ public class Gui implements ModMenuApi {
                                                     (value) -> config.moveFactor_v3 = value
                                             )
                                             .controller(floatOption ->  new FloatSliderControllerBuilderImpl(floatOption).range(0F,4F).step(0.001F))
+                                            .build())
+                                    .option(Option
+                                            .<Float>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.fov.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.fov.description")))
+                                            .binding(
+                                                    defaults.fov,
+                                                    () -> config.fov,
+                                                    (value) -> config.fov = value
+                                            )
+                                            .controller(floatOption ->  new FloatSliderControllerBuilderImpl(floatOption).range(45F,90F).step(0.001F))
                                             .build())
                                     .option(Option
                                             .<Boolean>createBuilder()

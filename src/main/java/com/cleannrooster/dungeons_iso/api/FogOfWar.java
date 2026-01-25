@@ -54,10 +54,13 @@ public class FogOfWar {
     Window window;
     Entity cameraEntity;
     Vector2d res;
+    public List<HitResult> realPoints;
+
     public HashMap<List<Integer>,HitResult> map;
     public HashMap<List<Integer>,HitResult> getMap() {
 
         HashMap<List<Integer>,HitResult> map = new HashMap<>();
+
         client = MinecraftClient.getInstance();
         renderer = client.gameRenderer;
         camera = client.gameRenderer.getCamera();
@@ -81,7 +84,7 @@ public class FogOfWar {
             Vector3d dir = forward.add(right.mul(offsets.x).add(up.mul(offsets.y))).normalize();
             Vector3d orth = camera.getRotation().transform(new Vector3d(0.0, 0.0, -1.0)).normalize();
             Vec3d rayDir = Config.GSON.instance().ortho ? new Vec3d(orth.x, orth.y, orth.z) : new Vec3d(dir.x, dir.y, dir.z);
-                Vec3d end =                             (Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos()).add(rayDir.multiply(Mod.getZoom()*Mod.zoomMetric*1.5F));
+                Vec3d end =                             (Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos()).add(rayDir.multiply((1+Mod.getZoom())*Mod.zoomMetric*3F));
 
             HitResult hitResult0 = raycast(Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(),end,new RaycastContextCull(
                         Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(),
@@ -128,6 +131,8 @@ CustomShapeTypes.CULLED,
     public List<Vec2f> points;
     public void populatePoints() {
         points = new ArrayList<>();
+         realPoints = new ArrayList<>();
+
         if(map != null) {
             for(List<Integer> integers : map.keySet()) {
                 HitResult hitResult = map.get(integers);
@@ -135,6 +140,7 @@ CustomShapeTypes.CULLED,
                     Vec3d vec3d = hitResult.getPos();
                     HitResult result = cameraEntity.getWorld().raycast(new RaycastContext(cameraEntity.getEyePos(), vec3d.add(0,cameraEntity.getEyeHeight(cameraEntity.getPose()),0), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, cameraEntity));
                     if ((cameraEntity instanceof LivingEntity living && (angleBetween(hitResult.getPos().subtract(cameraEntity.getEyePos()),living.getRotationVector()) > 50 || client.getCameraEntity() instanceof LivingEntity livingEntity && livingEntity.hasStatusEffect(DARKNESS)) && hitResult.getPos().distanceTo(living.getEyePos()) >= Mod.getZoom()*2) ||(((result.getPos() != null && cameraEntity.getWorld().getLightLevel(LightType.BLOCK, BlockPos.ofFloored(result.getPos()))+cameraEntity.getWorld().getLightLevel(LightType.SKY, BlockPos.ofFloored(result.getPos())) <= 6) || (!(result instanceof BlockHitResult result1 && result1.getType().equals(HitResult.Type.MISS)))) &&  hitResult.getPos().distanceTo(cameraEntity.getEyePos()) > Mod.getZoom()*2)) {
+                        realPoints.add(hitResult);
                         points.add(new Vec2f(integers.get(0), integers.get(1)));
                     }
                 }

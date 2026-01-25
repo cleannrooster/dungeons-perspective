@@ -3,6 +3,7 @@ package com.cleannrooster.dungeons_iso.api.cullers;
 import com.cleannrooster.dungeons_iso.api.BlockCuller;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
 import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
+import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import net.minecraft.block.*;
 import net.minecraft.client.MinecraftClient;
@@ -155,7 +156,7 @@ public class FloodCuller implements BlockCuller {
             int z = p.getZ();
             builder.add(p);
 
-            if (p.isWithinDistance(cameraEntity.getBlockPos(), 16) && p.isWithinDistance(cameraEntity.getBlockPos(),  0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*Mod.getZoom()*Mod.zoomMetric)) {
+            if (p.isWithinDistance(cameraEntity.getBlockPos(), 16* Config.GSON.instance().cullAngle/30F) && p.isWithinDistance(cameraEntity.getBlockPos(),  0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*Mod.getZoom()*Mod.zoomMetric* Config.GSON.instance().cullAngle/30F)) {
                 if (!visited.containsKey(p.north())) {
                     if (this.shouldCull(p.north(), camera, cameraEntity)) {
                         stack.push(new int[]{p.north().getX(), p.north().getY(), p.north().getZ()});

@@ -4,6 +4,7 @@ import com.cleannrooster.dungeons_iso.api.BlockCuller;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
 import com.cleannrooster.dungeons_iso.api.cullers.FloodCuller;
 import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
+import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import dev.kosmx.playerAnim.core.util.Vec3f;
 import net.caffeinemc.mods.sodium.client.model.color.ColorProvider;
@@ -60,6 +61,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.awt.*;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Mixin(BlockRenderer.class)

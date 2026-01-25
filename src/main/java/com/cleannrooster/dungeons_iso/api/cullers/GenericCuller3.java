@@ -3,6 +3,7 @@ package com.cleannrooster.dungeons_iso.api.cullers;
 import com.cleannrooster.dungeons_iso.api.BlockCuller;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
 import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
+import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import net.fabricmc.loader.impl.lib.sat4j.core.Vec;
 import net.minecraft.block.*;
@@ -93,12 +94,14 @@ public class GenericCuller3 implements BlockCuller {
             var vec2 = Mod.preMod.subtract(fromPos.toCenterPos()).normalize();
             var theta =angleBetween(vec8, vec7)  ;
             var phi =angleBetween(vec1,  vec2)  ;
-            var chi =angleBetween(vec6,  new Vec3d(0,1,0))  ;
-            var factor = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*90;
-            var factor2 = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*45*Math.pow(0.9,Mod.zoom);
+            var vecAway = Vec3d.fromPolar(0,camera.getYaw());
+            var vecAngle = angleBetween(vecAway, blockPos.down().toBottomCenterPos().subtract(cameraEntity.getPos().subtract(0,1,0)).normalize());
+            var proj = vec2.multiply(vec1.dotProduct(vec2)/(vec2.length()*vec2.length()));
+
+            var factor = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*Config.GSON.instance().cullAngle*Math.max(1,90/(Math.toDegrees(Math.atan(proj.length()))));
 
             if(!isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock()) && blockPos.toCenterPos().getY() > fromPos.toCenterPos().getY() &&
-                    (((  theta < factor  )  && phi < 90F-Mod.pitch ) ||(  Mod.preMod.distanceTo(blockPos.toCenterPos()) < 5))){
+                    (((  theta < factor  )  && phi < 90F-Mod.pitch  && vecAngle < 15+angleBetween(vecAway,vec2)) ||(  Mod.preMod.distanceTo(blockPos.toCenterPos()) < 5))){
                 return true;
             }
             else {
@@ -112,25 +115,23 @@ public class GenericCuller3 implements BlockCuller {
 
     public boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity){
         if( ((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild() && camera != null && cameraEntity != null) {
-            List<Vec3d> vec3ds = new ArrayList<>();
 
 
-        var posBehindPlayerUp = cameraEntity.getEyePos().subtract(getRotationVec(cameraEntity,camera.getLastTickDelta()).multiply(-4)).add(0,blockPos.getY()-cameraEntity.getEyeY(),0) ;
             var vec7 = (blockPos.toCenterPos().subtract(Mod.preMod).normalize()) ;
             var vec8 = cameraEntity.getPos().subtract(Mod.preMod).normalize();
         var vec1 = blockPos.toCenterPos().subtract(cameraEntity.getPos().add(vec8.multiply(4)));
-        var vec4 = blockPos.toCenterPos().subtract(Mod.preMod).normalize().multiply(-1);
-        var vec6 = blockPos.toCenterPos().subtract(cameraEntity.getPos()).normalize();
         var vec2 = Mod.preMod.subtract(cameraEntity.getPos());
         var theta =angleBetween(vec8, vec7)  ;
         var phi =angleBetween(vec1,  vec2)  ;
-        var chi =angleBetween(vec6,  new Vec3d(0,1,0))  ;
+            var vecAway = Vec3d.fromPolar(0,camera.getYaw());
+            var vecAngle = angleBetween(vecAway, blockPos.down().toBottomCenterPos().subtract(cameraEntity.getPos().subtract(0,1,0)).normalize());
+
             var proj = vec2.multiply(vec1.dotProduct(vec2)/(vec2.length()*vec2.length()));
-        var factor = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*30*Math.max(1,90/(Math.toDegrees(Math.atan(proj.length()))));
+        var factor = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*Config.GSON.instance().cullAngle*Math.max(1,90/(Math.toDegrees(Math.atan(proj.length()))));
         var factor2 = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*45*Math.pow(0.9,Mod.zoom);
 
         if(!isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock()) && blockPos.toCenterPos().getY() > cameraEntity.getPos().getY() + 1 &&
-                (((  theta < factor  )  && phi < 30 && Mod.preMod.distanceTo(cameraEntity.getEyePos()) > Mod.preMod.distanceTo(blockPos.toCenterPos()) ) ||(  Mod.preMod.distanceTo(blockPos.toCenterPos()) < 5))){
+                (((  theta < factor  )  && phi < 30 && Mod.preMod.distanceTo(cameraEntity.getEyePos()) > Mod.preMod.distanceTo(blockPos.toCenterPos())  && vecAngle < 15+angleBetween(vecAway,vec2)) ||(  Mod.preMod.distanceTo(blockPos.toCenterPos()) < 5))){
             return true;
         }
         else {

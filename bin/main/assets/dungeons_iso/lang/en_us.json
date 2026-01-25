@@ -22,8 +22,6 @@
   "dungeons_iso.config.category.options": "Options",
   "dungeons_iso.config.fogOfWar.name": "Fog of War",
   "dungeons_iso.config.fogOfWar.description": "While enabled, things you shouldn't be able to see will be obscured by a fog of war.",
-  "dungeons_iso.config.cullangle.name": "Cull Angle",
-  "dungeons_iso.config.cullangle.description": "Increase or decrease the angle of the culling cone.",
 
   "dungeons_iso.config.xiv.name": "XIV Mode",
   "dungeons_iso.config.xiv.description": "While enabled, dragging the mouse up and down while holding Move Camera adjusts the Pitch instead of the Zoom.",
