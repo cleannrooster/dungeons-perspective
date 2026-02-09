@@ -25,6 +25,8 @@ public class Config {
     @SerialEntry
     public float cullAngle = 20.0F;
     @SerialEntry
+    public boolean backCull = true;
+    @SerialEntry
     public boolean scrollWheelZoom = true;
     @SerialEntry
     public boolean dynamicCamera = false;

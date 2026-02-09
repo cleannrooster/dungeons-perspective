@@ -172,6 +172,18 @@ public class Gui implements ModMenuApi {
                                             .controller(BooleanControllerBuilder::create)
                                             .build())
                                     .option(Option
+                                            .<Boolean>createBuilder()
+                                            .name(Text.translatable("dungeons_iso.config.backcull.name"))
+                                            .description(OptionDescription.of(Text.translatable(
+                                                    "dungeons_iso.config.backcull.description")))
+                                            .binding(
+                                                    defaults.dynamicCamera,
+                                                    () -> config.backCull,
+                                                    (value) -> config.backCull = value
+                                            )
+                                            .controller(BooleanControllerBuilder::create)
+                                            .build())
+                                    .option(Option
                                             .<Float>createBuilder()
                                             .name(Text.translatable("dungeons_iso.config.cullangle.name"))
                                             .description(OptionDescription.of(Text.translatable(

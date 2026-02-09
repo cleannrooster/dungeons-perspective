@@ -26,7 +26,9 @@ public class Mod {
     public static double x;
     public static boolean shouldReload;
     public static double flyingYAddition;
-
+    public static boolean shouldRebuild() {
+        return Mod.shouldReload && Mod.endTime < 10;
+    }
     public static double z;
     public static int cooldownIs;
     public static int cooldownWas;
@@ -60,7 +62,7 @@ public class Mod {
     public static float getZoom() {
         float modifier = 1F;
 
-        boolean bool = Config.GSON.instance().clipToSpace && Mod.shouldReload;
+        boolean bool = Config.GSON.instance().clipToSpace && Mod.shouldRebuild();
         if (MinecraftClient.getInstance().world != null) {
 
             if (bool) {

@@ -15,9 +15,12 @@ import net.caffeinemc.mods.sodium.client.model.light.LightPipeline;
 import net.caffeinemc.mods.sodium.client.model.light.data.QuadLightData;
 import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
 import net.caffeinemc.mods.sodium.client.model.quad.blender.BlendedColorProvider;
+import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.DefaultMaterials;
 import net.caffeinemc.mods.sodium.client.render.chunk.terrain.material.Material;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
+import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.frapi.render.AbstractBlockRenderContext;
 import net.caffeinemc.mods.sodium.client.services.PlatformModelAccess;
@@ -32,9 +35,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.color.world.BiomeColors;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.RenderLayers;
+import net.minecraft.client.render.*;
 import net.minecraft.client.render.model.BakedModel;
 import net.minecraft.client.render.model.BakedModelManager;
 import net.minecraft.entity.Entity;
@@ -80,6 +81,13 @@ public abstract class MixinBlockRenderer extends AbstractBlockRenderContext {
     }*/
     @Shadow
     private  ColorProviderRegistry colorProviderRegistry;
+    @Shadow
+    private  int[] vertexColors;
+    @Shadow
+    private ChunkBuildBuffers buffers;
+
+    @Shadow
+private  ChunkVertexEncoder.Vertex[] vertices;
 
     @Shadow
 private  Vector3f posOffset ;
@@ -89,27 +97,7 @@ private  Vector3f posOffset ;
     @Shadow
     private @Nullable ColorProvider<BlockState> colorProvider;
 
-    public static class TranslucencyProvider<T extends  BlockState> implements ColorProvider<BlockState> {
 
-
-        private TranslucencyProvider() {
-        }
-
-        protected int getColor(LevelSlice slice, BlockState state, BlockPos pos) {
-            if (SodiumCompat.blockCullers.stream().anyMatch(blockCuller -> blockCuller.shouldCull(pos,MinecraftClient.getInstance().gameRenderer.getCamera(),MinecraftClient.getInstance().cameraEntity))) {
-
-                return ColorHelper.Argb.getArgb((int) (255 * (1 - 1)), 0, 0,0);
-
-            }
-            return ColorHelper.Argb.getArgb((int) 255,255,255);
-        }
-
-        @Override
-        public void getColors(LevelSlice levelSlice, BlockPos blockPos, BlockPos.Mutable mutable, BlockState blockState, ModelQuadView modelQuadView, int[] ints) {
-            Arrays.fill(ints, -16777216 | this.getColor(levelSlice, blockState, blockPos));
-
-        }
-    }
 
     @Inject(at = @At("HEAD"), method = "renderModel", cancellable = true,remap = false)
 
@@ -129,7 +117,9 @@ private  Vector3f posOffset ;
                 }
 
                 if (bool) {
-                    ci.cancel();
+                    this.type = RenderLayer.getTranslucent();
+                    vertexColors[4] = 128;
+
 
                 }
             }

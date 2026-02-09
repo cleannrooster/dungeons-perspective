@@ -98,7 +98,7 @@ public abstract class CameraMixin implements CameraAccessor {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;clipToSpace(F)F", ordinal = 0)
     )
     public void b(Args args) {
-        if (Mod.enabled) {
+        if (Mod.enabled && focusedEntity != null) {
             if(ClientInit.isoBinding.wasPressed()){
                 this.setRotation((float) (Math.ceil(Mod.yaw / 90) * 90 - 45),  45);
 
@@ -124,7 +124,7 @@ public abstract class CameraMixin implements CameraAccessor {
 
             Mod.preMod = vec;
             BlockHitResult result = MinecraftClient.getInstance().cameraEntity.getWorld().raycast(new RaycastContext(MinecraftClient.getInstance().cameraEntity.getEyePos(), vec, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.NONE, MinecraftClient.getInstance().cameraEntity));
-            Mod.hit = this.area.raycast(new RaycastContext(this.focusedEntity.getEyePos(),vec2, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.NONE, this.focusedEntity));
+            Mod.hit = this.area.raycast(new RaycastContext(MinecraftClient.getInstance().cameraEntity.getEyePos(),vec2, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.NONE, MinecraftClient.getInstance().cameraEntity));
 
             if (result.getType().equals(HitResult.Type.BLOCK) ) {
                 Mod.isBlocked = true;
@@ -183,7 +183,16 @@ public abstract class CameraMixin implements CameraAccessor {
 
         }
     }
-
+    @Inject(
+            method = "update",
+            at = @At(value = "HEAD"),
+            cancellable = true
+    )
+    private void updateXIVHead(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta,CallbackInfo ci) {
+            if( focusedEntity==  null){
+            ci.cancel();
+        }
+    }
     @Inject(
             method = "clipToSpace",
             at = @At(value = "HEAD"),
@@ -272,9 +281,9 @@ public abstract class CameraMixin implements CameraAccessor {
     )
     public void updateXIV(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo info) {
         Camera camera = (Camera)  (Object) this;
-        if (!Mod.enabled && Config.GSON.instance().dynamicCamera) {
+        if (!Mod.enabled && Config.GSON.instance().dynamicCamera && focusedEntity != null) {
 
-            vec3d = focusedEntity.getEyePos();
+            vec3d = MinecraftClient.getInstance().cameraEntity.getEyePos();
         }
 
     }

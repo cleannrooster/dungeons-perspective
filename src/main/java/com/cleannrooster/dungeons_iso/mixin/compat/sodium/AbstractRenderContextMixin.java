@@ -18,11 +18,17 @@ import net.caffeinemc.mods.sodium.client.render.frapi.render.AbstractBlockRender
 import net.caffeinemc.mods.sodium.fabric.block.FabricBlockAccess;
 import net.fabricmc.fabric.api.renderer.v1.material.ShadeMode;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.IceBlock;
 import net.minecraft.block.TranslucentBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.RenderLayers;
+import net.minecraft.client.render.VertexFormat;
+import net.minecraft.client.render.VertexFormats;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.screen.EnchantmentScreenHandler;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -44,12 +50,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 import java.util.Map;
 
+import static com.google.common.collect.ImmutableList.of;
+import static net.minecraft.client.render.RenderPhase.*;
+
 @Mixin(AbstractBlockRenderContext.class)
 public abstract class AbstractRenderContextMixin implements BlockCullerUser {
     @Shadow    protected BlockPos pos;
     @Shadow
     protected BlockState state;
-
+    @Shadow
+    protected RenderLayer type;
+@Shadow
+private  MutableQuadViewImpl editorQuad;
     @Shadow
     protected LightPipelineProvider lighters;
 @Shadow
@@ -72,7 +84,9 @@ public abstract class AbstractRenderContextMixin implements BlockCullerUser {
     @Inject(at = @At("RETURN"), method = "isFaceCulled", cancellable = true)
     protected final void isFaceCulledDungeons(@Nullable Direction direction, CallbackInfoReturnable<Boolean> ci) {
         try {
-            if (MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player != null && Mod.enabled && !(state.getBlock() instanceof TranslucentBlock) && Mod.shouldReload) {
+            VoxelShape selfShape = direction != null ? state.getCullingFace(MinecraftClient.getInstance().world, pos, direction) : null;
+
+            if (MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player != null && Mod.enabled && !(state.getBlock() instanceof TranslucentBlock) && Mod.shouldRebuild()) {
                 if (MinecraftClient.getInstance().cameraEntity != null) {
                     boolean bool = pos.toCenterPos().getY() > MinecraftClient.getInstance().cameraEntity.getBlockPos().up().getY();
                     boolean boo3 = pos.toCenterPos().distanceTo(Mod.preMod) < Mod.getZoom() * Mod.zoomMetric * 1.25F;
@@ -82,18 +96,42 @@ public abstract class AbstractRenderContextMixin implements BlockCullerUser {
 
 
                     }
-                    VoxelShape selfShape = direction != null ? state.getCullingFace(MinecraftClient.getInstance().world, pos, direction) : null;
 
                     boolean bool2 = Mod.preMod.subtract(MinecraftClient.getInstance().cameraEntity.getPos()).dotProduct(pos.toCenterPos().subtract(MinecraftClient.getInstance().cameraEntity.getPos())) > 0;
+                    BlockPos.Mutable mutable = MinecraftClient.getInstance().cameraEntity.getBlockPos().mutableCopy();
 
+                    while(mutable.getY() > MinecraftClient.getInstance().world.getBottomY() && !MinecraftClient.getInstance().world.getBlockState(mutable).blocksMovement()) {
+                        mutable.move(Direction.DOWN);
+                    }
+                    if(pos.getY() > mutable.getY() -8){
+                        return;
+                    }
+                    if(!(state.getBlock() instanceof TranslucentBlock)) {
+                        if((Config.GSON.instance().backCull &&  direction != null && direction.pointsTo(MinecraftClient.getInstance().gameRenderer.getCamera().getYaw()))){
+                                                        editorQuad.color(editorQuad.color(0),editorQuad.color(1),editorQuad.color(2),128);
+                        }
+                        // ci.setReturnValue((Config.GSON.instance().backCull && direction != null && direction.pointsTo(MinecraftClient.getInstance().gameRenderer.getCamera().getYaw())));
 
-                    ci.setReturnValue(selfShape != null && selfShape.isEmpty());
-
+                    }
+                    return;
                 }
 
 
             }
+            if(Mod.enabled){
+                if(!(state.getBlock() instanceof TranslucentBlock)){
+                    if((Config.GSON.instance().backCull &&  direction != null && direction.pointsTo(MinecraftClient.getInstance().gameRenderer.getCamera().getYaw()))){
 
+                        editorQuad.color(editorQuad.color(0),editorQuad.color(1),editorQuad.color(2),128);
+
+                    }
+                    // ci.setReturnValue((Config.GSON.instance().backCull && direction != null && direction.pointsTo(MinecraftClient.getInstance().gameRenderer.getCamera().getYaw())));
+
+                }
+                   // ci.setReturnValue();
+                return;
+
+            }
         }
         catch(Exception ignored){
 

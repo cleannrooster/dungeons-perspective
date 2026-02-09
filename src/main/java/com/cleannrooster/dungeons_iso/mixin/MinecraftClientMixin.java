@@ -7,6 +7,7 @@ import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.ui.LootUI;
 import com.google.common.collect.Lists;
+import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.*;
 import net.minecraft.client.MinecraftClient;
@@ -85,7 +86,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
     @Override
     public boolean shouldRebuild() {
-        return Mod.shouldReload || Mod.endTime > 0;
+        return Mod.shouldReload && Mod.endTime < 10;
     }
 
     @Shadow
@@ -574,6 +575,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
             } else
             if(!Mod.enabled && client.world != null && client.player != null) {
+                MinecraftClient.getInstance().options.setPerspective(Perspective.FIRST_PERSON);
                 if (Config.GSON.instance().onStartup) {
                     first = true;
                 }
@@ -593,7 +595,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
                 InputUtil.setCursorParameters(client.getWindow().getHandle(), GLFW.GLFW_CURSOR_NORMAL, client.mouse.getX(), client.mouse.getY());
             }
-
+            MinecraftClient.getInstance().worldRenderer.reload();
         }
 
         if (ClientInit.zoomInBinding.wasPressed()) {
