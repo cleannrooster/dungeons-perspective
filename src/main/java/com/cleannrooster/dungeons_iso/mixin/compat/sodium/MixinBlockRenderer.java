@@ -117,9 +117,7 @@ private  Vector3f posOffset ;
                 }
 
                 if (bool) {
-                    this.type = RenderLayer.getTranslucent();
-                    vertexColors[4] = 128;
-
+                    ci.cancel();
 
                 }
             }

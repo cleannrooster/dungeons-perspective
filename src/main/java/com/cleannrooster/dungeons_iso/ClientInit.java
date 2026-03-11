@@ -132,14 +132,14 @@ public class ClientInit implements ClientModInitializer {
         ));
         KeyBindingHelper.registerKeyBinding(moveCameraBinding = new KeyBinding(
                 "dungeons_iso.binds.moveCamera",
-                InputUtil.Type.KEYSYM,
+                InputUtil.Type.MOUSE,
                 GLFW.GLFW_MOUSE_BUTTON_3,
                 "dungeons_iso.binds.category"
         ));
 
         KeyBindingHelper.registerKeyBinding(lockOn = new KeyBinding(
                 "dungeons_iso.binds.lockOn",
-                InputUtil.Type.MOUSE,
+                InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_H,
                 "dungeons_iso.binds.category"
         ));

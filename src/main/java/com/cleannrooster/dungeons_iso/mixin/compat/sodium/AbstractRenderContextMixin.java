@@ -107,10 +107,8 @@ private  MutableQuadViewImpl editorQuad;
                         return;
                     }
                     if(!(state.getBlock() instanceof TranslucentBlock)) {
-                        if((Config.GSON.instance().backCull &&  direction != null && direction.pointsTo(MinecraftClient.getInstance().gameRenderer.getCamera().getYaw()))){
-                                                        editorQuad.color(editorQuad.color(0),editorQuad.color(1),editorQuad.color(2),128);
-                        }
-                        // ci.setReturnValue((Config.GSON.instance().backCull && direction != null && direction.pointsTo(MinecraftClient.getInstance().gameRenderer.getCamera().getYaw())));
+
+                            ci.setReturnValue((Config.GSON.instance().backCull && direction != null && direction.pointsTo(MinecraftClient.getInstance().gameRenderer.getCamera().getYaw())));
 
                     }
                     return;
@@ -122,14 +120,12 @@ private  MutableQuadViewImpl editorQuad;
                 if(!(state.getBlock() instanceof TranslucentBlock)){
                     if((Config.GSON.instance().backCull &&  direction != null && direction.pointsTo(MinecraftClient.getInstance().gameRenderer.getCamera().getYaw()))){
 
-                        editorQuad.color(editorQuad.color(0),editorQuad.color(1),editorQuad.color(2),128);
-
+                        ci.setReturnValue((Config.GSON.instance().backCull && direction != null && direction.pointsTo(MinecraftClient.getInstance().gameRenderer.getCamera().getYaw())));
+                        return;
                     }
-                    // ci.setReturnValue((Config.GSON.instance().backCull && direction != null && direction.pointsTo(MinecraftClient.getInstance().gameRenderer.getCamera().getYaw())));
 
                 }
-                   // ci.setReturnValue();
-                return;
+
 
             }
         }

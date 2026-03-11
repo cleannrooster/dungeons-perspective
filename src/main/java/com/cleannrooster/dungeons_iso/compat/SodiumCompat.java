@@ -66,7 +66,7 @@ public class SodiumCompat {
             stream = floodCuller.getCulledBlocks(MinecraftClient.getInstance().player.getBlockPos().up(), MinecraftClient.getInstance().gameRenderer.getCamera(), MinecraftClient.getInstance().cameraEntity);
         }
         //System.out.println(stream.toArray().length);
-        double dub = 4*Mod.getZoom()*Mod.zoomMetric;
+        double dub = 1.25*Mod.getZoom()*Mod.zoomMetric;
         var vec = camera.getRotation().transform(new Vector3d(1,1,-1));
         box.expand(dub,dub,dub);
         SodiumWorldRenderer.instance().scheduleRebuildForBlockArea((int) box.minX, (int) box.minY, (int) box.minZ, (int) box.maxX, (int) box.maxY, (int) box.maxZ, true);
