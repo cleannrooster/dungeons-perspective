@@ -6,18 +6,11 @@ import com.cleannrooster.dungeons_iso.mod.Mod;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.gl.SimpleFramebuffer;
-import net.minecraft.client.gl.WindowFramebuffer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.*;
-import net.minecraft.client.texture.GuiAtlasManager;
-import net.minecraft.client.util.BufferAllocator;
 import net.minecraft.client.util.Window;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
@@ -26,24 +19,16 @@ import net.minecraft.util.math.*;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.LightType;
 import net.minecraft.world.RaycastContext;
-import org.joml.Matrix4f;
 import org.joml.Vector2d;
 import org.joml.Vector3d;
-import org.lwjgl.opengl.GL30;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static com.cleannrooster.dungeons_iso.api.cullers.GenericCuller3.angleBetween;
 import static net.minecraft.entity.effect.StatusEffects.DARKNESS;
-import static org.lwjgl.opengl.GL11C.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11C.GL_DEPTH_BUFFER_BIT;
 
 public class FogOfWar {
-    private static final Logger log = LoggerFactory.getLogger(FogOfWar.class);
 
     public FogOfWar() {
         map = new LinkedHashMap<>();
@@ -56,10 +41,16 @@ public class FogOfWar {
     Vector2d res;
     public List<HitResult> realPoints;
 
-    public HashMap<List<Integer>,HitResult> map;
-    public HashMap<List<Integer>,HitResult> getMap() {
+    public HashMap<Long, HitResult> map;
+    private final Random random = new Random();
 
-        HashMap<List<Integer>,HitResult> map = new HashMap<>();
+    private static long packXY(int x, int y) {
+        return ((long) x << 32) | (y & 0xFFFFFFFFL);
+    }
+
+    public HashMap<Long, HitResult> getMap() {
+
+        HashMap<Long, HitResult> map = new HashMap<>();
 
         client = MinecraftClient.getInstance();
         renderer = client.gameRenderer;
@@ -111,18 +102,8 @@ CustomShapeTypes.CULLED,
                     Vec3d vec3d = innerContext.getStart().subtract(innerContext.getEnd());
                     return BlockHitResult.createMissed(innerContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), BlockPos.ofFloored(innerContext.getEnd()));
                 });
-            /*    BlockHitResult scanUp = client.player.getWorld().raycast(
-                        new RaycastContext(
-                                hitResult0.getPos(),Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE,client.player)
 
-                );
-                BlockHitResult scanDown = client.player.getWorld().raycast(
-                        new RaycastContext(
-                                scanUp.getPos(),scanUp.getPos().add(hitResult0.getPos().subtract(scanUp.getPos()).normalize().multiply(renderer.getFarPlaneDistance()*2)), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE,client.player)
-
-                );*/
-
-                map.put(List.of(x,y),hitResult0);
+                map.put(packXY(x, y), hitResult0);
             }
 
         }
@@ -134,40 +115,48 @@ CustomShapeTypes.CULLED,
          realPoints = new ArrayList<>();
 
         if(map != null) {
-            for(List<Integer> integers : map.keySet()) {
-                HitResult hitResult = map.get(integers);
+            for(Map.Entry<Long, HitResult> entry : map.entrySet()) {
+                HitResult hitResult = entry.getValue();
                 if (hitResult != null && hitResult.getPos() != null) {
+                    long key = entry.getKey();
+                    int px = (int)(key >> 32);
+                    int py = (int)(key & 0xFFFFFFFFL);
                     Vec3d vec3d = hitResult.getPos();
                     HitResult result = cameraEntity.getWorld().raycast(new RaycastContext(cameraEntity.getEyePos(), vec3d.add(0,cameraEntity.getEyeHeight(cameraEntity.getPose()),0), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, cameraEntity));
-                    if ((cameraEntity instanceof LivingEntity living && (angleBetween(hitResult.getPos().subtract(cameraEntity.getEyePos()),living.getRotationVector()) > 50 || client.getCameraEntity() instanceof LivingEntity livingEntity && livingEntity.hasStatusEffect(DARKNESS)) && hitResult.getPos().distanceTo(living.getEyePos()) >= Mod.getZoom()*2) ||(((result.getPos() != null && cameraEntity.getWorld().getLightLevel(LightType.BLOCK, BlockPos.ofFloored(result.getPos()))+cameraEntity.getWorld().getLightLevel(LightType.SKY, BlockPos.ofFloored(result.getPos())) <= 6) || (!(result instanceof BlockHitResult result1 && result1.getType().equals(HitResult.Type.MISS)))) &&  hitResult.getPos().distanceTo(cameraEntity.getEyePos()) > Mod.getZoom()*2)) {
+                    if ((cameraEntity instanceof LivingEntity living && (BlockCuller.angleBetween(hitResult.getPos().subtract(cameraEntity.getEyePos()),living.getRotationVector()) > 50 || client.getCameraEntity() instanceof LivingEntity livingEntity && livingEntity.hasStatusEffect(DARKNESS)) && hitResult.getPos().distanceTo(living.getEyePos()) >= Mod.getZoom()*2) ||(((result.getPos() != null && cameraEntity.getWorld().getLightLevel(LightType.BLOCK, BlockPos.ofFloored(result.getPos()))+cameraEntity.getWorld().getLightLevel(LightType.SKY, BlockPos.ofFloored(result.getPos())) <= 6) || (!(result instanceof BlockHitResult result1 && result1.getType().equals(HitResult.Type.MISS)))) &&  hitResult.getPos().distanceTo(cameraEntity.getEyePos()) > Mod.getZoom()*2)) {
                         realPoints.add(hitResult);
-                        points.add(new Vec2f(integers.get(0), integers.get(1)));
+                        points.add(new Vec2f(px, py));
                     }
                 }
             }
         }
 
     }
-    List<Float> offsets =  new ArrayList<>(Collections.nCopies(42*18*2,0f));
+    float[] offsetsArray = new float[42*18*2];
 
 
     public void render(DrawContext context, float delta){
         context.getMatrices().push();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        Random random = new Random();
 
         if(points != null) {
+            // Ensure offsets array is large enough
+            int requiredSize = points.size() * 2;
+            if (offsetsArray.length < requiredSize) {
+                offsetsArray = new float[requiredSize];
+            }
 
-            for (Vec2f point : points) {
-                var a = Math.clamp((float) (offsets.get(points.indexOf(point))+random.nextGaussian()*-(offsets.get(points.indexOf(point)))+random.nextGaussian()),-50,50);
-                var b =Math.clamp((float) (offsets.get(points.indexOf(point)+1)+random.nextGaussian()*-(offsets.get(points.indexOf(point)+1))+random.nextGaussian()),-50,50);
+            for (int i = 0; i < points.size(); i++) {
+                Vec2f point = points.get(i);
+                int idx = i * 2;
+                float a = Math.clamp((float) (offsetsArray[idx] + random.nextGaussian() * -offsetsArray[idx] + random.nextGaussian()), -50, 50);
+                float b = Math.clamp((float) (offsetsArray[idx + 1] + random.nextGaussian() * -offsetsArray[idx + 1] + random.nextGaussian()), -50, 50);
                 var c = window.calculateScaleFactor(client.options.getGuiScale().getValue(),false);
                 context.drawTexture(Identifier.of("dungeons_iso","textures/shader/sample.png"), (int) point.x/c+(int)a/c-150/c, (int) point.y/c+(int)b/c-150/c,0,0,300/c,300/c,300/c,300/c);
 
-                offsets.set(points.indexOf(point), a);
-                offsets.set(points.indexOf(point)+1, b);
-
+                offsetsArray[idx] = a;
+                offsetsArray[idx + 1] = b;
             }
         }
         RenderSystem.disableBlend();

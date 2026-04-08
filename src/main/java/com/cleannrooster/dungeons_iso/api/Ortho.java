@@ -14,7 +14,7 @@ public class Ortho {
         return new Matrix4f().setOrtho(
                 -width, width,
                 -height, height,
-                Mod.factor+1, 1000
+                2, 1000
         );
     }
     public static Matrix4f createOrthoMatrixFrustum(float delta, float minScale) {

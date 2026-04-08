@@ -23,9 +23,11 @@ public class Config {
     @SerialEntry
     public boolean fogOfWar =  false;
     @SerialEntry
-    public float cullAngle = 20.0F;
+    public float cullAngle = 3.0F;
     @SerialEntry
-    public boolean backCull = true;
+    public float coneHalfAngle = 45.0F;
+    @SerialEntry
+    public boolean backCull = false;
     @SerialEntry
     public boolean scrollWheelZoom = true;
     @SerialEntry
@@ -66,5 +68,8 @@ public class Config {
     @SerialEntry
 
     public boolean frustumCulling = false;
+
+    @SerialEntry
+    public boolean showFirstTimeGui = true;
 
 }

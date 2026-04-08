@@ -116,6 +116,7 @@ public class ClientInit implements ClientModInitializer {
     public void onInitializeClient() {
         instance = this;
         Config.GSON.load();
+        com.cleannrooster.dungeons_iso.config.FirstTimeState.load();
 
 
         KeyBindingHelper.registerKeyBinding(toggleBinding = new KeyBinding(

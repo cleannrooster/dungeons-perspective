@@ -20,10 +20,16 @@
 
   "dungeons_iso.config.title": "§6Dungeons Perspective",
   "dungeons_iso.config.category.options": "Options",
+  "dungeons_iso.config.group.general": "General",
+  "dungeons_iso.config.group.camera": "Camera",
+  "dungeons_iso.config.group.controls": "Controls",
+  "dungeons_iso.config.group.rendering": "Rendering",
   "dungeons_iso.config.fogOfWar.name": "Fog of War",
   "dungeons_iso.config.fogOfWar.description": "While enabled, things you shouldn't be able to see will be obscured by a fog of war.",
-  "dungeons_iso.config.cullangle.name": "Cull Angle",
-  "dungeons_iso.config.cullangle.description": "Increase or decrease the angle of the culling cone.",
+  "dungeons_iso.config.cullangle.name": "Cull Radius",
+  "dungeons_iso.config.cullangle.description": "Increase or decrease the radius of the culling cylinder.",
+  "dungeons_iso.config.coneHalfAngle.name": "Cone Half-Angle",
+  "dungeons_iso.config.coneHalfAngle.description": "The half-angle of the cone near the player that tapers the culling area. Lower values create a narrower cone, reducing culling of nearby blocks.",
 
   "dungeons_iso.config.xiv.name": "XIV Mode",
   "dungeons_iso.config.xiv.description": "While enabled, dragging the mouse up and down while holding Move Camera adjusts the Pitch instead of the Zoom.",
@@ -75,7 +81,14 @@
   "dungeons_iso.config.ortho.name": "Orthographic Mode",
   "dungeons_iso.config.ortho.description":"Makes all blocks the same size regardless of distance. RTS-Like.",
   "dungeons_iso.config.frustumCulling.name": "Frustum Culling",
-  "dungeons_iso.config.frustumCulling.description":"Adds a frustum shape that culls blocks before it, making traversing through caves easier. Improves performance, but can be distracting. May make buildings look weird."
+  "dungeons_iso.config.frustumCulling.description":"Adds a frustum shape that culls blocks before it, making traversing through caves easier. Improves performance, but can be distracting. May make buildings look weird.",
 
+  "dungeons_iso.config.showFirstTimeGui.name": "Show First-Time Prompt",
+  "dungeons_iso.config.showFirstTimeGui.description": "When enabled, shows a prompt the first time you join a world asking whether to enable or disable the top-down perspective on login. Re-enabling this resets your previous choice.",
 
+  "dungeons_iso.firsttime.title": "\u00a76Dungeons Perspective",
+  "dungeons_iso.firsttime.description": "Would you like to enable the top-down perspective when joining worlds? You can change this later.",
+
+  "dungeons_iso.firsttime.enable": "Enable",
+  "dungeons_iso.firsttime.disable": "Disable"
 }

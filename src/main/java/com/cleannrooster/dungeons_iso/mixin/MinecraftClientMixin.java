@@ -537,6 +537,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
         }
     }
     public boolean first = false;
+    public boolean firstTimeGuiShown = false;
     public boolean isUse = false;
     public boolean disableTargeting = false;
 
@@ -545,7 +546,12 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
     public void tickXIV(CallbackInfo ci) {
        MinecraftClient client =  (MinecraftClient)  (Object) this;
         if (this.player == null) {
+            firstTimeGuiShown = false;
             return;
+        }
+        if (client.currentScreen == null && !firstTimeGuiShown && Config.GSON.instance().showFirstTimeGui && !com.cleannrooster.dungeons_iso.config.FirstTimeState.get().choiceMade) {
+            firstTimeGuiShown = true;
+            client.setScreen(new com.cleannrooster.dungeons_iso.ui.FirstTimeScreen());
         }
         Mod.zoom = Math.clamp(Mod.zoom,1F,10F);
 

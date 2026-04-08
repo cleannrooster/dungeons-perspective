@@ -2,28 +2,19 @@ package com.cleannrooster.dungeons_iso.api.cullers;
 
 import com.cleannrooster.dungeons_iso.api.BlockCuller;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
-import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
-import net.fabricmc.loader.impl.lib.sat4j.core.Vec;
 import net.minecraft.block.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import net.spell_engine.utils.VectorHelper;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public class GenericCuller3 implements BlockCuller {
-    public  List<BlockPos> culledBlocks = new ArrayList<>(1000);
 
     @Override
     public boolean shouldForceCull() {
@@ -36,32 +27,10 @@ public class GenericCuller3 implements BlockCuller {
     }
 
     @Override
-    public boolean cullBlocks(  BlockPos blockPos, Camera camera, Entity cameraEntity) {
+    public boolean cullBlocks(BlockPos blockPos, Camera camera, Entity cameraEntity) {
         try {
-
-        if( this.shouldCull(blockPos,camera,cameraEntity)){
-            if(culledBlocks.size() < 1000) {
-                culledBlocks.add(blockPos);
-                TransparentBlock block = new TransparentBlock(blockPos, 0);
-                SodiumCompat.transparentBlocks.put(blockPos, SodiumCompat.transparentBlocks.getOrDefault(blockPos, block));
-            }
-            else{
-                culledBlocks = new ArrayList<>(1000);
-                SodiumCompat.transparentBlocks = new LinkedHashMap<>();
-                culledBlocks.add(blockPos);
-                TransparentBlock block = new TransparentBlock(blockPos, 0);
-                SodiumCompat.transparentBlocks.put(blockPos, SodiumCompat.transparentBlocks.getOrDefault(blockPos, block));
-
-            }
-
-            return true;
-        }
-        else{
-            return false;
-        }
-        }
-        catch (Exception ignored){
-
+            return this.shouldCull(blockPos, camera, cameraEntity);
+        } catch (Exception ignored) {
         }
         return false;
     }
@@ -70,165 +39,146 @@ public class GenericCuller3 implements BlockCuller {
     public float blockTransparancy(BlockPos pos) {
         return 0;
     }
-    public static double angleBetween(Vec3d a, Vec3d b) {
-        double cosineTheta = a.dotProduct(b) / (a.length() * b.length());
-        double angle = Math.acos(cosineTheta) * 57.29577951308232;
-        return Double.isNaN(angle) ? 0.0 : angle;
-    }
+
     public final Vec3d getRotationVec(Entity entity, float tickDelta) {
         return entity.getRotationVector(entity.getPitch(tickDelta), entity.getHeadYaw());
     }
 
+    /**
+     * Computes the squared perpendicular distance from a point to a line defined by origin + direction.
+     * Returns the squared distance to avoid sqrt.
+     */
+    private static double perpDistSqToAxis(Vec3d point, Vec3d axisOrigin, Vec3d axis, double axisLenSq) {
+        Vec3d toPoint = point.subtract(axisOrigin);
+        // cross product components: toPoint x axis
+        double cx = toPoint.y * axis.z - toPoint.z * axis.y;
+        double cy = toPoint.z * axis.x - toPoint.x * axis.z;
+        double cz = toPoint.x * axis.y - toPoint.y * axis.x;
+        // |cross|^2 / |axis|^2 = perpendicular distance squared
+        return (cx * cx + cy * cy + cz * cz) / axisLenSq;
+    }
+
+    /**
+     * Computes the animated cylinder radius based on the configured cullAngle and the transition ramp.
+     */
+    private static double getAnimatedRadius(Entity cameraEntity) {
+        double animFactor = 0.1 * Math.min(10, Math.min(
+                cameraEntity.getWorld().getTime() - Mod.startTime + 2,
+                10 - Mod.endTime));
+        return animFactor * Config.GSON.instance().cullAngle;
+    }
+
+    /**
+     * Computes the effective radius at a given point along the axis.
+     * Within 5 blocks of the origin, uses a cone (linear taper to 0).
+     * Beyond 5 blocks, uses the full cylinder radius.
+     */
+    private static double effectiveRadiusSq(Vec3d toPoint, Vec3d axis, double axisLenSq, double radius) {
+        double axisLen = Math.sqrt(axisLenSq);
+        double projDist = (toPoint.x * axis.x + toPoint.y * axis.y + toPoint.z * axis.z) / axisLen;
+        // Cone near player: half-angle from config, transitions to cylinder where cone meets full radius
+        double tanHalfAngle = Math.tan(Math.toRadians(Config.GSON.instance().coneHalfAngle));
+        double coneRadius = projDist * tanHalfAngle;
+        double effRadius = Math.min(coneRadius, radius);
+        return effRadius * effRadius;
+    }
+
     @Override
-    public boolean shouldCullAlt(BlockPos blockPos,BlockPos fromPos, Camera camera, Entity cameraEntity) {
-        if( ((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild() && camera != null && cameraEntity != null) {
-            List<Vec3d> vec3ds = new ArrayList<>();
-
-
-            var posBehindPlayerUp = fromPos.toCenterPos().subtract(getRotationVec(cameraEntity,camera.getLastTickDelta()).multiply(-4)).add(0,blockPos.getY()-fromPos.toCenterPos().getY(),0) ;
-            var vec7 = (blockPos.toCenterPos().subtract(Mod.preMod).normalize()) ;
-            var vec8 = fromPos.toCenterPos().subtract(Mod.preMod).normalize();
-            var vec1 = blockPos.toCenterPos().subtract(fromPos.toCenterPos()).normalize();
-            var vec4 = blockPos.toCenterPos().subtract(Mod.preMod).normalize().multiply(-1);
-            var vec6 = blockPos.toCenterPos().subtract(fromPos.toCenterPos()).normalize();
-            var vec2 = Mod.preMod.subtract(fromPos.toCenterPos()).normalize();
-            var theta =angleBetween(vec8, vec7)  ;
-            var phi =angleBetween(vec1,  vec2)  ;
-            var vecAway = Vec3d.fromPolar(0,camera.getYaw());
-            var vecAngle = angleBetween(vecAway, blockPos.down().toBottomCenterPos().subtract(cameraEntity.getPos().subtract(0,1,0)).normalize());
-            var proj = vec2.multiply(vec1.dotProduct(vec2)/(vec2.length()*vec2.length()));
-
-            var factor = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*Config.GSON.instance().cullAngle*Math.max(1,90/(Math.toDegrees(Math.atan(proj.length()))));
-
-            if(!isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock()) && blockPos.toCenterPos().getY() > fromPos.toCenterPos().getY() &&
-                    (((  theta < factor  )  && phi < 90F-Mod.pitch  && vecAngle < 15+angleBetween(vecAway,vec2)) ||(  Mod.preMod.distanceTo(blockPos.toCenterPos()) < 5))){
-                return true;
-            }
-            else {
-                return false;
-
-            }
-        }
-        else{
+    public boolean shouldCullAlt(BlockPos blockPos, BlockPos fromPos, Camera camera, Entity cameraEntity) {
+        if (!((MinecraftClientAccessor) MinecraftClient.getInstance()).shouldRebuild() || camera == null || cameraEntity == null) {
             return false;
-        }    }
+        }
 
-    public boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity){
-        if( ((MinecraftClientAccessor)MinecraftClient.getInstance()).shouldRebuild() && camera != null && cameraEntity != null) {
+        Vec3d blockCenter = blockPos.toCenterPos();
+        Vec3d fromCenter = fromPos.toCenterPos();
 
+        if (isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) {
+            return false;
+        }
 
-            var vec7 = (blockPos.toCenterPos().subtract(Mod.preMod).normalize()) ;
-            var vec8 = cameraEntity.getPos().subtract(Mod.preMod).normalize();
-        var vec1 = blockPos.toCenterPos().subtract(cameraEntity.getPos().add(vec8.multiply(4)));
-        var vec2 = Mod.preMod.subtract(cameraEntity.getPos());
-        var theta =angleBetween(vec8, vec7)  ;
-        var phi =angleBetween(vec1,  vec2)  ;
-            var vecAway = Vec3d.fromPolar(0,camera.getYaw());
-            var vecAngle = angleBetween(vecAway, blockPos.down().toBottomCenterPos().subtract(cameraEntity.getPos().subtract(0,1,0)).normalize());
+        if (blockCenter.getY() <= fromCenter.getY()) {
+            return false;
+        }
 
-            var proj = vec2.multiply(vec1.dotProduct(vec2)/(vec2.length()*vec2.length()));
-        var factor = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*Config.GSON.instance().cullAngle*Math.max(1,90/(Math.toDegrees(Math.atan(proj.length()))));
-        var factor2 = 0.1*(Math.min(10,Math.min(cameraEntity.getWorld().getTime()-Mod.startTime+2,10-Mod.endTime)))*45*Math.pow(0.9,Mod.zoom);
-
-        if(!isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock()) && blockPos.toCenterPos().getY() > cameraEntity.getPos().getY() + 1 &&
-                (((  theta < factor  )  && phi < 30 && Mod.preMod.distanceTo(cameraEntity.getEyePos()) > Mod.preMod.distanceTo(blockPos.toCenterPos())  && vecAngle < 15+angleBetween(vecAway,vec2)) ||(  Mod.preMod.distanceTo(blockPos.toCenterPos()) < 5))){
+        // Close to camera always culls
+        if (Mod.preMod.distanceTo(blockCenter) < 5) {
             return true;
         }
-        else {
-            return false;
 
-        }
-        }
-        else{
-            return false;
-        }
+        // Cylinder/cone axis: from fromPos toward camera
+        Vec3d axis = Mod.preMod.subtract(fromCenter);
+        double axisLenSq = axis.lengthSquared();
+        if (axisLenSq == 0) return false;
+
+        double radius = getAnimatedRadius(cameraEntity);
+        double perpDistSq = perpDistSqToAxis(blockCenter, fromCenter, axis, axisLenSq);
+        Vec3d toPoint = blockCenter.subtract(fromCenter);
+
+        return perpDistSq <= effectiveRadiusSq(toPoint, axis, axisLenSq, radius);
     }
-    private static <T, C> T raycast(Vec3d start, Vec3d end, C context, BiFunction<C, BlockPos, T> blockHitFactory, Function<C, T> missFactory) {
-        if (start.equals(end)) {
-            return missFactory.apply(context);
-        } else {
-            double d = MathHelper.lerp(-1.0E-7, end.x, start.x);
-            double e = MathHelper.lerp(-1.0E-7, end.y, start.y);
-            double f = MathHelper.lerp(-1.0E-7, end.z, start.z);
-            double g = MathHelper.lerp(-1.0E-7, start.x, end.x);
-            double h = MathHelper.lerp(-1.0E-7, start.y, end.y);
-            double i = MathHelper.lerp(-1.0E-7, start.z, end.z);
-            int j = MathHelper.floor(g);
-            int k = MathHelper.floor(h);
-            int l = MathHelper.floor(i);
-            BlockPos.Mutable mutable = new BlockPos.Mutable(j, k, l);
-            T object = blockHitFactory.apply(context, mutable);
-            if (object != null) {
-                return object;
-            } else {
-                double m = d - g;
-                double n = e - h;
-                double o = f - i;
-                int p = MathHelper.sign(m);
-                int q = MathHelper.sign(n);
-                int r = MathHelper.sign(o);
-                double s = p == 0 ? Double.MAX_VALUE : (double)p / m;
-                double t = q == 0 ? Double.MAX_VALUE : (double)q / n;
-                double u = r == 0 ? Double.MAX_VALUE : (double)r / o;
-                double v = s * (p > 0 ? 1.0 - MathHelper.fractionalPart(g) : MathHelper.fractionalPart(g));
-                double w = t * (q > 0 ? 1.0 - MathHelper.fractionalPart(h) : MathHelper.fractionalPart(h));
-                double x = u * (r > 0 ? 1.0 - MathHelper.fractionalPart(i) : MathHelper.fractionalPart(i));
 
-                Object object2;
-                do {
-                    if (!(v <= 1.0) && !(w <= 1.0) && !(x <= 1.0)) {
-                        return missFactory.apply(context);
-                    }
-
-                    if (v < w) {
-                        if (v < x) {
-                            j += p;
-                            v += s;
-                        } else {
-                            l += r;
-                            x += u;
-                        }
-                    } else if (w < x) {
-                        k += q;
-                        w += t;
-                    } else {
-                        l += r;
-                        x += u;
-                    }
-
-                    object2 = blockHitFactory.apply(context, mutable.set(j, k, l));
-                } while(object2 == null);
-
-                return (T) object2;
-            }
+    public boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity) {
+        if (!((MinecraftClientAccessor) MinecraftClient.getInstance()).shouldRebuild() || camera == null || cameraEntity == null) {
+            return false;
         }
+
+        Vec3d blockCenter = blockPos.toCenterPos();
+        Vec3d entityPos = cameraEntity.getPos();
+
+        if (isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) {
+            return false;
+        }
+
+        if (blockCenter.getY() <= entityPos.getY() + 1) {
+            return false;
+        }
+
+        // Close to camera always culls
+        if (Mod.preMod.distanceTo(blockCenter) < 5) {
+            return true;
+        }
+
+        // Cylinder/cone axis: from player toward camera
+        Vec3d axis = Mod.preMod.subtract(entityPos);
+        double axisLenSq = axis.lengthSquared();
+        if (axisLenSq == 0) return false;
+
+        double radius = getAnimatedRadius(cameraEntity);
+        double perpDistSq = perpDistSqToAxis(blockCenter, entityPos, axis, axisLenSq);
+        Vec3d toPoint = blockCenter.subtract(entityPos);
+
+        return perpDistSq <= effectiveRadiusSq(toPoint, axis, axisLenSq, radius);
     }
+
     @Override
     public boolean shouldIgnoreBlockPick(BlockPos blockPos, Camera camera, Entity cameraEntity) {
-        if(!(isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) && blockPos != null && (cameraEntity instanceof PlayerEntity player && blockPos.toCenterPos().distanceTo(cameraEntity.getEyePos()) > player.getBlockInteractionRange())
-                && blockPos.toCenterPos().getY() > cameraEntity.getY()+1){
-            if(new Vec3d(0,1,0).dotProduct(blockPos.toCenterPos().subtract(cameraEntity.getPos()).normalize())>0.5F) {
+        if (blockPos == null || isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) {
+            return false;
+        }
+
+        Vec3d blockCenter = blockPos.toCenterPos();
+        if (cameraEntity instanceof PlayerEntity player
+                && blockCenter.distanceTo(cameraEntity.getEyePos()) > player.getBlockInteractionRange()
+                && blockCenter.getY() > cameraEntity.getY() + 1) {
+            return UP.dotProduct(blockCenter.subtract(cameraEntity.getPos()).normalize()) > 0.5F;
+        }
+        return false;
+    }
+
+    List<Class<? extends Block>> ignoredTypes = List.of(VaultBlock.class, SpawnerBlock.class, TrialSpawnerBlock.class, WallMountedBlock.class, LadderBlock.class, DoorBlock.class);
+    public boolean isIgnoredType(Block block) {
+        for (Class<? extends Block> ignoredType : ignoredTypes) {
+            if (ignoredType.isInstance(block)) {
                 return true;
             }
         }
         return false;
     }
 
-    List<Class<? extends Block>> ignoredTypes = List.of(VaultBlock.class, SpawnerBlock.class, TrialSpawnerBlock.class, WallMountedBlock.class,LadderBlock.class, DoorBlock.class);
-    public boolean isIgnoredType(Block block){
-        for(Class<? extends Block> ignoredType : ignoredTypes){
-            if(ignoredType.isInstance(block)){
-                return true;
-            }
-        }
-        return false;
-    }
     @Override
     public int frequency() {
-        return 01;
+        return 1;
     }
-
-
 
     @Override
     public void resetCulledBlocks() {

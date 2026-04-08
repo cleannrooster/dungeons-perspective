@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(./gradlew build:*)",
+      "Bash(grep -r \"roof\\\\|areafill\\\\|area.fill\\\\|flood.fill\" /c/Users/eannc/Documents/Mods/dungeons-perspective/src --include=*.java)"
+    ]
+  }
+}

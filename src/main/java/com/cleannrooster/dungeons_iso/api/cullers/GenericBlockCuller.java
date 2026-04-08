@@ -1,31 +1,18 @@
 package com.cleannrooster.dungeons_iso.api.cullers;
 
 import com.cleannrooster.dungeons_iso.api.BlockCuller;
-import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
-import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
-import com.cleannrooster.dungeons_iso.mod.Mod;
-import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.annotation.Nullable;
-import net.fabricmc.fabric.api.block.v1.FabricBlock;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.WallMountedBlock;
-import net.minecraft.block.enums.BlockFace;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShapes;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 public class GenericBlockCuller implements BlockCuller {
-    public  List<BlockPos> culledBlocks = new ArrayList<>(1000);
 
     @Override
     public boolean shouldForceCull() {
@@ -36,28 +23,8 @@ public class GenericBlockCuller implements BlockCuller {
         return true;
     }
     @Override
-    public boolean cullBlocks(  BlockPos blockPos, Camera camera, Entity cameraEntity) {
-
-        if( this.shouldCull(blockPos,camera,cameraEntity)){
-            if(culledBlocks.size() < 1000) {
-                culledBlocks.add(blockPos);
-                TransparentBlock block = new TransparentBlock(blockPos, 0);
-                SodiumCompat.transparentBlocks.put(blockPos, SodiumCompat.transparentBlocks.getOrDefault(blockPos, block));
-            }
-            else{
-                culledBlocks = new ArrayList<>(1000);
-                SodiumCompat.transparentBlocks = new LinkedHashMap<>();
-                culledBlocks.add(blockPos);
-                TransparentBlock block = new TransparentBlock(blockPos, 0);
-                SodiumCompat.transparentBlocks.put(blockPos, SodiumCompat.transparentBlocks.getOrDefault(blockPos, block));
-
-            }
-
-            return true;
-        }
-        else{
-            return false;
-        }
+    public boolean cullBlocks(BlockPos blockPos, Camera camera, Entity cameraEntity) {
+        return this.shouldCull(blockPos, camera, cameraEntity);
     }
 
     @Override
@@ -65,41 +32,51 @@ public class GenericBlockCuller implements BlockCuller {
         return 0;
     }
 
-    public boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity){
-        if(  camera != null && cameraEntity != null) {
-
-            if (!(isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) && blockPos != null && blockPos.toCenterPos().getY() > cameraEntity.getPos().getY() + 1 &&
-                    (cameraEntity.getPos().subtract((blockPos.toCenterPos())).normalize()
-                            .dotProduct(
-                                    (MinecraftClient.getInstance().cameraEntity.getPos()).subtract(camera.getPos()).normalize()) > 0.71
-                            ||
-                            camera.getPos().distanceTo(blockPos.toCenterPos()) < 3)) {
-                return !cameraEntity.getWorld().getBlockState(blockPos).getBlock().equals(Blocks.AIR);
-            }
-            else{
-                return false;
-            }
-        }
-        else{
+    public boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity) {
+        if (camera == null || cameraEntity == null || blockPos == null) {
             return false;
         }
+
+        if (isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) {
+            return false;
+        }
+
+        Vec3d blockCenter = blockPos.toCenterPos();
+        Vec3d entityPos = cameraEntity.getPos();
+        Vec3d cameraPos = camera.getPos();
+
+        if (blockCenter.getY() <= entityPos.getY() + 1) {
+            return false;
+        }
+
+        Vec3d toBlock = entityPos.subtract(blockCenter).normalize();
+        Vec3d toCamera = MinecraftClient.getInstance().cameraEntity.getPos().subtract(cameraPos).normalize();
+
+        if (toBlock.dotProduct(toCamera) > 0.71 || cameraPos.distanceTo(blockCenter) < 3) {
+            return !cameraEntity.getWorld().getBlockState(blockPos).getBlock().equals(Blocks.AIR);
+        }
+        return false;
     }
 
     @Override
     public boolean shouldIgnoreBlockPick(BlockPos blockPos, Camera camera, Entity cameraEntity) {
-        if(!(isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) && blockPos != null && (cameraEntity instanceof PlayerEntity player && blockPos.toCenterPos().distanceTo(cameraEntity.getEyePos()) > player.getBlockInteractionRange())
-                && blockPos.toCenterPos().getY() > cameraEntity.getY()+1){
-            if(new Vec3d(0,1,0).dotProduct(blockPos.toCenterPos().subtract(cameraEntity.getPos()).normalize())>0.5F) {
-                return true;
-            }
+        if (blockPos == null || isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) {
+            return false;
+        }
+
+        Vec3d blockCenter = blockPos.toCenterPos();
+        if (cameraEntity instanceof net.minecraft.entity.player.PlayerEntity player
+                && blockCenter.distanceTo(cameraEntity.getEyePos()) > player.getBlockInteractionRange()
+                && blockCenter.getY() > cameraEntity.getY() + 1) {
+            return UP.dotProduct(blockCenter.subtract(cameraEntity.getPos()).normalize()) > 0.5F;
         }
         return false;
     }
 
     List<Class<? extends Block>> ignoredTypes = List.of(WallMountedBlock.class);
-    public boolean isIgnoredType(Block block){
-        for(Class<? extends Block> ignoredType : ignoredTypes){
-            if(ignoredType.isInstance(block)){
+    public boolean isIgnoredType(Block block) {
+        for (Class<? extends Block> ignoredType : ignoredTypes) {
+            if (ignoredType.isInstance(block)) {
                 return true;
             }
         }
@@ -107,9 +84,8 @@ public class GenericBlockCuller implements BlockCuller {
     }
     @Override
     public int frequency() {
-        return 01;
+        return 1;
     }
-
 
     @Override
     public void resetCulledBlocks() {

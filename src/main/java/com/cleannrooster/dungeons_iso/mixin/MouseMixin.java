@@ -140,6 +140,62 @@ public class MouseMixin implements MouseAccessor {
     int lasti;
     int timeGone = 0;
 
+    /**
+     * Computes the ray origin for the current mouse position.
+     * In orthographic mode, the origin is offset from the camera along the view plane.
+     * In perspective mode, the origin is the camera position.
+     */
+    private Vec3d getRayOrigin(Camera camera, double coordsX, double coordsY) {
+        if (Config.GSON.instance().ortho) {
+            // Must match Ortho.createOrthoMatrix: halfWidth = getZoom()*2*aspect, halfHeight = getZoom()*2
+            // coordsX already has aspect baked in (ndcX * aspect), coordsY is raw ndcY
+            double orthoScale = Mod.getZoom() * 2;
+            return camera.getPos()
+                    .add(new Vec3d(camera.getDiagonalPlane()).multiply(-orthoScale * coordsX))
+                    .add(new Vec3d(camera.getVerticalPlane()).multiply(orthoScale * coordsY));
+        }
+        return camera.getPos();
+    }
+
+    /**
+     * Block raycast handler — shared between elytra and normal raycasts.
+     */
+    private static final BiFunction<RaycastContextCull, BlockPos, BlockHitResult> BLOCK_HIT_FACTORY = (innerContext, pos) -> {
+        MinecraftClient client = MinecraftClient.getInstance();
+        BlockState blockState = client.player.getWorld().getBlockState(pos);
+        FluidState fluidState = client.player.getWorld().getFluidState(pos);
+        Vec3d vec3d = innerContext.getStart();
+        Vec3d vec3d2 = innerContext.getEnd();
+        VoxelShape voxelShape = innerContext.getBlockShape(blockState, client.player.getWorld(), pos);
+        BlockHitResult firstResult = client.world.raycastBlock(vec3d, vec3d2, pos, voxelShape, blockState);
+
+        VoxelShape voxelShape2 = innerContext.getFluidShape(fluidState, client.player.getWorld(), pos);
+        BlockHitResult blockHitResult2 = voxelShape2.raycast(vec3d, vec3d2, pos);
+        double d = firstResult == null ? Double.MAX_VALUE : innerContext.getStart().squaredDistanceTo(firstResult.getPos());
+        double e = blockHitResult2 == null ? Double.MAX_VALUE : innerContext.getStart().squaredDistanceTo(blockHitResult2.getPos());
+        return d <= e ? firstResult : blockHitResult2;
+    };
+
+    private static final BiFunction<RaycastContextCull, BlockPos, BlockHitResult> ELYTRA_HIT_FACTORY = (innerContext, pos) -> {
+        MinecraftClient client = MinecraftClient.getInstance();
+        BlockState blockState = client.player.getWorld().getBlockState(pos);
+        FluidState fluidState = client.player.getWorld().getFluidState(pos);
+        Vec3d vec3d = innerContext.getStart();
+        Vec3d vec3d2 = innerContext.getEnd();
+        VoxelShape voxelShape = innerContext.getBlockShape(blockState, client.player.getWorld(), pos);
+        BlockHitResult firstResult = voxelShape.raycast(vec3d, vec3d2, pos);
+
+        VoxelShape voxelShape2 = innerContext.getFluidShape(fluidState, client.player.getWorld(), pos);
+        BlockHitResult blockHitResult2 = voxelShape2.raycast(vec3d, vec3d2, pos);
+        double d = firstResult == null ? Double.MAX_VALUE : innerContext.getStart().squaredDistanceTo(firstResult.getPos());
+        double e = blockHitResult2 == null ? Double.MAX_VALUE : innerContext.getStart().squaredDistanceTo(blockHitResult2.getPos());
+        return d <= e ? firstResult : blockHitResult2;
+    };
+
+    private static final Function<RaycastContextCull, BlockHitResult> MISS_FACTORY = (innerContext) -> {
+        Vec3d vec3d = innerContext.getStart().subtract(innerContext.getEnd());
+        return BlockHitResult.createMissed(innerContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), BlockPos.ofFloored(innerContext.getEnd()));
+    };
 
 
     @Inject(
@@ -223,149 +279,129 @@ public class MouseMixin implements MouseAccessor {
                         Mod.horizontalTarget = new BlockHitResult(Mod.horizontalTarget.getPos().add(0, ((-j*k)/40),0),Mod.horizontalTarget.getSide(),BlockPos.ofFloored(Mod.horizontalTarget.getPos().add(0, ((-j*k)/40),0)),true);
 
                     }
-                    Vector2d res = new Vector2d(window.getFramebufferWidth(), window.getFramebufferHeight());
-                    double aspect = res.x / res.y;
-                    Vector2d coords = new Vector2d(mouse.getX(), mouse.getY()).div(res).mul(  2.0).sub(new Vector2d(1.0));
-                    double fov2 =
-                            Math.toRadians(((GameRendererAccessor) renderer).callGetFov(camera, tickDelta, true)) / 2.0;
-                    coords.x *= aspect;
-                    coords.y = -coords.y;
-                    Vector2d offsets = coords.mul( Math.tan(fov2));
+
+                    // --- Screen-to-world ray computation ---
+                    int fbWidth = window.getFramebufferWidth();
+                    int fbHeight = window.getFramebufferHeight();
+                    double aspect = (double) fbWidth / fbHeight;
+                    double fov2 = Math.toRadians(((GameRendererAccessor) renderer).callGetFov(camera, tickDelta, true)) / 2.0;
+                    double tanFov2 = Math.tan(fov2);
+
+                    // Normalize mouse position to [-1, 1] NDC
+                    double ndcX = (mouse.getX() / fbWidth) * 2.0 - 1.0;
+                    double ndcY = -((mouse.getY() / fbHeight) * 2.0 - 1.0);
+
+                    // Apply aspect ratio and FOV to get view-space offsets
+                    double offsetX = ndcX * aspect * tanFov2;
+                    double offsetY = ndcY * tanFov2;
+
+                    // Build camera-space basis vectors
                     Vector3d forward = camera.getRotation().transform(new Vector3d(0.0, 0.0, -1.0));
                     Vector3d right = camera.getRotation().transform(new Vector3d(1.0, 0.0, 0.0));
                     Vector3d up = camera.getRotation().transform(new Vector3d(0.0, 1.0, 0.0));
-                    Vector3d dir =  forward.add(right.mul(offsets.x).add(up.mul(offsets.y))).normalize();
-                    Vector3d orth =  camera.getRotation().transform(new Vector3d(0.0, 0.0, -1.0)).normalize();
-                    Vec3d rayDir =  Config.GSON.instance().ortho ? new Vec3d(orth.x,orth.y,orth.z):new Vec3d(dir.x, dir.y, dir.z);
-                    Quaternionf quaternionf = camera.getRotation().conjugate(new Quaternionf());
-                    Matrix4f matrix4f2 = (new Matrix4f()).rotation(quaternionf);
-                    Frustum frustum = new Frustum(matrix4f2,Ortho.createOrthoMatrix(tickDelta,20));
-                    Box box = Box.of((Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos()),2,2,2)
-                            .stretch(rayDir.multiply(renderer.getFarPlaneDistance()*2))
+
+                    // Construct ray direction
+                    Vec3d rayDir;
+                    if (Config.GSON.instance().ortho) {
+                        rayDir = new Vec3d(forward.x, forward.y, forward.z);
+                    } else {
+                        Vector3d dir = new Vector3d(forward).add(new Vector3d(right).mul(offsetX)).add(new Vector3d(up).mul(offsetY)).normalize();
+                        rayDir = new Vec3d(dir.x, dir.y, dir.z);
+                    }
+
+                    // Compute ray origin (offset in ortho mode, camera pos in perspective)
+                    Vec3d rayOrigin = getRayOrigin(camera, ndcX * aspect, ndcY);
+
+                    // End point of the ray
+                    Vec3d end = rayOrigin.add(rayDir.multiply(renderer.getFarPlaneDistance()));
+
+                    // Bounding box for entity search along the ray
+                    Box box = Box.of(rayOrigin, 2, 2, 2)
+                            .stretch(rayDir.multiply(renderer.getFarPlaneDistance() * 2))
                             .expand(1.0, 1.0, 1.0);
-                    Vec3d end =                             (Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos()).add(rayDir.multiply(renderer.getFarPlaneDistance()));
-                    Vec3d vec3d5= camera.getProjection().getPosition(-2f*(float)(i-0.5)*(float)aspect,-2f*(float)(j-0.5));
-                    if(cameraEntity instanceof PlayerEntity player && player.isFallFlying()){
 
-
-                        if(((CameraAccessor)camera).getPosBeforeModulation() != null){
-                            HitResult hitResult0 = raycast(Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(),end,new RaycastContextCull(
-                                    Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(),
-                                    end,
+                    // Elytra flight: adjust endpoint to hit ground level
+                    if (cameraEntity instanceof PlayerEntity player && player.isFallFlying()) {
+                        if (((CameraAccessor) camera).getPosBeforeModulation() != null) {
+                            HitResult hitResult0 = raycast(rayOrigin, end, new RaycastContextCull(
+                                    rayOrigin, end,
                                     CustomShapeTypes.AIR_AT_LEVEL,
                                     RaycastContext.ShapeType.OUTLINE,
                                     RaycastContext.FluidHandling.NONE,
                                     cameraEntity
-                            ),(innerContext, pos) -> {
-                                BlockState blockState = client.player.getWorld().getBlockState(pos);
-                                FluidState fluidState = client.player.getWorld().getFluidState(pos);
-                                Vec3d vec3d = innerContext.getStart();
-                                Vec3d vec3d2 = innerContext.getEnd();
-                                VoxelShape voxelShape = innerContext.getBlockShape(blockState, client.player.getWorld(), pos);
-
-
-                                BlockHitResult firstResult = voxelShape.raycast(vec3d, vec3d2, pos);
-
-                                VoxelShape voxelShape2 = innerContext.getFluidShape(fluidState, client.player.getWorld(), pos);
-                                BlockHitResult blockHitResult2 = voxelShape2.raycast(vec3d, vec3d2, pos);
-                                double d = firstResult == null ? Double.MAX_VALUE : innerContext.getStart().squaredDistanceTo(firstResult.getPos());
-                                double e = blockHitResult2 == null ? Double.MAX_VALUE : innerContext.getStart().squaredDistanceTo(blockHitResult2.getPos());
-                                return d <= e ? firstResult : blockHitResult2;
-                            }, (innerContext) -> {
-                                Vec3d vec3d = innerContext.getStart().subtract(innerContext.getEnd());
-                                return BlockHitResult.createMissed(innerContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), BlockPos.ofFloored(innerContext.getEnd()));
-                            });
-                            if(hitResult0 instanceof BlockHitResult result) {
-                                Mod.flyingYAddition = -2*Math.log(result.getPos().distanceTo(player.getEyePos()) / 8F);
+                            ), ELYTRA_HIT_FACTORY, MISS_FACTORY);
+                            if (hitResult0 instanceof BlockHitResult result) {
+                                Mod.flyingYAddition = -2 * Math.log(result.getPos().distanceTo(player.getEyePos()) / 8F);
                             }
-                            end = hitResult0.getPos().add(0,Mod.flyingYAddition,0);
-
+                            end = hitResult0.getPos().add(0, Mod.flyingYAddition, 0);
                         }
                     }
 
-
-                    HitResult hitResult0 = raycast(Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(),end,new RaycastContextCull(
-                            Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(),
-                            end,
+                    // Main block raycast
+                    HitResult hitResult0 = raycast(rayOrigin, end, new RaycastContextCull(
+                            rayOrigin, end,
                             CustomShapeTypes.CULLED,
                             RaycastContext.ShapeType.OUTLINE,
                             RaycastContext.FluidHandling.NONE,
                             cameraEntity
-                    ),(innerContext, pos) -> {
-                        BlockState blockState = client.player.getWorld().getBlockState(pos);
-                        FluidState fluidState = client.player.getWorld().getFluidState(pos);
-                        Vec3d vec3d = innerContext.getStart();
-                        Vec3d vec3d2 = innerContext.getEnd();
-                        VoxelShape voxelShape = innerContext.getBlockShape(blockState, client.player.getWorld(), pos);
-                        BlockHitResult firstResult = client.world.raycastBlock(vec3d, vec3d2, pos, voxelShape, blockState);
+                    ), BLOCK_HIT_FACTORY, MISS_FACTORY);
 
-
-                        VoxelShape voxelShape2 = innerContext.getFluidShape(fluidState, client.player.getWorld(), pos);
-                        BlockHitResult blockHitResult2 = voxelShape2.raycast(vec3d, vec3d2, pos);
-                        double d = firstResult == null ? Double.MAX_VALUE : innerContext.getStart().squaredDistanceTo(firstResult.getPos());
-                        double e = blockHitResult2 == null ? Double.MAX_VALUE : innerContext.getStart().squaredDistanceTo(blockHitResult2.getPos());
-                        return d <= e ? firstResult : blockHitResult2;
-                    }, (innerContext) -> {
-                        Vec3d vec3d = innerContext.getStart().subtract(innerContext.getEnd());
-                        return BlockHitResult.createMissed(innerContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), BlockPos.ofFloored(innerContext.getEnd()));
-                    });
+                    // Scan back toward camera, then forward again to find the nearest visible surface
                     BlockHitResult scanUp = client.player.getWorld().raycast(
                             new RaycastContext(
-                                    hitResult0.getPos(),Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE,client.player)
-
+                                    hitResult0.getPos(), rayOrigin, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, client.player)
                     );
                     BlockHitResult scanDown = client.player.getWorld().raycast(
                             new RaycastContext(
-                                    scanUp.getPos(),scanUp.getPos().add(hitResult0.getPos().subtract(scanUp.getPos()).normalize().multiply(renderer.getFarPlaneDistance()*2)), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE,client.player)
-
+                                    scanUp.getPos(), scanUp.getPos().add(hitResult0.getPos().subtract(scanUp.getPos()).normalize().multiply(renderer.getFarPlaneDistance() * 2)), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, client.player)
                     );
 
-                    if(Mod.crosshairTarget == null){
+                    if (Mod.crosshairTarget == null) {
                         Mod.crosshairTarget = client.crosshairTarget;
                     }
+
+                    // Entity targeting: first try scanDown->camera ray, then camera->end ray
                     HitResult hitResult = raycastExpanded(
                             cameraEntity,
                             scanDown.getPos(),
-                            Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(),
+                            rayOrigin,
                             box,
                             entity -> !entity.isSpectator() && entity.canHit(),
-                            renderer.getFarPlaneDistance()*2
-                    ,0.5F);
+                            renderer.getFarPlaneDistance() * 2,
+                            0.5F);
                     HitResult hitResult2 = raycastExpanded(
                             cameraEntity,
-                            Config.GSON.instance().ortho ? camera.getPos().add(new Vec3d(camera.getDiagonalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.x).multiply(-0.72)).add(new Vec3d(camera.getVerticalPlane()).multiply(Mod.zoomMetric*Mod.getZoom()).multiply(coords.y).multiply(0.72)) :camera.getPos(),
+                            rayOrigin,
                             end,
                             box,
                             entity -> !entity.isSpectator() && entity.canHit(),
-                            renderer.getFarPlaneDistance()*2
-                            ,0.5F);
+                            renderer.getFarPlaneDistance() * 2,
+                            0.5F);
+
                     if (!(hitResult instanceof EntityHitResult result && result.getType().equals(HitResult.Type.ENTITY))) {
-                        if(!(hitResult2 instanceof EntityHitResult result2 && result2.getType().equals(HitResult.Type.ENTITY))){
+                        if (!(hitResult2 instanceof EntityHitResult result2 && result2.getType().equals(HitResult.Type.ENTITY))) {
                             hitResult = scanDown;
-                            if(cameraEntity instanceof PlayerEntity player && hitResult.getPos().distanceTo(cameraEntity.getEyePos()) > player.getBlockInteractionRange() && cameraEntity.getWorld().getBlockEntity(BlockPos.ofFloored(hitResult.getPos())) == null
+                            if (cameraEntity instanceof PlayerEntity player && hitResult.getPos().distanceTo(cameraEntity.getEyePos()) > player.getBlockInteractionRange() && cameraEntity.getWorld().getBlockEntity(BlockPos.ofFloored(hitResult.getPos())) == null
                                     && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof WallMountedBlock)
                                     && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof DoorBlock)
                                     && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof TrapdoorBlock)) {
-                                hitResult = new BlockHitResult(new Vec3d(scanDown.getPos().getX(), cameraEntity.getEyeY(), scanDown.getPos().getZ()), scanDown.getSide(),BlockPos.ofFloored(scanDown.getPos().getX(), cameraEntity.getEyeY(), scanDown.getPos().getZ()),false);
+                                hitResult = new BlockHitResult(new Vec3d(scanDown.getPos().getX(), cameraEntity.getEyeY(), scanDown.getPos().getZ()), scanDown.getSide(), BlockPos.ofFloored(scanDown.getPos().getX(), cameraEntity.getEyeY(), scanDown.getPos().getZ()), false);
                             }
-                        }
-                        else {
+                        } else {
                             hitResult = hitResult2;
                         }
-
-
                     }
 
-                    if(ClientInit.verticalBinding.wasPressed()){
+                    if (ClientInit.verticalBinding.wasPressed()) {
                         Mod.verticalMode = !Mod.verticalMode;
                         Mod.horizontalTarget = Mod.verticalMode ? scanDown : null;
-                        if(Mod.verticalMode){
+                        if (Mod.verticalMode) {
                             client.player.sendMessage(Text.translatable("Vertical look mode activated (Default Keybind: RIGHT ALT)"), true);
                         }
                     }
-                    Mod.prevCrosshairTarget = Mod.crosshairTarget != null ? Mod.crosshairTarget : Mod.horizontalTarget != null ? Mod.horizontalTarget : hitResult ;
-                    Mod.crosshairTarget =  Mod.horizontalTarget != null ? Mod.horizontalTarget : hitResult;
-                    Mod.mouseTarget =  Mod.horizontalTarget != null ? Mod.horizontalTarget : hitResult;
+                    Mod.prevCrosshairTarget = Mod.crosshairTarget != null ? Mod.crosshairTarget : Mod.horizontalTarget != null ? Mod.horizontalTarget : hitResult;
+                    Mod.crosshairTarget = Mod.horizontalTarget != null ? Mod.horizontalTarget : hitResult;
+                    Mod.mouseTarget = Mod.horizontalTarget != null ? Mod.horizontalTarget : hitResult;
                 }
 
 

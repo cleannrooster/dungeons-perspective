@@ -5,10 +5,22 @@ import net.minecraft.block.BlockState;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.List;
 
 public interface BlockCuller {
+    Vec3d UP = new Vec3d(0, 1, 0);
+
+    static double angleBetween(Vec3d a, Vec3d b) {
+        double dot = a.dotProduct(b);
+        double lenSq = a.lengthSquared() * b.lengthSquared();
+        if (lenSq == 0) return 0;
+        double cosineTheta = dot / Math.sqrt(lenSq);
+        double angle = Math.acos(Math.clamp(cosineTheta, -1.0, 1.0)) * 57.29577951308232;
+        return Double.isNaN(angle) ? 0.0 : angle;
+    }
+
     boolean cullBlocks( BlockPos blockPos, Camera camera, Entity cameraEntity);
     default List<BlockPos> getCulledBlocks(BlockPos blockPos, Camera camera, Entity cameraEntity){
         return List.of();
