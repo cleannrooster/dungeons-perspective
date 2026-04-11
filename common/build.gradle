@@ -1,0 +1,46 @@
+architectury {
+    common rootProject.enabled_platforms.split(',')
+}
+
+def platform = "fabric"
+
+dependencies {
+    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
+
+    // YACL - compile against fabric variant in common
+    modImplementation "dev.isxander:yet-another-config-lib:${rootProject.yacl_version}-${platform}"
+
+    // Cloth Config
+    modImplementation "me.shedaniel.cloth:cloth-config-${platform}:${rootProject.cloth_config_version}"
+
+    // owo-lib
+    modImplementation "io.wispforest:owo-lib:${rootProject.owo_version}"
+    annotationProcessor "io.wispforest:owo-lib:${rootProject.owo_version}"
+
+    // Player Animation Library
+    modImplementation "dev.kosmx.player-anim:player-animation-lib-${platform}:${rootProject.player_anim_version}"
+
+    // Spell Engine & Spell Power (optional compat - compile only)
+    modCompileOnly "maven.modrinth:spell-engine:${rootProject.spell_engine_version}-${platform}"
+    modCompileOnly "maven.modrinth:spell-power:${rootProject.spell_power_version}-${platform}"
+
+    // Combat Roll (optional compat - compile only)
+    modCompileOnly "maven.modrinth:combat-roll:2.0.4+1.21.1-${platform}"
+
+    // Trinkets (optional compat - compile only, fabric only lib)
+    modCompileOnly "dev.emi:trinkets:${rootProject.trinkets_version}"
+
+    // ModMenu (optional - compile only, fabric only)
+    modCompileOnly "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+
+    // Sodium (optional compat - compile against fabric variant in common)
+    modCompileOnly "maven.modrinth:sodium:${rootProject.sodium_version}-${platform}"
+
+    // MixinSquared
+    modImplementation "com.github.bawnorton.mixinsquared:mixinsquared-${platform}:0.2.0"
+    annotationProcessor "com.github.bawnorton.mixinsquared:mixinsquared-${platform}:0.2.0"
+
+    // TinyConfig (bundled - pure Java GSON config lib)
+    implementation "com.github.ZsoltMolnarrr:TinyConfig:${rootProject.tiny_config_version}"
+}

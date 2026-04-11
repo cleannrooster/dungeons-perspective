@@ -3,7 +3,23 @@
     "allow": [
       "Bash(xargs grep:*)",
       "Bash(./gradlew build:*)",
-      "Bash(grep -r \"roof\\\\|areafill\\\\|area.fill\\\\|flood.fill\" /c/Users/eannc/Documents/Mods/dungeons-perspective/src --include=*.java)"
+      "Bash(grep -r \"roof\\\\|areafill\\\\|area.fill\\\\|flood.fill\" /c/Users/eannc/Documents/Mods/dungeons-perspective/src --include=*.java)",
+      "WebFetch(domain:github.com)",
+      "Bash(cp -r \"C:/Users/eannc/Documents/Mods/dungeons-perspective/src/main/java\" \"C:/Users/eannc/Documents/Mods/dungeons-perspective/common/src/main/java\")",
+      "Bash(cp -r \"C:/Users/eannc/Documents/Mods/dungeons-perspective/src/main/resources\" \"C:/Users/eannc/Documents/Mods/dungeons-perspective/common/src/main/resources\")",
+      "Bash(dir \"C:\\\\Users\\\\eannc\\\\Documents\\\\Mods\\\\dungeons-perspective\\\\src\\\\main\\\\java\\\\com\\\\cleannrooster\\\\dungeons_iso\" /b)",
+      "Bash(dir \"C:\\\\Users\\\\eannc\\\\Documents\\\\Mods\\\\dungeons-perspective\\\\build\" /b)",
+      "Bash(dir \"C:\\\\Users\\\\eannc\\\\Documents\\\\Mods\\\\dungeons-perspective\\\\build\\\\classes\" /s /b)",
+      "Bash(findstr \"ClientInit\")",
+      "Bash(findstr /i \"clientinit\")",
+      "Bash(dir \"C:\\\\Users\\\\eannc\\\\Documents\\\\Mods\\\\dungeons-perspective\\\\build\\\\classes\\\\java\" /s /b)",
+      "Bash(dir \"C:\\\\Users\\\\eannc\\\\Documents\\\\Mods\\\\dungeons-perspective\\\\build\\\\classes\\\\java\\\\main\" /s /b)",
+      "Bash(dir \"C:\\\\Users\\\\eannc\\\\Documents\\\\Mods\\\\dungeons-perspective\\\\build\\\\classes\\\\java\\\\main\\\\com\" /s /b)",
+      "Bash(dir \"C:\\\\Users\\\\eannc\\\\Documents\\\\Mods\\\\dungeons-perspective\\\\build\\\\classes\\\\java\\\\main\\\\com\\\\cleannrooster\\\\dungeons_iso\" /b)",
+      "Bash(dir \"C:\\\\Users\\\\eannc\\\\Documents\\\\Mods\\\\dungeons-perspective\\\\src\\\\main\\\\java\\\\com\\\\cleannrooster\\\\dungeons_iso\" /s /b)",
+      "Bash(dir \"C:\\\\Users\\\\eannc\\\\Documents\\\\Mods\\\\dungeons-perspective\\\\src\\\\main\\\\java\\\\com\\\\cleannrooster\\\\dungeons_iso\" /s /b /a-d)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\eannc\\\\Documents\\\\Mods\\\\dungeons-perspective\\\\src\" -Recurse -Filter \"*.java\")",
+      "Bash(Select-Object -ExpandProperty FullName)"
     ]
   }
 }
