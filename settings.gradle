@@ -1,14 +1,43 @@
 pluginManagement {
     repositories {
         maven { url = 'https://maven.fabricmc.net/' }
-        maven { url = 'https://maven.architectury.dev/' }
-        maven { url = 'https://files.minecraftforge.net/maven/' }
         gradlePluginPortal()
     }
 }
 
-rootProject.name = 'dungeons-perspective'
+dependencyResolutionManagement {
+    repositories {
+        maven { url = new File(rootDir, '.gradle/local-maven').toURI() }
+    }
+}
 
-include 'common'
-include 'fabric'
-include 'neoforge'
+// ─── MC 26.1: generate local identity intermediary (JAR + POM) ───────────────
+// Fabric's upstream intermediary POM has version 0.0.0 for deobfuscated versions,
+// causing Gradle's metadata consistency check to fail. We generate a correctly-versioned
+// local artifact before any project is configured so loom resolves it from here instead.
+def mcVersion = '26.1'
+def localMaven = new File(rootDir, '.gradle/local-maven')
+def intDir    = new File(localMaven, "net/fabricmc/intermediary/${mcVersion}")
+def intJar    = new File(intDir, "intermediary-${mcVersion}-v2.jar")
+def intPom    = new File(intDir, "intermediary-${mcVersion}.pom")
+
+if (!intJar.exists()) {
+    intDir.mkdirs()
+    def zos = new java.util.zip.ZipOutputStream(new java.io.FileOutputStream(intJar))
+    zos.putNextEntry(new java.util.zip.ZipEntry('mappings/mappings.tiny'))
+    zos.write("tiny\t2\t0\tofficial\tintermediary\n".getBytes('UTF-8'))
+    zos.closeEntry()
+    zos.close()
+}
+if (!intPom.exists()) {
+    intPom.text = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>net.fabricmc</groupId>
+  <artifactId>intermediary</artifactId>
+  <version>${mcVersion}</version>
+</project>"""
+}
+
+rootProject.name = 'dungeons-perspective'

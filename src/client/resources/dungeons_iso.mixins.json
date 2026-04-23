@@ -1,0 +1,46 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.cleannrooster.dungeons_iso.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "plugin": "com.cleannrooster.dungeons_iso.MixinPlugin",
+  "client": [
+    "compat.combat_roll.RollManagerMixin",
+    "CameraMixin",
+    "GameRendererAccessor",
+    "GameRendererMixin",
+    "InGameHudMixin",
+    "KeyboardInputMixin",
+    "KeyboardMixin",
+    "MinecraftMixin",
+    "MouseMixin",
+    "client.PlayerMixin",
+    "OptionsMixin",
+    "AbstractSoundInstanceMixin",
+    "AbstractHorseEntityMixin",
+    "LightmapTextureManagerMixin",
+    "BackgroundRendererMixin",
+    "LightingProviderMixin",
+    "WrapperProtoChunkMixin",
+    "WorldMixin",
+    "ClientLevelMixin",
+    "ChunkDataMixin",
+    "LocalPlayerMixin",
+    "BossBarHudMixin",
+    "compat.sodium.MixinBlockRenderer",
+    "compat.sodium.SodiumWorldRendererMixin",
+    "compat.sodium.AbstractRenderContextMixin",
+    "compat.sodium.AbstractRenderContextMixin2",
+    "compat.sodium.FluidRendererMixin",
+    "compat.sodium.RenderSectionManagerMixin",
+    "RenderSystemMixin",
+    "KeyBindingMixin"
+
+  ],
+  "server": [
+    "server.PlayerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
