@@ -26,47 +26,34 @@ configurations {
 }
 
 dependencies {
-    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
+    implementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+    implementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
+    // loom-no-remap doesn't expose fabric-api's jar-in-jar modules on the compile classpath,
+    // so depend on the individual modules we use directly.
+    implementation "net.fabricmc.fabric-api:fabric-command-api-v2:3.1.0+00cb03469e"
+    implementation "net.fabricmc.fabric-api:fabric-key-mapping-api-v1:2.0.5+e2bdee789e"
 
-    common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
-    shadowBundle project(path: ':common', configuration: 'transformProductionFabric')
+    // 26.2 is unobfuscated, so the Architectury remap-transform variants (namedElements /
+    // transformProductionFabric) aren't produced under loom-no-remap. Depend on :common directly
+    // and bundle its classes into the shadow jar.
+    common(project(path: ':common')) { transitive = false }
+    shadowBundle project(path: ':common')
 
     // YACL - fabric
-    modImplementation "dev.isxander:yet-another-config-lib:${rootProject.yacl_version}-${platform}"
+    implementation "dev.isxander:yet-another-config-lib:${rootProject.yacl_version}-${platform}"
 
     // Cloth Config
-    modImplementation "me.shedaniel.cloth:cloth-config-${platform}:${rootProject.cloth_config_version}"
-
-    // owo-lib
-    modImplementation "io.wispforest:owo-lib:${rootProject.owo_version}"
-    annotationProcessor "io.wispforest:owo-lib:${rootProject.owo_version}"
-
-    // Player Animation Library
-    modImplementation "dev.kosmx.player-anim:player-animation-lib-${platform}:${rootProject.player_anim_version}"
-
-    // Spell Engine & Spell Power
-    modImplementation "maven.modrinth:spell-engine:${rootProject.spell_engine_version}-${platform}"
-    modImplementation "maven.modrinth:spell-power:${rootProject.spell_power_version}-${platform}"
-
-    // Combat Roll
-    modImplementation "maven.modrinth:combat-roll:2.0.4+1.21.1-${platform}"
-
-    // Trinkets
-    modImplementation "dev.emi:trinkets:${rootProject.trinkets_version}"
+    implementation "me.shedaniel.cloth:cloth-config-${platform}:${rootProject.cloth_config_version}"
 
     // ModMenu
-    modImplementation "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+    implementation "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
 
     // Sodium (for compat)
-    modImplementation "maven.modrinth:sodium:${rootProject.sodium_version}-${platform}"
+    implementation "maven.modrinth:sodium:${rootProject.sodium_version}-${platform}"
 
     // MixinSquared
-    include(modImplementation("com.github.bawnorton.mixinsquared:mixinsquared-${platform}:0.2.0"))
-    annotationProcessor "com.github.bawnorton.mixinsquared:mixinsquared-${platform}:0.2.0"
-    implementation include("maven.modrinth:tiny-config:${project.tiny_config_version}-fabric")
-
-    // TinyConfig (bundled)
+    annotationProcessor "com.github.bawnorton.mixinsquared:mixinsquared-common:${rootProject.mixinsquared_version}"
+    include(implementation("com.github.bawnorton.mixinsquared:mixinsquared-fabric:${rootProject.mixinsquared_version}"))
 }
 
 processResources {
@@ -79,9 +66,14 @@ processResources {
 
 shadowJar {
     configurations = [project.configurations.shadowBundle]
+    // 26.2 is unobfuscated: bundle :common's compiled classes and resources directly (no remap).
+    from project(':common').sourceSets.main.output
     archiveClassifier = 'dev-shadow'
 }
 
-remapJar {
-    inputFile.set shadowJar.archiveFile
+jar {
+    // No remapJar in no-remap mode: unpack the shadow jar's contents into the final jar.
+    dependsOn shadowJar
+    from zipTree(shadowJar.archiveFile)
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

@@ -9,14 +9,21 @@ import net.caffeinemc.mods.sodium.client.model.color.ColorProviderRegistry;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexEncoder;
-import net.caffeinemc.mods.sodium.client.render.frapi.render.AbstractBlockRenderContext;
-import net.minecraft.block.*;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.*;
-import net.minecraft.client.render.model.BakedModel;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.FaceAttachedHorizontalDirectionalBlock;
+import net.minecraft.world.level.block.LadderBlock;
+import net.minecraft.world.level.block.SpawnerBlock;
+import net.minecraft.world.level.block.TrialSpawnerBlock;
+import net.minecraft.world.level.block.VaultBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,7 +47,7 @@ private  ChunkVertexEncoder.Vertex[] vertices;
 
     @Shadow
 private  Vector3f posOffset ;
-    private Vec3d posOffsetOffset = Vec3d.ZERO;
+    private Vec3 posOffsetOffset = Vec3.ZERO;
     private int timer = 10;
 
     // Cached trig value — recomputed only when the config value changes.
@@ -53,13 +60,13 @@ private  Vector3f posOffset ;
 
 
     @Inject(at = @At("HEAD"), method = "renderModel", cancellable = true, remap = false)
-    public void renderModelXIVCOLORPROVIDER(BakedModel model, BlockState state, BlockPos pos, BlockPos origin, CallbackInfo ci) {
+    public void renderModelXIVCOLORPROVIDER(BlockStateModel model, BlockState state, BlockPos pos, BlockPos origin, CallbackInfo ci) {
         try {
             if (!Mod.enabled) return;
 
-            MinecraftClient client = MinecraftClient.getInstance();
-            Entity cameraEntity = client.cameraEntity;
-            if (cameraEntity == null || client.gameRenderer == null || cameraEntity.getWorld() == null) return;
+            Minecraft client = Minecraft.getInstance();
+            Entity cameraEntity = client.getCameraEntity();
+            if (cameraEntity == null || client.gameRenderer == null || cameraEntity.level() == null) return;
 
             // FloodCuller first — O(1) hash lookup, cheapest check
             if (SodiumCompat.floodCuller.isAboveFlood(pos)) {
@@ -70,7 +77,7 @@ private  Vector3f posOffset ;
             // GenericCuller3 cylinder test — inlined to avoid redundant allocations
             if (!((MinecraftClientAccessor) client).shouldRebuild()) return;
 
-            Camera camera = client.gameRenderer.getCamera();
+            Camera camera = client.gameRenderer.mainCamera();
 
             // Block center using raw coords — avoids toCenterPos() Vec3d allocation
             double bx = pos.getX() + 0.5;
@@ -104,7 +111,7 @@ private  Vector3f posOffset ;
             // Skip ignored block types (doors, spawners, etc.)
             Block block = state.getBlock();
             if (block instanceof VaultBlock || block instanceof SpawnerBlock || block instanceof TrialSpawnerBlock
-                    || block instanceof WallMountedBlock || block instanceof LadderBlock || block instanceof DoorBlock) {
+                    || block instanceof FaceAttachedHorizontalDirectionalBlock || block instanceof LadderBlock || block instanceof DoorBlock) {
                 return;
             }
 
@@ -122,7 +129,7 @@ private  Vector3f posOffset ;
             if (camDistSq == 0) return;
 
             double animFactor = 0.1 * Math.min(10, Math.min(
-                    cameraEntity.getWorld().getTime() - Mod.startTime + 2,
+                    cameraEntity.level().getGameTime() - Mod.startTime + 2,
                     10 - Mod.endTime));
             double radius = animFactor * Config.GSON.instance().cullAngle;
 

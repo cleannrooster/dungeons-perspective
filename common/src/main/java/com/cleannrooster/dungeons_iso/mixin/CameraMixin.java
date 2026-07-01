@@ -3,17 +3,6 @@ package com.cleannrooster.dungeons_iso.mixin;
 import com.cleannrooster.dungeons_iso.api.CameraAccessor;
 import com.cleannrooster.dungeons_iso.compat.DragonCompat;
 import com.cleannrooster.dungeons_iso.config.Config;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.Camera;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.RaycastContext;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,51 +14,62 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 import com.cleannrooster.dungeons_iso.ClientInit;
 import com.cleannrooster.dungeons_iso.mod.Mod;
+import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
 import static com.cleannrooster.dungeons_iso.mod.Mod.*;
 
+// 26.2: Camera was heavily refactored. Field renames (area->level, yaw->yRot, pitch->xRot,
+// pos->position, focusedEntity->entity, blockPos->blockPosition); update(...) now takes a single
+// DeltaTracker and the setRotation/getMaxZoom (Yarn clipToSpace) calls happen inside
+// alignWithEntity. The @ModifyArgs ordinals into alignWithEntity may need runtime tuning.
 @Mixin(Camera.class)
 public abstract class CameraMixin implements CameraAccessor {
     @Override
-    public void setPosInterfae(Vec3d pos) {
-        this.pos = pos;
+    public void setPosInterfae(Vec3 pos) {
+        this.position = pos;
     }
 
 
     @Shadow
-    private BlockView area;
-
-    @Shadow
-    private  Vector3f horizontalPlane;
+    private Level level;
 
     @SuppressWarnings("unused")
     @Shadow
-    private float yaw;
+    private float yRot;
     @Shadow
-    private float pitch;
-    private Vec3d vec3d;
+    private float xRot;
+    private Vec3 vec3d;
     @Shadow
+    private Vec3 position;
+    @Shadow
+    private Entity entity;
 
-    private Vec3d pos;
-    @Shadow
-    private Entity focusedEntity;
-
-    private Vec3d posBeforeModulation;
+    private Vec3 posBeforeModulation;
 
     @Override
-    public Vec3d getPosBeforeModulation() {
+    public Vec3 getPosBeforeModulation() {
         return posBeforeModulation;
     }
 
-    private Vec3d cachedMovement = Vec3d.ZERO;
+    private Vec3 cachedMovement = Vec3.ZERO;
 
     int i = 0;
     @Shadow
-
-    private  BlockPos.Mutable blockPos;
+    private BlockPos.MutableBlockPos blockPosition;
 
     @Inject(
-            method = "getPitch",
+            method = "xRot",
             at = @At(value = "HEAD"),
             cancellable = true
     )
@@ -83,8 +83,8 @@ public abstract class CameraMixin implements CameraAccessor {
     protected abstract void setRotation(float yaw, float pitch);
 
     @ModifyArgs(
-            method = "update",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setRotation(FF)V", ordinal = 0)
+            method = "alignWithEntity",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FF)V", ordinal = 0)
     )
     public void a(Args args) {
         if (Mod.enabled) {
@@ -94,22 +94,22 @@ public abstract class CameraMixin implements CameraAccessor {
     }
 
     @ModifyArgs(
-            method = "update",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;clipToSpace(F)F", ordinal = 0)
+            method = "alignWithEntity",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;getMaxZoom(F)F", ordinal = 0)
     )
     public void b(Args args) {
-        if (Mod.enabled && focusedEntity != null) {
-            if(ClientInit.isoBinding.wasPressed()){
+        if (Mod.enabled && entity != null) {
+            if(ClientInit.isoBinding.consumeClick()){
                 this.setRotation((float) (Math.ceil(Mod.yaw / 90) * 90 - 45),  45);
 
-                Mod.yaw = this.yaw;
-                Mod.pitch = this.pitch;
+                Mod.yaw = this.yRot;
+                Mod.pitch = this.xRot;
 
             }else {
-                if(ClientInit.rotateClockwise.wasPressed()) {
+                if(ClientInit.rotateClockwise.consumeClick()) {
                     this.setRotation(Mod.yaw+5, Mod.pitch);
                 }
-                else if(ClientInit.rotateCounterClockwise.wasPressed()){
+                else if(ClientInit.rotateCounterClockwise.consumeClick()){
                     this.setRotation(Mod.yaw-5, Mod.pitch);
 
                 }
@@ -122,14 +122,14 @@ public abstract class CameraMixin implements CameraAccessor {
             float g = 0.1F;
             float f = args.get(0);
 
-            Vector3f vector3f = (new Vector3f(0, 0, (float)((float) args.get(0) * Mod.getZoom()))).rotate(MinecraftClient.getInstance().gameRenderer.getCamera().getRotation());
-            Vec3d vec = (new Vec3d(this.pos.x + (double)vector3f.x, this.pos.y + (double)vector3f.y, this.pos.z + (double)vector3f.z));
-            Vector3f vector3f2 = (new Vector3f(0, 0, (float)((float) args.get(0) * zoom))).rotate(MinecraftClient.getInstance().gameRenderer.getCamera().getRotation());
-            Vec3d vec2 = (new Vec3d(this.pos.x + (double)vector3f.x, this.pos.y + (double)vector3f.y, this.pos.z + (double)vector3f.z));
+            Vector3f vector3f = (new Vector3f(0, 0, (float)((float) args.get(0) * Mod.getZoom()))).rotate(Minecraft.getInstance().gameRenderer.mainCamera().rotation());
+            Vec3 vec = (new Vec3(this.position.x + (double)vector3f.x, this.position.y + (double)vector3f.y, this.position.z + (double)vector3f.z));
+            Vector3f vector3f2 = (new Vector3f(0, 0, (float)((float) args.get(0) * zoom))).rotate(Minecraft.getInstance().gameRenderer.mainCamera().rotation());
+            Vec3 vec2 = (new Vec3(this.position.x + (double)vector3f.x, this.position.y + (double)vector3f.y, this.position.z + (double)vector3f.z));
 
             Mod.preMod = vec;
-            BlockHitResult result = MinecraftClient.getInstance().cameraEntity.getWorld().raycast(new RaycastContext(MinecraftClient.getInstance().cameraEntity.getEyePos(), vec, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.NONE, MinecraftClient.getInstance().cameraEntity));
-            Mod.hit = this.area.raycast(new RaycastContext(MinecraftClient.getInstance().cameraEntity.getEyePos(),vec2, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.NONE, MinecraftClient.getInstance().cameraEntity));
+            BlockHitResult result = Minecraft.getInstance().getCameraEntity().level().clip(new ClipContext(Minecraft.getInstance().getCameraEntity().getEyePosition(), vec, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, Minecraft.getInstance().getCameraEntity()));
+            Mod.hit = this.level.clip(new ClipContext(Minecraft.getInstance().getCameraEntity().getEyePosition(),vec2, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, Minecraft.getInstance().getCameraEntity()));
 
             if (result.getType().equals(HitResult.Type.BLOCK) ) {
                 Mod.isBlocked = true;
@@ -137,7 +137,7 @@ public abstract class CameraMixin implements CameraAccessor {
                 Mod.startZoomNoDelay = System.currentTimeMillis();
 
                 if(!dirty) {
-                    Mod.startTime = (MinecraftClient.getInstance().world.getTime());
+                    Mod.startTime = (Minecraft.getInstance().level.getGameTime());
                     Mod.startZoom = System.currentTimeMillis();
                 }
                 Mod.endTime = 0;
@@ -163,9 +163,9 @@ public abstract class CameraMixin implements CameraAccessor {
                 zoomOutTimeNoDelay = 0;
 
                 Mod.dirty = true;
-                Mod.dirtyTime = MinecraftClient.getInstance().world.getTime();
+                Mod.dirtyTime = Minecraft.getInstance().level.getGameTime();
 
-                prevblock = MinecraftClient.getInstance().world.getBlockState(result.getBlockPos());
+                prevblock = Minecraft.getInstance().level.getBlockState(result.getBlockPos());
 
 
 
@@ -193,44 +193,44 @@ public abstract class CameraMixin implements CameraAccessor {
             at = @At(value = "HEAD"),
             cancellable = true
     )
-    private void updateXIVHead(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta,CallbackInfo ci) {
-            if( focusedEntity==  null){
+    private void updateXIVHead(DeltaTracker deltaTracker, CallbackInfo ci) {
+            if( this.entity ==  null){
             ci.cancel();
         }
     }
     @Inject(
-            method = "clipToSpace",
+            method = "getMaxZoom",
             at = @At(value = "HEAD"),
             cancellable = true
     )
     private void clipToSpaceXIV(float a, CallbackInfoReturnable<Float> callbackInfoReturnable) {
 
-        if (MinecraftClient.getInstance().gameRenderer.getCamera() instanceof Camera camera && Mod.enabled ) {
+        if (Minecraft.getInstance().gameRenderer.mainCamera() instanceof Camera camera && Mod.enabled ) {
 
                 callbackInfoReturnable.setReturnValue(a);
 
 
 
-            Mod.yaw = this.yaw;
+            Mod.yaw = this.yRot;
             if(!Config.GSON.instance().XIV){
             Mod.pitch =  45;
             }
-            ClientPlayerEntity f = (MinecraftClient.getInstance().player);
+            LocalPlayer f = (Minecraft.getInstance().player);
 
             if (Mod.enabled ) {
-                this.posBeforeModulation = pos;
+                this.posBeforeModulation = position;
 
-                MinecraftClient client = MinecraftClient.getInstance();
+                Minecraft client = Minecraft.getInstance();
                 assert client.player != null;
-                float tickDelta = client.gameRenderer.getCamera().getLastTickDelta();
+                float tickDelta = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
-                Vec3d movement = client.player.getMovement().subtract(0,client.player.getMovement().getY(),0).multiply(5.5).multiply(1+2*Mod.zoom);
+                Vec3 movement = client.player.getKnownMovement().subtract(0,client.player.getKnownMovement().y(),0).scale(5.5).scale(1+2*Mod.zoom);
 
                 if(f.getVehicle() != null){
-                   movement = client.player.getVehicle().getVelocity().subtract(0,client.player.getVehicle().getVelocity().getY(),0).multiply(5.5).multiply(2*Mod.zoom);
+                   movement = client.player.getVehicle().getDeltaMovement().subtract(0,client.player.getVehicle().getDeltaMovement().y(),0).scale(5.5).scale(2*Mod.zoom);
                 }
                 if(vec3d == null){
-                    vec3d = new Vec3d(this.pos.getX(),pos.getY(),pos.getZ());
+                    vec3d = new Vec3(this.position.x(),position.y(),position.z());
                 }
 
                 var delta = 1F ;
@@ -240,26 +240,21 @@ public abstract class CameraMixin implements CameraAccessor {
                     delta *= tickDelta;
                     Mod.x=0F;
                     Mod.z=0F;
-                    vec3d = new Vec3d(pos.getX(),pos.y, pos.getZ());
+                    vec3d = new Vec3(position.x(),position.y, position.z());
                 }else
-                if(!(MinecraftClient.getInstance().options.pickItemKey.isPressed()||ClientInit.moveCameraBinding.isPressed())) {
+                if(!(Minecraft.getInstance().options.keyPickItem.isDown()||ClientInit.moveCameraBinding.isDown())) {
                     delta *= (float) (((0.10)) * Config.GSON.instance().moveFactor_v3);
-                    vec3d = new Vec3d(MathHelper.lerp(delta,vec3d.getX(),client.player.getX()+Mod.x),MathHelper.lerp(delta,vec3d.getY(),client.player.getEyeY()), MathHelper.lerp(delta,vec3d.getZ(),client.player.getZ()+Mod.z));
+                    vec3d = new Vec3(Mth.lerp(delta,vec3d.x(),client.player.getX()+Mod.x),Mth.lerp(delta,vec3d.y(),client.player.getEyeY()), Mth.lerp(delta,vec3d.z(),client.player.getZ()+Mod.z));
 
                 }
                 else{
                     delta *= 0F;
-                    vec3d = new Vec3d(MathHelper.lerp(delta,vec3d.getX(),client.player.getX()+Mod.x),MathHelper.lerp(delta,vec3d.getY(),client.player.getEyeY()), MathHelper.lerp(delta,vec3d.getZ(),client.player.getZ()+Mod.z));
+                    vec3d = new Vec3(Mth.lerp(delta,vec3d.x(),client.player.getX()+Mod.x),Mth.lerp(delta,vec3d.y(),client.player.getEyeY()), Mth.lerp(delta,vec3d.z(),client.player.getZ()+Mod.z));
 
                 }
 
-            /*    if ( dot> 0.02){
-                    vec3d = new Vec3d(MathHelper.lerp(delta, vec3d.getX(), this.pos.getX()), this.pos.getY(), MathHelper.lerp(delta, vec3d.getZ(), this.pos.getZ()));
-
-                }*/
-
-                this.pos = vec3d;
-                this.blockPos.set(vec3d.getX(), vec3d.getY(), vec3d.getZ());
+                this.position = vec3d;
+                this.blockPosition.set(vec3d.x(), vec3d.y(), vec3d.z());
 
 
 
@@ -269,14 +264,14 @@ public abstract class CameraMixin implements CameraAccessor {
 
 
     }
-    public final Vec3d getRotationVector(float pitch, float yaw) {
+    public final Vec3 getRotationVector(float pitch, float yaw) {
         float f = pitch * 0.017453292F;
         float g = -yaw * 0.017453292F;
-        float h = MathHelper.cos(g);
-        float i = MathHelper.sin(g);
-        float j = MathHelper.cos(f);
-        float k = MathHelper.sin(f);
-        return new Vec3d((double)(i * j), (double)(-k), (double)(h * j));
+        float h = Mth.cos(g);
+        float i = Mth.sin(g);
+        float j = Mth.cos(f);
+        float k = Mth.sin(f);
+        return new Vec3((double)(i * j), (double)(-k), (double)(h * j));
     }
 
     @Inject(
@@ -284,25 +279,12 @@ public abstract class CameraMixin implements CameraAccessor {
             at = @At(value = "TAIL"),
             cancellable = true
     )
-    public void updateXIV(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo info) {
+    public void updateXIV(DeltaTracker deltaTracker, CallbackInfo info) {
         Camera camera = (Camera)  (Object) this;
-        if (!Mod.enabled && Config.GSON.instance().dynamicCamera && focusedEntity != null) {
+        if (!Mod.enabled && Config.GSON.instance().dynamicCamera && this.entity != null) {
 
-            vec3d = MinecraftClient.getInstance().cameraEntity.getEyePos();
+            vec3d = Minecraft.getInstance().getCameraEntity().getEyePosition();
         }
 
     }
-  /*  @Inject(
-            method = "getPos",
-            at = @At(value = "HEAD"),
-            cancellable = true
-    )
-    public void posXIV(CallbackInfoReturnable<Vec3d> vec3dCallbackInfoReturnable) {
-        if((MinecraftClient.getInstance().options.pickItemKey.isPressed()||ClientInit.moveCameraBinding.isPressed())){
-            vec3dCallbackInfoReturnable.setReturnValue(pos);
-        }
-        else if(Mod.enabled && vec3d != null){
-            vec3dCallbackInfoReturnable.setReturnValue(vec3d);
-        }
-    }*/
 }

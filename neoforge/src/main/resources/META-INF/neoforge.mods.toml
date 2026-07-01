@@ -15,7 +15,7 @@ logoFile = "assets/dungeons_iso/icon.png"
 [[dependencies.dungeons_iso]]
 modId = "neoforge"
 type = "required"
-versionRange = "[21.1,)"
+versionRange = "[26.2,)"
 ordering = "NONE"
 side = "BOTH"
 
@@ -25,12 +25,7 @@ type = "optional"
 versionRange = "*"
 ordering = "NONE"
 side = "BOTH"
-[[dependencies.dungeons_iso]]
-modId = "owo"
-type = "required"
-versionRange = "*"
-ordering = "NONE"
-side = "BOTH"
+
 [[dependencies.dungeons_iso]]
 modId = "yet_another_config_lib_v3"
 type = "required"

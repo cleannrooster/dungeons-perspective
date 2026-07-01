@@ -3,11 +3,13 @@ package com.cleannrooster.dungeons_iso.api.cullers;
 import com.cleannrooster.dungeons_iso.api.BlockCuller;
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
-import net.minecraft.block.*;
-import net.minecraft.client.render.Camera;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-
+import net.minecraft.client.Camera;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.FaceAttachedHorizontalDirectionalBlock;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import java.util.*;
 
 public class FloodCuller implements BlockCuller {
@@ -51,8 +53,8 @@ public class FloodCuller implements BlockCuller {
 
     public boolean shouldCull(BlockPos blockPos, Camera camera, Entity cameraEntity) {
         return cameraEntity != null && Mod.shouldReload
-                && cameraEntity.getWorld().getBlockState(blockPos)
-                .getCameraCollisionShape(cameraEntity.getWorld(), blockPos, ShapeContext.of(cameraEntity))
+                && cameraEntity.level().getBlockState(blockPos)
+                .getVisualShape(cameraEntity.level(), blockPos, CollisionContext.of(cameraEntity))
                 .isEmpty();
     }
 
@@ -62,7 +64,7 @@ public class FloodCuller implements BlockCuller {
     }
 
     public boolean isIgnoredType(Block block) {
-        return block instanceof WallMountedBlock || block instanceof DoorBlock;
+        return block instanceof FaceAttachedHorizontalDirectionalBlock || block instanceof DoorBlock;
     }
 
     @Override
@@ -72,7 +74,7 @@ public class FloodCuller implements BlockCuller {
 
     @Override
     public List<BlockPos> getCulledBlocks(BlockPos blockPos, Camera camera, Entity cameraEntity) {
-        BlockPos startPos = cameraEntity.getBlockPos().up();
+        BlockPos startPos = cameraEntity.blockPosition().above();
         floodY = startPos.getY();
         int minY = floodY - MAX_VERTICAL_DOWN;
         int maxY = floodY + MAX_VERTICAL_UP;
@@ -85,14 +87,14 @@ public class FloodCuller implements BlockCuller {
         double cullAngleRatio = Config.GSON.instance().cullAngle / 30.0;
         double maxDist    = 16.0 * cullAngleRatio;
         double zoomDist   = 0.1 * (Math.min(10, Math.min(
-                cameraEntity.getWorld().getTime() - Mod.startTime + 2,
+                cameraEntity.level().getGameTime() - Mod.startTime + 2,
                 10 - Mod.endTime)))
                 * Mod.getZoom() * Mod.zoomMetric * cullAngleRatio;
         double maxDistSq  = maxDist  * maxDist;
         double zoomDistSq = zoomDist * zoomDist;
 
-        int entityX = cameraEntity.getBlockPos().getX();
-        int entityZ = cameraEntity.getBlockPos().getZ();
+        int entityX = cameraEntity.blockPosition().getX();
+        int entityZ = cameraEntity.blockPosition().getZ();
 
         int startX = startPos.getX();
         int startY = startPos.getY();
@@ -102,16 +104,16 @@ public class FloodCuller implements BlockCuller {
         pushStack(startPacked);
         visited.add(startPacked);
 
-        BlockPos.Mutable mutable = new BlockPos.Mutable();
+        BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
 
         // 6-directional offsets: ±X, ±Z (horizontal), ±Y (vertical)
         // Stored as flat int pairs: {dx, dy, dz} — use 3-element int arrays.
         // To avoid allocating these every call, define them as a constant.
         while (stackTop > 0) {
             long packed = longStack[--stackTop];
-            int x = BlockPos.unpackLongX(packed);
-            int y = BlockPos.unpackLongY(packed);
-            int z = BlockPos.unpackLongZ(packed);
+            int x = BlockPos.getX(packed);
+            int y = BlockPos.getY(packed);
+            int z = BlockPos.getZ(packed);
 
             // Update ceiling map: track highest air-block Y seen at this XZ column.
             long xz = packXZ(x, z);
@@ -141,7 +143,7 @@ public class FloodCuller implements BlockCuller {
         return List.of();
     }
 
-    private void tryNeighbor(int nx, int ny, int nz, Camera camera, Entity cameraEntity, BlockPos.Mutable mutable) {
+    private void tryNeighbor(int nx, int ny, int nz, Camera camera, Entity cameraEntity, BlockPos.MutableBlockPos mutable) {
         long neighborPacked = BlockPos.asLong(nx, ny, nz);
         if (!visited.contains(neighborPacked)) {
             visited.add(neighborPacked);

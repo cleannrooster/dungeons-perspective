@@ -2,26 +2,26 @@ package com.cleannrooster.dungeons_iso.compat;
 
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.Entity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.Entity;
 
 public class DragonCompat {
     public static boolean bool;
 
     public static void getDragonDistanceMultiplier(){
          bool = false;
-        for (Entity entity: MinecraftClient.getInstance().world.getEntities()){
-            if(entity.getType().getTranslationKey().contains("dungeons-dragon")  ){
+        for (Entity entity: Minecraft.getInstance().level.entitiesForRendering()){
+            if(entity.getType().getDescriptionId().contains("dungeons-dragon")  ){
                 bool = true;
 
             }
         }
         if(bool){
-            Mod.dragonTime = MinecraftClient.getInstance().world.getTime();
+            Mod.dragonTime = Minecraft.getInstance().level.getGameTime();
         }
         else{
 
-            Mod.dragonTimeSince = MinecraftClient.getInstance().world.getTime();
+            Mod.dragonTimeSince = Minecraft.getInstance().level.getGameTime();
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.cleannrooster.dungeons_iso.api;
 
-import net.minecraft.client.render.chunk.ChunkOcclusionData;
+import net.minecraft.client.renderer.chunk.VisibilitySet;
 
 public abstract interface ChunkDataAccessor {
-    ChunkOcclusionData getOcclusionGraph();
+    VisibilitySet getOcclusionGraph();
 }

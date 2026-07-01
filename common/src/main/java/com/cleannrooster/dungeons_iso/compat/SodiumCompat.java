@@ -9,13 +9,12 @@ import com.cleannrooster.dungeons_iso.api.cullers.GenericBlockCuller2;
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.Camera;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
 import org.joml.Vector3d;
 
 import java.util.ArrayList;
@@ -24,7 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static net.minecraft.entity.effect.StatusEffects.DARKNESS;
+import static net.minecraft.world.effect.MobEffects.DARKNESS;
 
 public class SodiumCompat {
     public static List<BlockCuller> blockCullers = new ArrayList<>();
@@ -36,7 +35,7 @@ public class SodiumCompat {
     public static List<BlockPos> stream = List.of();
     // Last player block position that triggered a Sodium chunk rebuild.
     // Rebuilds are skipped while the player stays on the same block.
-    private static BlockPos lastRebuildPos = BlockPos.ORIGIN;
+    private static BlockPos lastRebuildPos = BlockPos.ZERO;
     public static FogOfWar fogOfWar;
     public static HashMap<List<Integer>, HitResult> map = new HashMap<>();
     static{
@@ -48,12 +47,12 @@ public class SodiumCompat {
 
 
     public static void run(){
-        Camera camera = MinecraftClient.getInstance().gameRenderer.getCamera();
+        Camera camera = Minecraft.getInstance().gameRenderer.mainCamera();
 
         if(fogOfWar == null){
             fogOfWar = new FogOfWar();
         }
-        if(((MinecraftClient.getInstance().getCameraEntity() instanceof LivingEntity living && living.hasStatusEffect(DARKNESS)) ||Config.GSON.instance().fogOfWar)) {
+        if(((Minecraft.getInstance().getCameraEntity() instanceof LivingEntity living && living.hasEffect(DARKNESS)) ||Config.GSON.instance().fogOfWar)) {
             fogOfWar.map = fogOfWar.getMap();
             fogOfWar.populatePoints();
         }
@@ -64,27 +63,27 @@ public class SodiumCompat {
         }
 
 
-        if(MinecraftClient.getInstance().cameraEntity!= null) {
-            stream = floodCuller.getCulledBlocks(MinecraftClient.getInstance().player.getBlockPos().up(), MinecraftClient.getInstance().gameRenderer.getCamera(), MinecraftClient.getInstance().cameraEntity);
+        if(Minecraft.getInstance().getCameraEntity()!= null) {
+            stream = floodCuller.getCulledBlocks(Minecraft.getInstance().player.blockPosition().above(), Minecraft.getInstance().gameRenderer.mainCamera(), Minecraft.getInstance().getCameraEntity());
         }
 
         // Only schedule a Sodium chunk rebuild when the player moves to a new block position.
         // Box.expand() returns a new Box (immutable) — assign the result.
-        BlockPos currentPos = MinecraftClient.getInstance().player.getBlockPos();
+        BlockPos currentPos = Minecraft.getInstance().player.blockPosition();
         if (!currentPos.equals(lastRebuildPos)) {
             lastRebuildPos = currentPos;
             double dub = 1.25 * Mod.getZoom() * Mod.zoomMetric;
-            Box box = new Box(MinecraftClient.getInstance().player.getEyePos(),
-                    MinecraftClient.getInstance().gameRenderer.getCamera().getPos())
-                    .expand(1, 0, 1)
-                    .expand(dub, dub, dub);
+            AABB box = new AABB(Minecraft.getInstance().player.getEyePosition(),
+                    Minecraft.getInstance().gameRenderer.mainCamera().position())
+                    .inflate(1, 0, 1)
+                    .inflate(dub, dub, dub);
             SodiumWorldRenderer.instance().scheduleRebuildForBlockArea(
                     (int) box.minX, (int) box.minY, (int) box.minZ,
                     (int) box.maxX, (int) box.maxY, (int) box.maxZ, true);
         }
 
         for(BlockCuller culler :blockCullers) {
-            if(MinecraftClient.getInstance().player.age % culler.frequency() == 0) {
+            if(Minecraft.getInstance().player.tickCount % culler.frequency() == 0) {
                 culler.resetCulledBlocks();
             }
 

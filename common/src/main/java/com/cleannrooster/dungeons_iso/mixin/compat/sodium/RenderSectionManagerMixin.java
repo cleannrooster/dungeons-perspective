@@ -10,12 +10,8 @@ import net.caffeinemc.mods.sodium.client.render.chunk.lists.VisibleChunkCollecto
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.render.viewport.frustum.Frustum;
 import net.caffeinemc.mods.sodium.client.render.viewport.frustum.SimpleFrustum;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.Camera;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 import org.joml.FrustumIntersection;
 import org.joml.Vector3d;
@@ -52,7 +48,7 @@ public abstract class RenderSectionManagerMixin {
  @Inject(at = @At("HEAD"), method = "shouldUseOcclusionCulling", cancellable = true,remap = false)
 
     private void shouldUseOcclusionCullingXIV(Camera camera, boolean spectator,CallbackInfoReturnable<Boolean> cir) {
-        if(Mod.enabled&& MinecraftClient.getInstance().player != null && Mod.shouldRebuild()){
+        if(Mod.enabled&& Minecraft.getInstance().player != null && Mod.shouldRebuild()){
             cir.setReturnValue(false);
         }
     }

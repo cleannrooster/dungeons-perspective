@@ -1,16 +1,15 @@
 package com.cleannrooster.dungeons_iso.api.cullers;
 
 import com.cleannrooster.dungeons_iso.api.BlockCuller;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.WallMountedBlock;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.Camera;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.List;
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.FaceAttachedHorizontalDirectionalBlock;
+import net.minecraft.world.phys.Vec3;
 
 public class GenericBlockCuller implements BlockCuller {
 
@@ -37,44 +36,44 @@ public class GenericBlockCuller implements BlockCuller {
             return false;
         }
 
-        if (isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) {
+        if (isIgnoredType(cameraEntity.level().getBlockState(blockPos).getBlock())) {
             return false;
         }
 
-        Vec3d blockCenter = blockPos.toCenterPos();
-        Vec3d entityPos = cameraEntity.getPos();
-        Vec3d cameraPos = camera.getPos();
+        Vec3 blockCenter = Vec3.atCenterOf(blockPos);
+        Vec3 entityPos = cameraEntity.position();
+        Vec3 cameraPos = camera.position();
 
-        if (blockCenter.getY() <= entityPos.getY() + 1) {
+        if (blockCenter.y() <= entityPos.y() + 1) {
             return false;
         }
 
-        Vec3d toBlock = entityPos.subtract(blockCenter).normalize();
-        Vec3d toCamera = MinecraftClient.getInstance().cameraEntity.getPos().subtract(cameraPos).normalize();
+        Vec3 toBlock = entityPos.subtract(blockCenter).normalize();
+        Vec3 toCamera = Minecraft.getInstance().getCameraEntity().position().subtract(cameraPos).normalize();
 
-        if (toBlock.dotProduct(toCamera) > 0.71 || cameraPos.distanceTo(blockCenter) < 3) {
-            return !cameraEntity.getWorld().getBlockState(blockPos).getBlock().equals(Blocks.AIR);
+        if (toBlock.dot(toCamera) > 0.71 || cameraPos.distanceTo(blockCenter) < 3) {
+            return !cameraEntity.level().getBlockState(blockPos).getBlock().equals(Blocks.AIR);
         }
         return false;
     }
 
     @Override
     public boolean shouldIgnoreBlockPick(BlockPos blockPos, Camera camera, Entity cameraEntity) {
-        if (blockPos == null || isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) {
+        if (blockPos == null || isIgnoredType(cameraEntity.level().getBlockState(blockPos).getBlock())) {
             return false;
         }
 
-        Vec3d blockCenter = blockPos.toCenterPos();
-        if (cameraEntity instanceof net.minecraft.entity.player.PlayerEntity player
-                && blockCenter.distanceTo(cameraEntity.getEyePos()) > player.getBlockInteractionRange()
-                && blockCenter.getY() > cameraEntity.getY() + 1) {
-            return UP.dotProduct(blockCenter.subtract(cameraEntity.getPos()).normalize()) > 0.5F;
+        Vec3 blockCenter = Vec3.atCenterOf(blockPos);
+        if (cameraEntity instanceof net.minecraft.world.entity.player.Player player
+                && blockCenter.distanceTo(cameraEntity.getEyePosition()) > player.blockInteractionRange()
+                && blockCenter.y() > cameraEntity.getY() + 1) {
+            return UP.dot(blockCenter.subtract(cameraEntity.position()).normalize()) > 0.5F;
         }
         return false;
     }
 
     public boolean isIgnoredType(Block block) {
-        return block instanceof WallMountedBlock;
+        return block instanceof FaceAttachedHorizontalDirectionalBlock;
     }
     @Override
     public int frequency() {

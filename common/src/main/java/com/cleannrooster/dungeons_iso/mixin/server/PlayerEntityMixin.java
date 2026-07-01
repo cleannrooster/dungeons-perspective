@@ -1,7 +1,7 @@
 package com.cleannrooster.dungeons_iso.mixin.server;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -12,11 +12,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * reject interactions made from the isometric view. Server admins opt in by installing
  * the mod.
  */
-@Mixin(PlayerEntity.class)
+@Mixin(Player.class)
 public class PlayerEntityMixin {
+    // NOTE (26.2 port): canInteractWithBlockAt(BlockPos, double) was removed in 26.2; this
+    // server-side reach override is not registered in any mixin config and needs reimplementing
+    // against the blockInteractionRange() attribute. Disabled so it can't be loaded as-is.
+    /*
     @Inject(method = "canInteractWithBlockAt", at = @At("RETURN"), cancellable = true)
     public void canInteractWithBlockAt(BlockPos pos, double additionalRange, CallbackInfoReturnable<Boolean> cir) {
         cir.setReturnValue(true);
         cir.cancel();
     }
+    */
 }

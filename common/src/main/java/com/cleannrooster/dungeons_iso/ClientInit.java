@@ -2,32 +2,37 @@ package com.cleannrooster.dungeons_iso;
 
 
 import com.cleannrooster.dungeons_iso.config.Config;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.shape.VoxelShape;
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.lwjgl.glfw.GLFW;
 
 public class ClientInit {
     public static ClientInit instance;
 
-    public static KeyBinding toggleBinding;
-    public static KeyBinding isoBinding;
-    public static KeyBinding verticalBinding;
-    public static KeyBinding lockOn;
-    public static KeyBinding clickToMove;
-    public static KeyBinding moveCameraBinding;
-    public static KeyBinding zoomInBinding;
-    public static KeyBinding zoomOutBinding;
-    public static KeyBinding rotateToggle;
-    public static KeyBinding cycleTargetBinding;
-    public static KeyBinding openLootMenu;
-    public static KeyBinding rotateCounterClockwise;
-    public static KeyBinding rotateClockwise;
-    public static KeyBinding interact;
-    public static KeyBinding contextToggleBinding;
+    // 26.2: KeyMapping takes a KeyMapping.Category instead of a String category id.
+    public static final KeyMapping.Category CATEGORY =
+            KeyMapping.Category.register(Identifier.fromNamespaceAndPath("dungeons_iso", "binds"));
+
+    public static KeyMapping toggleBinding;
+    public static KeyMapping isoBinding;
+    public static KeyMapping verticalBinding;
+    public static KeyMapping lockOn;
+    public static KeyMapping clickToMove;
+    public static KeyMapping moveCameraBinding;
+    public static KeyMapping zoomInBinding;
+    public static KeyMapping zoomOutBinding;
+    public static KeyMapping rotateToggle;
+    public static KeyMapping cycleTargetBinding;
+    public static KeyMapping openLootMenu;
+    public static KeyMapping rotateCounterClockwise;
+    public static KeyMapping rotateClockwise;
+    public static KeyMapping interact;
+    public static KeyMapping contextToggleBinding;
 
     /**
      * Creates all KeyBinding objects.
@@ -35,95 +40,95 @@ public class ClientInit {
      * Does NOT call any platform-specific registration API — see getAllKeyBindings().
      */
     public static void registerKeyBindings() {
-        toggleBinding = new KeyBinding(
+        toggleBinding = new KeyMapping(
                 "dungeons_iso.binds.toggle",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_F4,
-                "dungeons_iso.binds.category"
+                CATEGORY
         );
-        isoBinding = new KeyBinding(
+        isoBinding = new KeyMapping(
                 "dungeons_iso.binds.iso",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_HOME,
-                "dungeons_iso.binds.category"
+                CATEGORY
         );
-        moveCameraBinding = new KeyBinding(
+        moveCameraBinding = new KeyMapping(
                 "dungeons_iso.binds.moveCamera",
-                InputUtil.Type.MOUSE,
+                InputConstants.Type.MOUSE,
                 GLFW.GLFW_MOUSE_BUTTON_3,
-                "dungeons_iso.binds.category"
+                CATEGORY
         );
-        lockOn = new KeyBinding(
+        lockOn = new KeyMapping(
                 "dungeons_iso.binds.lockOn",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_H,
-                "dungeons_iso.binds.category"
+                CATEGORY
         );
-        verticalBinding = new KeyBinding(
+        verticalBinding = new KeyMapping(
                 "dungeons_iso.binds.verticalBinding",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_RIGHT_ALT,
-                "dungeons_iso.binds.category"
+                CATEGORY
         );
-        clickToMove = new KeyBinding(
+        clickToMove = new KeyMapping(
                 "dungeons_iso.binds.clickToMove",
-                InputUtil.Type.MOUSE,
-                InputUtil.UNKNOWN_KEY.getCode(),
-                "dungeons_iso.binds.category"
+                InputConstants.Type.MOUSE,
+                InputConstants.UNKNOWN.getValue(),
+                CATEGORY
         );
-        zoomInBinding = new KeyBinding(
+        zoomInBinding = new KeyMapping(
                 "dungeons_iso.binds.zoomIn",
-                InputUtil.Type.MOUSE,
+                InputConstants.Type.MOUSE,
                 GLFW.GLFW_KEY_UP,
-                "dungeons_iso.binds.category"
+                CATEGORY
         );
-        zoomOutBinding = new KeyBinding(
+        zoomOutBinding = new KeyMapping(
                 "dungeons_iso.binds.zoomOut",
-                InputUtil.Type.MOUSE,
+                InputConstants.Type.MOUSE,
                 GLFW.GLFW_KEY_DOWN,
-                "dungeons_iso.binds.category"
+                CATEGORY
         );
-        rotateToggle = new KeyBinding(
+        rotateToggle = new KeyMapping(
                 "dungeons_iso.binds.rotateToggle",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_DELETE,
-                "dungeons_iso.binds.category"
+                CATEGORY
         );
-        rotateClockwise = new KeyBinding(
+        rotateClockwise = new KeyMapping(
                 "dungeons_iso.binds.rotateClockwise",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_RIGHT,
-                "dungeons_iso.binds.category"
+                CATEGORY
         );
-        interact = new KeyBinding(
+        interact = new KeyMapping(
                 "dungeons_iso.binds.interact",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_G,
-                "dungeons_iso.binds.category"
+                CATEGORY
         );
-        rotateCounterClockwise = new KeyBinding(
+        rotateCounterClockwise = new KeyMapping(
                 "dungeons_iso.binds.rotateCounterClockwise",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_LEFT,
-                "dungeons_iso.binds.category"
+                CATEGORY
         );
-        contextToggleBinding = new KeyBinding(
+        contextToggleBinding = new KeyMapping(
                 "dungeons_iso.binds.dynCameraToggle",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_END,
-                "dungeons_iso.binds.category"
+                CATEGORY
         );
-        cycleTargetBinding = new KeyBinding(
+        cycleTargetBinding = new KeyMapping(
                 "dungeons_iso.binds.cycleTargetBinding",
-                InputUtil.Type.MOUSE,
+                InputConstants.Type.MOUSE,
                 GLFW.GLFW_MOUSE_BUTTON_4,
-                "dungeons_iso.binds.category"
+                CATEGORY
         );
-        openLootMenu = new KeyBinding(
+        openLootMenu = new KeyMapping(
                 "dungeons_iso.binds.openLootMenu",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_Z,
-                "dungeons_iso.binds.category"
+                CATEGORY
         );
     }
 
@@ -131,8 +136,8 @@ public class ClientInit {
      * Returns all key bindings so platform modules can register them.
      * Fabric: KeyBindingHelper.registerKeyBinding(). NeoForge: event.register().
      */
-    public static KeyBinding[] getAllKeyBindings() {
-        return new KeyBinding[]{
+    public static KeyMapping[] getAllKeyBindings() {
+        return new KeyMapping[]{
                 toggleBinding, isoBinding, moveCameraBinding, lockOn, verticalBinding,
                 clickToMove, zoomInBinding, zoomOutBinding, rotateToggle, rotateClockwise,
                 interact, rotateCounterClockwise, contextToggleBinding, cycleTargetBinding,
@@ -149,18 +154,18 @@ public class ClientInit {
         com.cleannrooster.dungeons_iso.config.FirstTimeState.load();
     }
 
-    private static void drawCuboidShapeOutline(MatrixStack matrices, VertexConsumer vertexConsumer, VoxelShape shape, double offsetX, double offsetY, double offsetZ, float red, float green, float blue, float alpha) {
-        MatrixStack.Entry entry = matrices.peek();
-        shape.forEachEdge((minX, minY, minZ, maxX, maxY, maxZ) -> {
+    private static void drawCuboidShapeOutline(PoseStack matrices, VertexConsumer vertexConsumer, VoxelShape shape, double offsetX, double offsetY, double offsetZ, float red, float green, float blue, float alpha) {
+        PoseStack.Pose entry = matrices.last();
+        shape.forAllEdges((minX, minY, minZ, maxX, maxY, maxZ) -> {
             float k = (float)(maxX - minX);
             float l = (float)(maxY - minY);
             float m = (float)(maxZ - minZ);
-            float n = MathHelper.sqrt(k * k + l * l + m * m);
+            float n = Mth.sqrt(k * k + l * l + m * m);
             k /= n;
             l /= n;
             m /= n;
-            vertexConsumer.vertex(entry, (float)(minX + offsetX), (float)(minY + offsetY), (float)(minZ + offsetZ)).color(red, green, blue, alpha).normal(entry, k, l, m);
-            vertexConsumer.vertex(entry, (float)(maxX + offsetX), (float)(maxY + offsetY), (float)(maxZ + offsetZ)).color(red, green, blue, alpha).normal(entry, k, l, m);
+            vertexConsumer.addVertex(entry, (float)(minX + offsetX), (float)(minY + offsetY), (float)(minZ + offsetZ)).setColor(red, green, blue, alpha).setNormal(entry, k, l, m);
+            vertexConsumer.addVertex(entry, (float)(maxX + offsetX), (float)(maxY + offsetY), (float)(maxZ + offsetZ)).setColor(red, green, blue, alpha).setNormal(entry, k, l, m);
         });
     }
 }

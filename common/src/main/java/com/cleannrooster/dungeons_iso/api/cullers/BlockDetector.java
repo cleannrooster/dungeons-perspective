@@ -2,16 +2,15 @@ package com.cleannrooster.dungeons_iso.api.cullers;
 
 import com.cleannrooster.dungeons_iso.api.BlockCuller;
 import com.cleannrooster.dungeons_iso.mod.Mod;
-import net.minecraft.block.Block;
-import net.minecraft.block.DoorBlock;
-import net.minecraft.block.WallMountedBlock;
-import net.minecraft.client.render.Camera;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.List;
+import net.minecraft.client.Camera;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.FaceAttachedHorizontalDirectionalBlock;
+import net.minecraft.world.phys.Vec3;
 
 public class BlockDetector implements BlockCuller {
 
@@ -39,23 +38,23 @@ public class BlockDetector implements BlockCuller {
                 return false;
             }
 
-            Vec3d blockCenter = blockPos.toCenterPos();
-            Vec3d entityPos = cameraEntity.getPos();
-            Vec3d cameraPos = camera.getPos();
+            Vec3 blockCenter = Vec3.atCenterOf(blockPos);
+            Vec3 entityPos = cameraEntity.position();
+            Vec3 cameraPos = camera.position();
 
-            if (isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) {
+            if (isIgnoredType(cameraEntity.level().getBlockState(blockPos).getBlock())) {
                 return false;
             }
 
-            if (blockCenter.getY() <= entityPos.getY() + 2) {
+            if (blockCenter.y() <= entityPos.y() + 2) {
                 return false;
             }
 
-            Vec3d vec1 = blockCenter.subtract(cameraPos);
-            Vec3d vec2 = cameraEntity.getEyePos().subtract(cameraPos);
+            Vec3 vec1 = blockCenter.subtract(cameraPos);
+            Vec3 vec2 = cameraEntity.getEyePosition().subtract(cameraPos);
 
-            if (cameraEntity instanceof PlayerEntity player) {
-                vec1 = vec1.add(player.getMovement().normalize().multiply(2));
+            if (cameraEntity instanceof Player player) {
+                vec1 = vec1.add(player.getKnownMovement().normalize().scale(2));
             }
 
             double calc_theta = BlockCuller.angleBetween(vec2, vec1);
@@ -67,21 +66,21 @@ public class BlockDetector implements BlockCuller {
 
     @Override
     public boolean shouldIgnoreBlockPick(BlockPos blockPos, Camera camera, Entity cameraEntity) {
-        if (blockPos == null || isIgnoredType(cameraEntity.getWorld().getBlockState(blockPos).getBlock())) {
+        if (blockPos == null || isIgnoredType(cameraEntity.level().getBlockState(blockPos).getBlock())) {
             return false;
         }
 
-        Vec3d blockCenter = blockPos.toCenterPos();
-        if (cameraEntity instanceof PlayerEntity player
-                && blockCenter.distanceTo(cameraEntity.getEyePos()) > player.getBlockInteractionRange()
-                && blockCenter.getY() > cameraEntity.getY() + 1) {
-            return UP.dotProduct(blockCenter.subtract(cameraEntity.getPos()).normalize()) > 0.5F;
+        Vec3 blockCenter = Vec3.atCenterOf(blockPos);
+        if (cameraEntity instanceof Player player
+                && blockCenter.distanceTo(cameraEntity.getEyePosition()) > player.blockInteractionRange()
+                && blockCenter.y() > cameraEntity.getY() + 1) {
+            return UP.dot(blockCenter.subtract(cameraEntity.position()).normalize()) > 0.5F;
         }
         return false;
     }
 
     public boolean isIgnoredType(Block block) {
-        return block instanceof WallMountedBlock || block instanceof DoorBlock;
+        return block instanceof FaceAttachedHorizontalDirectionalBlock || block instanceof DoorBlock;
     }
     @Override
     public int frequency() {

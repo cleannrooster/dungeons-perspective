@@ -1,20 +1,18 @@
 package com.cleannrooster.dungeons_iso.api;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.render.Camera;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.List;
+import net.minecraft.client.Camera;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.phys.Vec3;
 
 public interface BlockCuller {
-    Vec3d UP = new Vec3d(0, 1, 0);
+    Vec3 UP = new Vec3(0, 1, 0);
 
-    static double angleBetween(Vec3d a, Vec3d b) {
-        double dot = a.dotProduct(b);
-        double lenSq = a.lengthSquared() * b.lengthSquared();
+    static double angleBetween(Vec3 a, Vec3 b) {
+        double dot = a.dot(b);
+        double lenSq = a.lengthSqr() * b.lengthSqr();
         if (lenSq == 0) return 0;
         double cosineTheta = dot / Math.sqrt(lenSq);
         double angle = Math.acos(Math.clamp(cosineTheta, -1.0, 1.0)) * 57.29577951308232;

@@ -2,19 +2,28 @@ package com.cleannrooster.dungeons_iso.mod;
 
 import com.cleannrooster.dungeons_iso.compat.DragonCompat;
 import com.cleannrooster.dungeons_iso.config.Config;
-import net.minecraft.block.*;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.Perspective;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.server.world.ChunkTicketManager;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.CameraType;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.block.BarrelBlock;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.BeaconBlock;
+import net.minecraft.world.level.block.BeehiveBlock;
+import net.minecraft.world.level.block.BellBlock;
+import net.minecraft.world.level.block.BlastFurnaceBlock;
+import net.minecraft.world.level.block.CakeBlock;
+import net.minecraft.world.level.block.CraftingTableBlock;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.FurnaceBlock;
+import net.minecraft.world.level.block.HopperBlock;
+import net.minecraft.world.level.block.LoomBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Vector2f;
 
 import java.util.Objects;
@@ -49,7 +58,7 @@ public class Mod {
     public static BlockHitResult hit;
     public static boolean forward;
     public static boolean notmoving;
-    public static Vec3d preMod = Vec3d.ZERO;
+    public static Vec3 preMod = Vec3.ZERO;
     public static float livingPitch;
     public static float livingBodyYaw;
     public static float livingYaw;
@@ -63,15 +72,15 @@ public class Mod {
         float modifier = 1F;
 
         boolean bool = Config.GSON.instance().clipToSpace && Mod.shouldRebuild();
-        if (MinecraftClient.getInstance().world != null) {
+        if (Minecraft.getInstance().level != null) {
 
             if (bool) {
-                modifier = (Math.min(2F, ((float) 1F + ((DragonCompat.bool ? (float) (Math.max(0F, (float) MinecraftClient.getInstance().world.getTime() - (float) Mod.dragonTimeSince + MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta())) : Math.max(0F, 20F - (float) MinecraftClient.getInstance().world.getTime() + (float) Mod.dragonTime + MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta()))) / 20F)))  * Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom;
+                modifier = (Math.min(2F, ((float) 1F + ((DragonCompat.bool ? (float) (Math.max(0F, (float) Minecraft.getInstance().level.getGameTime() - (float) Mod.dragonTimeSince + Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true))) : Math.max(0F, 20F - (float) Minecraft.getInstance().level.getGameTime() + (float) Mod.dragonTime + Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true)))) / 20F)))  * Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom;
 
             } else {
 
                 if (Config.GSON.instance().clipToSpace) {
-                    modifier = (Math.min(2F, ((float) 1F + ((DragonCompat.bool ? (float) (Math.max(0F, (float) MinecraftClient.getInstance().world.getTime() - (float) Mod.dragonTimeSince + MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta())) : Math.max(0F, 20F - (float) MinecraftClient.getInstance().world.getTime() + (float) Mod.dragonTime + MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta()))) / 20F))) * Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom;
+                    modifier = (Math.min(2F, ((float) 1F + ((DragonCompat.bool ? (float) (Math.max(0F, (float) Minecraft.getInstance().level.getGameTime() - (float) Mod.dragonTimeSince + Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true))) : Math.max(0F, 20F - (float) Minecraft.getInstance().level.getGameTime() + (float) Mod.dragonTime + Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true)))) / 20F))) * Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F) * Mod.zoom;
 
                 } else {
                     modifier =  Mod.zoom;
@@ -79,19 +88,19 @@ public class Mod {
                 }
             }
 
-            if (MinecraftClient.getInstance().cameraEntity instanceof LivingEntity living) {
+            if (Minecraft.getInstance().getCameraEntity() instanceof LivingEntity living) {
                 modifier *= living.getScale();
             }
         }
         if(Objects.isNull(hit) || !Config.GSON.instance().clipToSpace) {
             return modifier;
         }
-        return (float) Math.max(0.5F*modifier*((Math.clamp((Mod.clipMetric+(Mod.notmoving ? 0 :  Mod.forward ? 0.4F: -1.0F)*MinecraftClient.getInstance().gameRenderer.getCamera().getLastTickDelta()),16,32))/(32)),2F);
+        return (float) Math.max(0.5F*modifier*((Math.clamp((Mod.clipMetric+(Mod.notmoving ? 0 :  Mod.forward ? 0.4F: -1.0F)*Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true)),16,32))/(32)),2F);
     }
 
     public static float zoom = 5.0F;
     public static boolean enabled = false;
-    public static Perspective lastPerspective;
+    public static CameraType lastPerspective;
     public static HitResult crosshairTarget;
     public static Entity pickedTarget;
     public static Entity targeted;
@@ -118,51 +127,52 @@ public class Mod {
     public static float zoomOutTime;
     public static boolean verticalMode;
 
+    // 26.2: BlockState#getTags() was removed; query tag membership via the block's registry holder.
+    private static boolean isInteractTag(BlockState state) {
+        var holder = state.getBlock().builtInRegistryHolder();
+        return holder.is(BlockTags.ALL_SIGNS) || holder.is(BlockTags.ANVIL) || holder.is(BlockTags.BUTTONS) || holder.is(BlockTags.CAMPFIRES)
+                || holder.is(BlockTags.CAULDRONS) || holder.is(BlockTags.FENCE_GATES) || holder.is(BlockTags.TRAPDOORS) || holder.is(BlockTags.DOORS);
+    }
+
     public static boolean isInteractable(BlockHitResult result){
         BlockPos pos = result.getBlockPos();
 
-        return (((MinecraftClient.getInstance().world.getBlockEntity(pos) != null ||
-                 MinecraftClient.getInstance().world.getBlockState(result.getBlockPos()).streamTags().anyMatch(tag ->{
-                      return tag.equals(BlockTags.ALL_SIGNS) ||  tag.equals(BlockTags.ANVIL) ||  tag.equals(BlockTags.BUTTONS) ||  tag.equals(BlockTags.CAMPFIRES)
-                              || tag.equals(BlockTags.CAULDRONS) || tag.equals(BlockTags.FENCE_GATES) || tag.equals(BlockTags.TRAPDOORS)  || tag.equals(BlockTags.DOORS);
-                 })
-                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof CraftingTableBlock
-                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof FurnaceBlock
-                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof BarrelBlock
-                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof BellBlock
-                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof BeehiveBlock
-                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof BlastFurnaceBlock
-                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof CakeBlock
-                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof HopperBlock
-                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof BlockWithEntity
-                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof BlockEntityProvider
-                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof BeaconBlock
-                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof LoomBlock
+        return (((Minecraft.getInstance().level.getBlockEntity(pos) != null ||
+                 isInteractTag(Minecraft.getInstance().level.getBlockState(result.getBlockPos()))
+                || Minecraft.getInstance().level.getBlockState(pos).getBlock() instanceof CraftingTableBlock
+                || Minecraft.getInstance().level.getBlockState(pos).getBlock() instanceof FurnaceBlock
+                || Minecraft.getInstance().level.getBlockState(pos).getBlock() instanceof BarrelBlock
+                || Minecraft.getInstance().level.getBlockState(pos).getBlock() instanceof BellBlock
+                || Minecraft.getInstance().level.getBlockState(pos).getBlock() instanceof BeehiveBlock
+                || Minecraft.getInstance().level.getBlockState(pos).getBlock() instanceof BlastFurnaceBlock
+                || Minecraft.getInstance().level.getBlockState(pos).getBlock() instanceof CakeBlock
+                || Minecraft.getInstance().level.getBlockState(pos).getBlock() instanceof HopperBlock
+                || Minecraft.getInstance().level.getBlockState(pos).getBlock() instanceof BaseEntityBlock
+                || Minecraft.getInstance().level.getBlockState(pos).getBlock() instanceof EntityBlock
+                || Minecraft.getInstance().level.getBlockState(pos).getBlock() instanceof BeaconBlock
+                || Minecraft.getInstance().level.getBlockState(pos).getBlock() instanceof LoomBlock
 
-        ) && MinecraftClient.getInstance().player.getPos().distanceTo(pos.toCenterPos())<
-                MinecraftClient.getInstance().player.getBlockInteractionRange()));
+        ) && Minecraft.getInstance().player.position().distanceTo(Vec3.atCenterOf(pos))<
+                Minecraft.getInstance().player.blockInteractionRange()));
     }
     public static boolean isInteractable(BlockPos result){
-        return (((MinecraftClient.getInstance().world.getBlockEntity(result)) != null ||
-                MinecraftClient.getInstance().world.getBlockState(result).streamTags().anyMatch(tag ->{
-                    return tag.equals(BlockTags.ALL_SIGNS) ||  tag.equals(BlockTags.ANVIL) ||  tag.equals(BlockTags.BUTTONS) ||  tag.equals(BlockTags.CAMPFIRES)
-                            || tag.equals(BlockTags.CAULDRONS) || tag.equals(BlockTags.FENCE_GATES) || tag.equals(BlockTags.TRAPDOORS)  || tag.equals(BlockTags.DOORS);
-                })
-                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof CraftingTableBlock
-                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof FurnaceBlock
-                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof BarrelBlock
-                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof BellBlock
-                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof BeehiveBlock
-                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof BlastFurnaceBlock
-                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof CakeBlock
-                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof HopperBlock
-                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof BlockWithEntity
-                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof BlockEntityProvider
-                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof BeaconBlock
-                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof LoomBlock
+        return (((Minecraft.getInstance().level.getBlockEntity(result)) != null ||
+                isInteractTag(Minecraft.getInstance().level.getBlockState(result))
+                || Minecraft.getInstance().level.getBlockState(result).getBlock() instanceof CraftingTableBlock
+                || Minecraft.getInstance().level.getBlockState(result).getBlock() instanceof FurnaceBlock
+                || Minecraft.getInstance().level.getBlockState(result).getBlock() instanceof BarrelBlock
+                || Minecraft.getInstance().level.getBlockState(result).getBlock() instanceof BellBlock
+                || Minecraft.getInstance().level.getBlockState(result).getBlock() instanceof BeehiveBlock
+                || Minecraft.getInstance().level.getBlockState(result).getBlock() instanceof BlastFurnaceBlock
+                || Minecraft.getInstance().level.getBlockState(result).getBlock() instanceof CakeBlock
+                || Minecraft.getInstance().level.getBlockState(result).getBlock() instanceof HopperBlock
+                || Minecraft.getInstance().level.getBlockState(result).getBlock() instanceof BaseEntityBlock
+                || Minecraft.getInstance().level.getBlockState(result).getBlock() instanceof EntityBlock
+                || Minecraft.getInstance().level.getBlockState(result).getBlock() instanceof BeaconBlock
+                || Minecraft.getInstance().level.getBlockState(result).getBlock() instanceof LoomBlock
 
-        ) && MinecraftClient.getInstance().player.getPos().distanceTo(result.toCenterPos())<
-                MinecraftClient.getInstance().player.getBlockInteractionRange());
+        ) && Minecraft.getInstance().player.position().distanceTo(Vec3.atCenterOf(result))<
+                Minecraft.getInstance().player.blockInteractionRange());
     }
     public static int frustrumZoom;
     public static int cooldown;

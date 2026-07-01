@@ -1,9 +1,9 @@
 package com.cleannrooster.dungeons_iso.mixin;
 
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.Camera;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
@@ -13,6 +13,6 @@ public interface GameRendererAccessor {
     double callGetFov(Camera camera, float tickDelta, boolean changingFov);
 
     @Invoker("ensureTargetInRange")
-    HitResult callEnsureTargetInRange(HitResult hitResult, Vec3d cameraPos, double interactionRange);
+    HitResult callEnsureTargetInRange(HitResult hitResult, Vec3 cameraPos, double interactionRange);
 
 }

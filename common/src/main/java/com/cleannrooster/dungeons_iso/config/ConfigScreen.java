@@ -3,8 +3,8 @@ package com.cleannrooster.dungeons_iso.config;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
 import dev.isxander.yacl3.impl.controller.FloatSliderControllerBuilderImpl;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 /**
  * Platform-agnostic config screen factory backed by YACL.
@@ -20,18 +20,18 @@ public class ConfigScreen {
         return YetAnotherConfigLib.create(
                 Config.GSON,
                 (defaults, config, builder) -> builder
-                        .title(Text.translatable("dungeons_iso.config.title"))
+                        .title(Component.translatable("dungeons_iso.config.title"))
                         .category(ConfigCategory
                                 .createBuilder()
-                                .name(Text.translatable("dungeons_iso.config.category.options"))
+                                .name(Component.translatable("dungeons_iso.config.category.options"))
 
                                 // General
                                 .group(OptionGroup.createBuilder()
-                                        .name(Text.translatable("dungeons_iso.config.group.general"))
+                                        .name(Component.translatable("dungeons_iso.config.group.general"))
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.force.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.force.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.force.description")))
                                                 .binding(
                                                         defaults.force,
@@ -42,8 +42,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.onStartup.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.onStartup.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.onStartup.description")))
                                                 .binding(
                                                         defaults.onStartup,
@@ -54,8 +54,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.showFirstTimeGui.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.showFirstTimeGui.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.showFirstTimeGui.description")))
                                                 .binding(
                                                         defaults.showFirstTimeGui,
@@ -73,11 +73,11 @@ public class ConfigScreen {
 
                                 // Camera
                                 .group(OptionGroup.createBuilder()
-                                        .name(Text.translatable("dungeons_iso.config.group.camera"))
+                                        .name(Component.translatable("dungeons_iso.config.group.camera"))
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.xiv.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.xiv.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.xiv.description")))
                                                 .binding(
                                                         defaults.XIV,
@@ -88,8 +88,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.ortho.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.ortho.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.ortho.description")))
                                                 .binding(
                                                         defaults.ortho,
@@ -100,8 +100,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.cameraRelative.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.cameraRelative.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.cameraRelative.description")))
                                                 .binding(
                                                         defaults.cameraRelative,
@@ -112,8 +112,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.dynamic_camera.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.dynamic_camera.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.dynamic_camera.description")))
                                                 .binding(
                                                         defaults.dynamicCamera,
@@ -124,8 +124,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Float>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.movefactor.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.movefactor.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.movefactor.description")))
                                                 .binding(
                                                         defaults.moveFactor_v3,
@@ -136,8 +136,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.scrollWheelZoom.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.scrollWheelZoom.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.scrollWheelZoom.description")))
                                                 .binding(
                                                         defaults.scrollWheelZoom,
@@ -148,8 +148,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Float>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.zoomFactor.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.zoomFactor.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.zoomFactor.description")))
                                                 .binding(
                                                         defaults.zoomFactor,
@@ -160,8 +160,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Float>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.fov.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.fov.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.fov.description")))
                                                 .binding(
                                                         defaults.fov,
@@ -172,8 +172,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.clipToSpace.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.clipToSpace.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.clipToSpace.description")))
                                                 .binding(
                                                         defaults.clipToSpace,
@@ -184,8 +184,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Float>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.zNearFactor.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.zNearFactor.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.zNearFactor.description")))
                                                 .binding(
                                                         defaults.zNearFactor,
@@ -196,8 +196,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Float>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.bias.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.bias.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.bias.description")))
                                                 .binding(
                                                         defaults.soundListenerBias,
@@ -210,11 +210,11 @@ public class ConfigScreen {
 
                                 // Controls
                                 .group(OptionGroup.createBuilder()
-                                        .name(Text.translatable("dungeons_iso.config.group.controls"))
+                                        .name(Component.translatable("dungeons_iso.config.group.controls"))
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.turn_to_mouse.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.turn_to_mouse.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.turn_to_mouse.description")))
                                                 .binding(
                                                         defaults.turnToMouse,
@@ -225,8 +225,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.click_to_move.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.click_to_move.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.click_to_move.description")))
                                                 .binding(
                                                         defaults.clickToMove,
@@ -237,8 +237,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.forceAutoJump.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.forceAutoJump.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.forceAutoJump.description")))
                                                 .binding(
                                                         defaults.forceAutoJump,
@@ -249,8 +249,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.rollTowardsCursor.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.rollTowardsCursor.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.rollTowardsCursor.description")))
                                                 .binding(
                                                         defaults.rollTowardsCursor,
@@ -261,8 +261,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.additionalMeleeAssistance.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.additionalMeleeAssistance.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.additionalMeleeAssistance.description")))
                                                 .binding(
                                                         defaults.additionalMeleeAssistance,
@@ -275,11 +275,11 @@ public class ConfigScreen {
 
                                 // Rendering
                                 .group(OptionGroup.createBuilder()
-                                        .name(Text.translatable("dungeons_iso.config.group.rendering"))
+                                        .name(Component.translatable("dungeons_iso.config.group.rendering"))
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.fogOfWar.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.fogOfWar.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.fogOfWar.description")))
                                                 .binding(
                                                         defaults.fogOfWar,
@@ -290,8 +290,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.frustumCulling.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.frustumCulling.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.frustumCulling.description")))
                                                 .binding(
                                                         defaults.frustumCulling,
@@ -302,8 +302,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.backcull.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.backcull.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.backcull.description")))
                                                 .binding(
                                                         defaults.backCull,
@@ -314,8 +314,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Float>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.cullangle.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.cullangle.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.cullangle.description")))
                                                 .binding(
                                                         defaults.cullAngle,
@@ -326,8 +326,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Float>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.coneHalfAngle.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.coneHalfAngle.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.coneHalfAngle.description")))
                                                 .binding(
                                                         defaults.coneHalfAngle,
@@ -338,8 +338,8 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Boolean>createBuilder()
-                                                .name(Text.translatable("dungeons_iso.config.force_no_defer.name"))
-                                                .description(OptionDescription.of(Text.translatable(
+                                                .name(Component.translatable("dungeons_iso.config.force_no_defer.name"))
+                                                .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.force_no_defer.description")))
                                                 .binding(
                                                         defaults.forceNoDefer,

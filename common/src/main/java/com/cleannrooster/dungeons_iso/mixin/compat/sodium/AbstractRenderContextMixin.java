@@ -1,5 +1,6 @@
 package com.cleannrooster.dungeons_iso.mixin.compat.sodium;
 
+import net.minecraft.world.phys.Vec3;
 import com.cleannrooster.dungeons_iso.api.BlockCuller;
 import com.cleannrooster.dungeons_iso.api.BlockCullerUser;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
@@ -12,32 +13,15 @@ import net.caffeinemc.mods.sodium.client.model.light.LightMode;
 import net.caffeinemc.mods.sodium.client.model.light.LightPipeline;
 import net.caffeinemc.mods.sodium.client.model.light.LightPipelineProvider;
 import net.caffeinemc.mods.sodium.client.model.light.data.QuadLightData;
-import net.caffeinemc.mods.sodium.client.render.frapi.helper.ColorHelper;
-import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableQuadViewImpl;
-import net.caffeinemc.mods.sodium.client.render.frapi.render.AbstractBlockRenderContext;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.IceBlock;
-import net.minecraft.block.TranslucentBlock;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.RenderLayers;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.mob.EndermanEntity;
-import net.minecraft.screen.EnchantmentScreenHandler;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.RaycastContext;
-import net.minecraft.world.World;
-import net.spell_power.SpellPowerMod;
+import net.caffeinemc.mods.sodium.client.render.helper.ColorHelper;
+import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
+import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.HalfTransparentBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -50,17 +34,12 @@ import java.util.List;
 import java.util.Map;
 
 import static com.google.common.collect.ImmutableList.of;
-import static net.minecraft.client.render.RenderPhase.*;
 
 @Mixin(AbstractBlockRenderContext.class)
 public abstract class AbstractRenderContextMixin implements BlockCullerUser {
     @Shadow    protected BlockPos pos;
     @Shadow
     protected BlockState state;
-    @Shadow
-    protected RenderLayer type;
-@Shadow
-private  MutableQuadViewImpl editorQuad;
 
     @Shadow
     protected LightPipelineProvider lighters;
@@ -84,12 +63,12 @@ private  MutableQuadViewImpl editorQuad;
     @Inject(at = @At("RETURN"), method = "isFaceCulled", cancellable = true)
     protected final void isFaceCulledDungeons(@Nullable Direction direction, CallbackInfoReturnable<Boolean> ci) {
         try {
-            VoxelShape selfShape = direction != null ? state.getCullingFace(MinecraftClient.getInstance().world, pos, direction) : null;
+            VoxelShape selfShape = direction != null ? state.getFaceOcclusionShape(direction) : null;
 
-            if (MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player != null && Mod.enabled && !(state.getBlock() instanceof TranslucentBlock) && Mod.shouldRebuild()) {
-                if (MinecraftClient.getInstance().cameraEntity != null) {
-                    boolean bool = pos.toCenterPos().getY() > MinecraftClient.getInstance().cameraEntity.getBlockPos().up().getY();
-                    boolean boo3 = pos.toCenterPos().distanceTo(Mod.preMod) < Mod.getZoom() * Mod.zoomMetric * 1.25F;
+            if (Minecraft.getInstance() != null && Minecraft.getInstance().player != null && Mod.enabled && !(state.getBlock() instanceof HalfTransparentBlock) && Mod.shouldRebuild()) {
+                if (Minecraft.getInstance().getCameraEntity() != null) {
+                    boolean bool = Vec3.atCenterOf(pos).y() > Minecraft.getInstance().getCameraEntity().blockPosition().above().getY();
+                    boolean boo3 = Vec3.atCenterOf(pos).distanceTo(Mod.preMod) < Mod.getZoom() * Mod.zoomMetric * 1.25F;
                     boolean bool3 = false;
 
                     if (bool && boo3) {
@@ -97,18 +76,18 @@ private  MutableQuadViewImpl editorQuad;
 
                     }
 
-                    boolean bool2 = Mod.preMod.subtract(MinecraftClient.getInstance().cameraEntity.getPos()).dotProduct(pos.toCenterPos().subtract(MinecraftClient.getInstance().cameraEntity.getPos())) > 0;
-                    BlockPos.Mutable mutable = MinecraftClient.getInstance().cameraEntity.getBlockPos().mutableCopy();
+                    boolean bool2 = Mod.preMod.subtract(Minecraft.getInstance().getCameraEntity().position()).dot(Vec3.atCenterOf(pos).subtract(Minecraft.getInstance().getCameraEntity().position())) > 0;
+                    BlockPos.MutableBlockPos mutable = Minecraft.getInstance().getCameraEntity().blockPosition().mutable();
 
-                    while(mutable.getY() > MinecraftClient.getInstance().world.getBottomY() && !MinecraftClient.getInstance().world.getBlockState(mutable).blocksMovement()) {
+                    while(mutable.getY() > Minecraft.getInstance().level.getMinY() && !Minecraft.getInstance().level.getBlockState(mutable).blocksMotion()) {
                         mutable.move(Direction.DOWN);
                     }
                     if(pos.getY() > mutable.getY() -8){
                         return;
                     }
-                    if(!(state.getBlock() instanceof TranslucentBlock)) {
+                    if(!(state.getBlock() instanceof HalfTransparentBlock)) {
 
-                            ci.setReturnValue((Config.GSON.instance().backCull && direction != null && direction.pointsTo(MinecraftClient.getInstance().gameRenderer.getCamera().getYaw())));
+                            ci.setReturnValue((Config.GSON.instance().backCull && direction != null && direction.isFacingAngle(Minecraft.getInstance().gameRenderer.mainCamera().yRot())));
 
                     }
                     return;
@@ -117,10 +96,10 @@ private  MutableQuadViewImpl editorQuad;
 
             }
             if(Mod.enabled){
-                if(!(state.getBlock() instanceof TranslucentBlock)){
-                    if((Config.GSON.instance().backCull &&  direction != null && direction.pointsTo(MinecraftClient.getInstance().gameRenderer.getCamera().getYaw()))){
+                if(!(state.getBlock() instanceof HalfTransparentBlock)){
+                    if((Config.GSON.instance().backCull &&  direction != null && direction.isFacingAngle(Minecraft.getInstance().gameRenderer.mainCamera().yRot()))){
 
-                        ci.setReturnValue((Config.GSON.instance().backCull && direction != null && direction.pointsTo(MinecraftClient.getInstance().gameRenderer.getCamera().getYaw())));
+                        ci.setReturnValue((Config.GSON.instance().backCull && direction != null && direction.isFacingAngle(Minecraft.getInstance().gameRenderer.mainCamera().yRot())));
                         return;
                     }
 

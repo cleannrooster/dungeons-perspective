@@ -5,15 +5,9 @@ import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import net.caffeinemc.mods.sodium.client.services.PlatformBlockAccess;
 import net.caffeinemc.mods.sodium.fabric.block.FabricBlockAccess;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.BlockRenderView;
-import net.minecraft.world.BlockView;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.BlockHitResult;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,10 +18,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class FabricBlockAccessMixin {
     @Inject(method = "shouldBlockEntityGlow", at = @At("RETURN"), cancellable = true)
 
-    public void shouldBlockEntityGlowXIV(BlockEntity blockEntity, ClientPlayerEntity player, CallbackInfoReturnable<Boolean> info) {
+    public void shouldBlockEntityGlowXIV(BlockEntity blockEntity, LocalPlayer player, CallbackInfoReturnable<Boolean> info) {
         try {
 
-            if(Mod.enabled && Mod.mouseTarget instanceof BlockHitResult blockHitResult && blockHitResult.getBlockPos().equals(blockEntity.getPos())) {
+            if(Mod.enabled && Mod.mouseTarget instanceof BlockHitResult blockHitResult && blockHitResult.getBlockPos().equals(blockEntity.getBlockPos())) {
             info.setReturnValue(true);
         }
         }

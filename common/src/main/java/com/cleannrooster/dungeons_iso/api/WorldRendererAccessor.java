@@ -1,8 +1,8 @@
 package com.cleannrooster.dungeons_iso.api;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.client.render.chunk.ChunkBuilder;
+import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
 
 public abstract interface WorldRendererAccessor {
-    ObjectArrayList<ChunkBuilder.BuiltChunk> chunks();
+    ObjectArrayList<SectionRenderDispatcher.RenderSection> chunks();
 }

@@ -1,15 +1,15 @@
 package com.cleannrooster.dungeons_iso.api;
 
 import com.cleannrooster.dungeons_iso.mod.Mod;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import org.joml.Matrix4f;
 
 public class Ortho {
 
     public static Matrix4f createOrthoMatrix(float delta, float minScale) {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         float width = Math.max(minScale, Mod.getZoom()*2
-                * client.getWindow().getFramebufferWidth() / client.getWindow().getFramebufferHeight());
+                * client.getWindow().getWidth() / client.getWindow().getHeight());
         float height = Math.max(minScale, Mod.getZoom()*2);
         return new Matrix4f().setOrtho(
                 -width, width,
@@ -18,9 +18,9 @@ public class Ortho {
         );
     }
     public static Matrix4f createOrthoMatrixFrustum(float delta, float minScale) {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         float width = Math.max(minScale, Mod.getZoom()*2
-                * client.getWindow().getFramebufferWidth() / client.getWindow().getFramebufferHeight());
+                * client.getWindow().getWidth() / client.getWindow().getHeight());
         float height = Math.max(minScale, Mod.getZoom()*2);
         return new Matrix4f().setOrtho(
                 -width, width,

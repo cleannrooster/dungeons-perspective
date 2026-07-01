@@ -1,68 +1,54 @@
 package com.cleannrooster.dungeons_iso.mixin;
 
 import com.cleannrooster.dungeons_iso.mod.Mod;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.BackgroundRenderer;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.fog.FogData;
+import net.minecraft.client.renderer.fog.FogRenderer;
+import net.minecraft.world.level.ClipContext;
 import org.joml.Vector3d;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static com.mojang.blaze3d.systems.RenderSystem.assertOnRenderThread;
-
-@Mixin(BackgroundRenderer.class)
+// 26.2: the fog system was rewritten. FogRenderer#applyFog/render and the static red/green/blue
+// fields no longer exist; fog is now described by a mutable FogData returned from setupFog, and
+// RenderSystem#setShaderFogStart/End were removed. We adjust the returned FogData to push the fog
+// band out for the isometric zoom. (Darkness suppression now lives in LightmapTextureManagerMixin,
+// which targets DarknessFogEnvironment.)
+@Mixin(FogRenderer.class)
 public class BackgroundRendererMixin {
-    @Shadow
-    private static float red;
-    @Shadow
-    private static float green;
-    @Shadow
-    private static float blue;
-    @Inject(method = "applyFog", at = @At("HEAD"), cancellable = true)
-    private static void applyFogFogOfWar(Camera camera, BackgroundRenderer.FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo ci) {
-        if(Mod.enabled && MinecraftClient.getInstance().getCameraEntity() != null && MinecraftClient.getInstance().getCameraEntity() instanceof LivingEntity living && living.hasStatusEffect(StatusEffects.DARKNESS)){
-            ci.cancel();
+
+    @Inject(method = "setupFog", at = @At("RETURN"))
+    private void setupFogXIV(Camera camera, int renderDistance, DeltaTracker deltaTracker, float skyDarkness, ClientLevel level, CallbackInfoReturnable<FogData> cir) {
+        if (Mod.enabled) {
+            FogData data = cir.getReturnValue();
+            if (data == null) {
+                return;
+            }
+            var flot = (Mod.zoomMetric * (Mod.getZoom() + 1) + (float) scal);
+            data.environmentalStart = flot * 1.5F;
+            data.environmentalEnd = flot * 3F;
+            data.renderDistanceStart = flot * 1.5F;
+            data.renderDistanceEnd = flot * 3F;
         }
-
-    }
-    @Inject(method = "render", at = @At("TAIL"), cancellable = true)
-    private static void renderXIV(Camera camera, float tickDelta, ClientWorld world, int viewDistance, float skyDarkness,CallbackInfo ci) {
-        if(Mod.enabled) {
-
-        }
-    }
-        @Inject(method = "applyFog", at = @At("TAIL"), cancellable = true)
-    private static void applyFogFogOfWarEND(Camera camera, BackgroundRenderer.FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo ci) {
-        if(Mod.enabled){
-            var flot = (Mod.zoomMetric*(Mod.getZoom()+1) +(float)scal);
-            RenderSystem.setShaderFogStart(flot*1.5F);
-            RenderSystem.setShaderFogEnd(flot*3F);
-
-
-        }
-
     }
 
     private static float scal = 0;
     private static void method(){
-        var camera = MinecraftClient.getInstance().gameRenderer.getCamera();
-        var entity = MinecraftClient.getInstance().cameraEntity;
-        Vector3d forward = camera.getRotation().transform(new Vector3d(0.0, 0.0, -1.0));
-        Vector3d right = camera.getRotation().transform(new Vector3d(1.0, 0.0, 0.0));
-        Vector3d up = camera.getRotation().transform(new Vector3d(0.0, 1.0, 0.0));
-        Vector3d orth =  camera.getRotation().transform(new Vector3d(0.0, 0.0, -1.0)).normalize();
+        var camera = Minecraft.getInstance().gameRenderer.mainCamera();
+        var entity = Minecraft.getInstance().getCameraEntity();
+        Vector3d forward = camera.rotation().transform(new Vector3d(0.0, 0.0, -1.0));
+        Vector3d right = camera.rotation().transform(new Vector3d(1.0, 0.0, 0.0));
+        Vector3d up = camera.rotation().transform(new Vector3d(0.0, 1.0, 0.0));
+        Vector3d orth =  camera.rotation().transform(new Vector3d(0.0, 0.0, -1.0)).normalize();
         Vector3d dir =  forward.add(right.mul(0).add(up.mul(0))).normalize();
-        var dirScal = dir.mul(2*MinecraftClient.getInstance().gameRenderer.getFarPlaneDistance());
-        var end =  entity.getPos().add(dirScal.x,dirScal.y,dirScal.z);
-        var hit = MinecraftClient.getInstance().cameraEntity.getWorld().raycast(new RaycastContext( entity.getPos(),end, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.ANY,entity));
-        scal = (float) hit.getPos().distanceTo(entity.getPos());
+        var dirScal = dir.mul(2*(float)(Minecraft.getInstance().options.getEffectiveRenderDistance() * 16));
+        var end =  entity.position().add(dirScal.x,dirScal.y,dirScal.z);
+        var hit = Minecraft.getInstance().getCameraEntity().level().clip(new ClipContext( entity.position(),end, ClipContext.Block.VISUAL, ClipContext.Fluid.ANY,entity));
+        scal = (float) hit.getLocation().distanceTo(entity.position());
     }
 }

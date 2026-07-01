@@ -32,9 +32,9 @@
     "dungeons_iso.fabric.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.14.14",
-    "minecraft": ">=1.20.1",
+    "fabricloader": ">=0.19.3",
+    "minecraft": ">=26.2",
     "fabric-api": "*",
-    "yet_another_config_lib_v3": ">=3.5.0"
+    "yet_another_config_lib_v3": ">=3.9.0"
   }
 }

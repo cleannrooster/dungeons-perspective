@@ -2,67 +2,68 @@ package com.cleannrooster.dungeons_iso.api;
 
 import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.mod.Mod;
-import net.minecraft.block.*;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
-public enum CustomShapeTypes implements RaycastContext.ShapeProvider {
+public enum CustomShapeTypes implements ClipContext.ShapeGetter {
 
     CULLED((state, world, pos, context) -> {
         for(BlockCuller culler : SodiumCompat.blockCullersShapes){
-            if(MinecraftClient.getInstance().gameRenderer.getCamera() != null && MinecraftClient.getInstance().cameraEntity != null)
+            if(Minecraft.getInstance().gameRenderer.mainCamera() != null && Minecraft.getInstance().getCameraEntity() != null)
             {
-                if (culler.shouldCull(pos, MinecraftClient.getInstance().gameRenderer.getCamera(), MinecraftClient.getInstance().cameraEntity)) {
-                    return VoxelShapes.empty();
+                if (culler.shouldCull(pos, Minecraft.getInstance().gameRenderer.mainCamera(), Minecraft.getInstance().getCameraEntity())) {
+                    return Shapes.empty();
                 }
-                if (culler.shouldIgnoreBlockPick(pos, MinecraftClient.getInstance().gameRenderer.getCamera(), MinecraftClient.getInstance().cameraEntity)) {
-                    return VoxelShapes.empty();
+                if (culler.shouldIgnoreBlockPick(pos, Minecraft.getInstance().gameRenderer.mainCamera(), Minecraft.getInstance().getCameraEntity())) {
+                    return Shapes.empty();
                 }
             }
         }
 
-            return  state.getCameraCollisionShape(world,pos,context);
+            return  state.getVisualShape(world,pos,context);
 
     }),
     AIR_AT_LEVEL((state, world, pos, context) -> {
         for(BlockCuller culler : SodiumCompat.blockCullersShapes){
-            if(MinecraftClient.getInstance().gameRenderer.getCamera() != null && MinecraftClient.getInstance().cameraEntity != null) {
-                if (culler.shouldCull(pos, MinecraftClient.getInstance().gameRenderer.getCamera(), MinecraftClient.getInstance().cameraEntity)) {
-                    return VoxelShapes.empty();
+            if(Minecraft.getInstance().gameRenderer.mainCamera() != null && Minecraft.getInstance().getCameraEntity() != null) {
+                if (culler.shouldCull(pos, Minecraft.getInstance().gameRenderer.mainCamera(), Minecraft.getInstance().getCameraEntity())) {
+                    return Shapes.empty();
                 }
             }
 
         }
-        if(pos.getY() > MinecraftClient.getInstance().cameraEntity.getY()){
-            return VoxelShapes.empty();
+        if(pos.getY() > Minecraft.getInstance().getCameraEntity().getY()){
+            return Shapes.empty();
 
         }
         else{
-            return VoxelShapes.cuboid(0,0,0,1,Math.max(0,((MinecraftClient.getInstance().cameraEntity.getY()*16) % 16F)/16F),1);
+            return Shapes.box(0,0,0,1,Math.max(0,((Minecraft.getInstance().getCameraEntity().getY()*16) % 16F)/16F),1);
         }
 
     }),
     VERTICAL((state, world, pos, context) -> {
         if(pos.getX()== Mod.horizontalTarget.getBlockPos().getX() || pos.getY() ==Mod.horizontalTarget.getBlockPos().getZ()) {
 
-            return VoxelShapes.cuboid(0, 0, 0, 1, Math.max(0, ((MinecraftClient.getInstance().cameraEntity.getY() * 16) % 16F) / 16F), 1);
+            return Shapes.box(0, 0, 0, 1, Math.max(0, ((Minecraft.getInstance().getCameraEntity().getY() * 16) % 16F) / 16F), 1);
         }
         else{
-            return VoxelShapes.empty();
+            return Shapes.empty();
         }
     });
 
-    private CustomShapeTypes(final RaycastContext.ShapeProvider provider) {
+    private CustomShapeTypes(final ClipContext.ShapeGetter provider) {
         this.provider = provider;
     }
-    private final RaycastContext.ShapeProvider provider;
+    private final ClipContext.ShapeGetter provider;
 
 
-    public VoxelShape get(BlockState blockState, BlockView blockView, BlockPos blockPos, ShapeContext shapeContext) {
+    public VoxelShape get(BlockState blockState, BlockGetter blockView, BlockPos blockPos, CollisionContext shapeContext) {
         return this.provider.get(blockState, blockView, blockPos, shapeContext);
     }
 }

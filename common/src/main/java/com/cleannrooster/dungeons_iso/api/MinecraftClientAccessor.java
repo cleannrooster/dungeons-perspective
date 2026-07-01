@@ -1,15 +1,15 @@
 package com.cleannrooster.dungeons_iso.api;
 
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
 public abstract interface MinecraftClientAccessor {
     int getMouseCooldown();
     boolean shouldRebuild();
     void setLocation(HitResult vec3d);
     HitResult getLocation();
-    Vec3d getOriginalLocation();
-    void setOriginalLocation(Vec3d vec3d);
+    Vec3 getOriginalLocation();
+    void setOriginalLocation(Vec3 vec3d);
 
     int setMouseCooldown(int cooldown);
 }

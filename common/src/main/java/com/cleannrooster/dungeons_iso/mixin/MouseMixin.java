@@ -3,36 +3,33 @@ package com.cleannrooster.dungeons_iso.mixin;
 import com.cleannrooster.dungeons_iso.api.*;
 import com.cleannrooster.dungeons_iso.compat.MidnightControlsCompat;
 import com.cleannrooster.dungeons_iso.ModCompat;
-import net.minecraft.client.tutorial.TutorialManager;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.DoorBlock;
-import net.minecraft.block.TrapdoorBlock;
-import net.minecraft.block.WallMountedBlock;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.Mouse;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.Frustum;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.sound.ElytraSoundInstance;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.Window;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.text.Text;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.*;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.*;
-import net.minecraft.world.event.BlockPositionSource;
+import net.minecraft.client.Camera;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.MouseHandler;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.tutorial.Tutorial;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.FaceAttachedHorizontalDirectionalBlock;
+import net.minecraft.world.level.block.TrapDoorBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -47,30 +44,31 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.cleannrooster.dungeons_iso.ClientInit;
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
-
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.platform.Window;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-@Mixin(Mouse.class)
+@Mixin(MouseHandler.class)
 public class MouseMixin implements MouseAccessor {
     @Shadow
-    private boolean cursorLocked;
+    private boolean mouseGrabbed;
     @Shadow
-    private boolean rightButtonClicked;
+    private boolean isRightPressed;
 
     @Shadow
     @Final
-    private MinecraftClient client;
+    private Minecraft minecraft;
     @SuppressWarnings("unused")
     @Shadow
-    private boolean hasResolutionChanged;
+    private boolean ignoreFirstMove;
     @Shadow
-    private double x;
+    private double xpos;
     @Shadow
-    private double y;
+    private double ypos;
 
 
     private static int lockontime;
@@ -83,36 +81,36 @@ public class MouseMixin implements MouseAccessor {
 
 
     @Inject(
-            method = "lockCursor",
+            method = "grabMouse",
             at = @At(value = "HEAD"),
             cancellable = true
     )
     public void lockCursorXIV(CallbackInfo info) {
 
-        if (client.isWindowFocused()) {
-            if (!cursorLocked) {
-                if (!MinecraftClient.IS_SYSTEM_MAC) {
-                    KeyBinding.updatePressedStates();
+        if (minecraft.isWindowActive()) {
+            if (!mouseGrabbed) {
+                if (!false) {
+                    KeyMapping.setAll();
                 }
 
-                cursorLocked = true;
+                mouseGrabbed = true;
 
                 if (Mod.enabled) {
                     // Merely hide the cursor instead of "disabling" it
-                    InputUtil.setCursorParameters(client.getWindow().getHandle(), GLFW.GLFW_CURSOR_NORMAL, x, y);
+                    InputConstants.grabOrReleaseMouse(minecraft.getWindow(), GLFW.GLFW_CURSOR_NORMAL, xpos, ypos);
                 } else {
-                    InputUtil.setCursorParameters(client.getWindow().getHandle(), GLFW.GLFW_CURSOR_DISABLED, x, y);
+                    InputConstants.grabOrReleaseMouse(minecraft.getWindow(), GLFW.GLFW_CURSOR_DISABLED, xpos, ypos);
 
-                    x = client.getWindow().getWidth() / 2.0;
-                    y = client.getWindow().getHeight() / 2.0;
+                    xpos = minecraft.getWindow().getScreenWidth() / 2.0;
+                    ypos = minecraft.getWindow().getScreenHeight() / 2.0;
                 }
 
-                client.setScreen(null);
+                minecraft.setScreenAndShow(null);
 
                 // This has protected access and i don't wanna AW it lmao hope this works
-                //client.attackCooldown = 10000;
+                //minecraft.attackCooldown = 10000;
 
-                hasResolutionChanged = true;
+                ignoreFirstMove = true;
             }
         }
     }
@@ -123,18 +121,18 @@ public class MouseMixin implements MouseAccessor {
      * @author quaternary
      */
     @Inject(
-            method = "unlockCursor",
+            method = "releaseMouse",
             at = @At(value = "HEAD"),
             cancellable = true
     )
     public void unlockCursorXIV(CallbackInfo info) {
-        if (cursorLocked) {
-            cursorLocked = false;
+        if (mouseGrabbed) {
+            mouseGrabbed = false;
             if (!Mod.enabled) {
-                x = client.getWindow().getWidth() / 2.0;
-                y = client.getWindow().getHeight() / 2.0;
+                xpos = minecraft.getWindow().getScreenWidth() / 2.0;
+                ypos = minecraft.getWindow().getScreenHeight() / 2.0;
             }
-            InputUtil.setCursorParameters(client.getWindow().getHandle(), GLFW.GLFW_CURSOR_NORMAL, x, y);
+            InputConstants.grabOrReleaseMouse(minecraft.getWindow(), GLFW.GLFW_CURSOR_NORMAL, xpos, ypos);
         }
     }
     int lasti;
@@ -145,56 +143,56 @@ public class MouseMixin implements MouseAccessor {
      * In orthographic mode, the origin is offset from the camera along the view plane.
      * In perspective mode, the origin is the camera position.
      */
-    private Vec3d getRayOrigin(Camera camera, double coordsX, double coordsY) {
+    private Vec3 getRayOrigin(Camera camera, double coordsX, double coordsY) {
         if (Config.GSON.instance().ortho) {
             // Must match Ortho.createOrthoMatrix: halfWidth = getZoom()*2*aspect, halfHeight = getZoom()*2
             // coordsX already has aspect baked in (ndcX * aspect), coordsY is raw ndcY
             double orthoScale = Mod.getZoom() * 2;
-            return camera.getPos()
-                    .add(new Vec3d(camera.getDiagonalPlane()).multiply(-orthoScale * coordsX))
-                    .add(new Vec3d(camera.getVerticalPlane()).multiply(orthoScale * coordsY));
+            return camera.position()
+                    .add(new Vec3(camera.leftVector()).scale(-orthoScale * coordsX))
+                    .add(new Vec3(camera.upVector()).scale(orthoScale * coordsY));
         }
-        return camera.getPos();
+        return camera.position();
     }
 
     /**
      * Block raycast handler — shared between elytra and normal raycasts.
      */
     private static final BiFunction<RaycastContextCull, BlockPos, BlockHitResult> BLOCK_HIT_FACTORY = (innerContext, pos) -> {
-        MinecraftClient client = MinecraftClient.getInstance();
-        BlockState blockState = client.player.getWorld().getBlockState(pos);
-        FluidState fluidState = client.player.getWorld().getFluidState(pos);
-        Vec3d vec3d = innerContext.getStart();
-        Vec3d vec3d2 = innerContext.getEnd();
-        VoxelShape voxelShape = innerContext.getBlockShape(blockState, client.player.getWorld(), pos);
-        BlockHitResult firstResult = client.world.raycastBlock(vec3d, vec3d2, pos, voxelShape, blockState);
+        Minecraft minecraft = Minecraft.getInstance();
+        BlockState blockState = minecraft.player.level().getBlockState(pos);
+        FluidState fluidState = minecraft.player.level().getFluidState(pos);
+        Vec3 vec3d = innerContext.getFrom();
+        Vec3 vec3d2 = innerContext.getTo();
+        VoxelShape voxelShape = innerContext.getBlockShape(blockState, minecraft.player.level(), pos);
+        BlockHitResult firstResult = minecraft.level.clipWithInteractionOverride(vec3d, vec3d2, pos, voxelShape, blockState);
 
-        VoxelShape voxelShape2 = innerContext.getFluidShape(fluidState, client.player.getWorld(), pos);
-        BlockHitResult blockHitResult2 = voxelShape2.raycast(vec3d, vec3d2, pos);
-        double d = firstResult == null ? Double.MAX_VALUE : innerContext.getStart().squaredDistanceTo(firstResult.getPos());
-        double e = blockHitResult2 == null ? Double.MAX_VALUE : innerContext.getStart().squaredDistanceTo(blockHitResult2.getPos());
+        VoxelShape voxelShape2 = innerContext.getFluidShape(fluidState, minecraft.player.level(), pos);
+        BlockHitResult blockHitResult2 = voxelShape2.clip(vec3d, vec3d2, pos);
+        double d = firstResult == null ? Double.MAX_VALUE : innerContext.getFrom().distanceToSqr(firstResult.getLocation());
+        double e = blockHitResult2 == null ? Double.MAX_VALUE : innerContext.getFrom().distanceToSqr(blockHitResult2.getLocation());
         return d <= e ? firstResult : blockHitResult2;
     };
 
     private static final BiFunction<RaycastContextCull, BlockPos, BlockHitResult> ELYTRA_HIT_FACTORY = (innerContext, pos) -> {
-        MinecraftClient client = MinecraftClient.getInstance();
-        BlockState blockState = client.player.getWorld().getBlockState(pos);
-        FluidState fluidState = client.player.getWorld().getFluidState(pos);
-        Vec3d vec3d = innerContext.getStart();
-        Vec3d vec3d2 = innerContext.getEnd();
-        VoxelShape voxelShape = innerContext.getBlockShape(blockState, client.player.getWorld(), pos);
-        BlockHitResult firstResult = voxelShape.raycast(vec3d, vec3d2, pos);
+        Minecraft minecraft = Minecraft.getInstance();
+        BlockState blockState = minecraft.player.level().getBlockState(pos);
+        FluidState fluidState = minecraft.player.level().getFluidState(pos);
+        Vec3 vec3d = innerContext.getFrom();
+        Vec3 vec3d2 = innerContext.getTo();
+        VoxelShape voxelShape = innerContext.getBlockShape(blockState, minecraft.player.level(), pos);
+        BlockHitResult firstResult = voxelShape.clip(vec3d, vec3d2, pos);
 
-        VoxelShape voxelShape2 = innerContext.getFluidShape(fluidState, client.player.getWorld(), pos);
-        BlockHitResult blockHitResult2 = voxelShape2.raycast(vec3d, vec3d2, pos);
-        double d = firstResult == null ? Double.MAX_VALUE : innerContext.getStart().squaredDistanceTo(firstResult.getPos());
-        double e = blockHitResult2 == null ? Double.MAX_VALUE : innerContext.getStart().squaredDistanceTo(blockHitResult2.getPos());
+        VoxelShape voxelShape2 = innerContext.getFluidShape(fluidState, minecraft.player.level(), pos);
+        BlockHitResult blockHitResult2 = voxelShape2.clip(vec3d, vec3d2, pos);
+        double d = firstResult == null ? Double.MAX_VALUE : innerContext.getFrom().distanceToSqr(firstResult.getLocation());
+        double e = blockHitResult2 == null ? Double.MAX_VALUE : innerContext.getFrom().distanceToSqr(blockHitResult2.getLocation());
         return d <= e ? firstResult : blockHitResult2;
     };
 
     private static final Function<RaycastContextCull, BlockHitResult> MISS_FACTORY = (innerContext) -> {
-        Vec3d vec3d = innerContext.getStart().subtract(innerContext.getEnd());
-        return BlockHitResult.createMissed(innerContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), BlockPos.ofFloored(innerContext.getEnd()));
+        Vec3 vec3d = innerContext.getFrom().subtract(innerContext.getTo());
+        return BlockHitResult.miss(innerContext.getTo(), Direction.getApproximateNearest(vec3d.x, vec3d.y, vec3d.z), BlockPos.containing(innerContext.getTo()));
     };
 
 
@@ -210,22 +208,22 @@ public class MouseMixin implements MouseAccessor {
      * instead of the actual mouse delta, producing a constant-rate camera spin.
      */
     @Redirect(
-            method = "updateMouse",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/tutorial/TutorialManager;onUpdateMouse(DD)V")
+            method = "turnPlayer",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/tutorial/Tutorial;onMouse(DD)V")
     )
-    private void updateMouseAXIV(TutorialManager tutorialManager, double i, double j) {
+    private void updateMouseAXIV(Tutorial tutorialManager, double i, double j) {
         // Always call the original so tutorial tracking still works
-        tutorialManager.onUpdateMouse(i, j);
+        tutorialManager.onMouse(i, j);
 
-        GameRenderer renderer = client.gameRenderer;
-        Window window = client.getWindow();
-        Mouse mouse = client.mouse;
+        GameRenderer renderer = minecraft.gameRenderer;
+        Window window = minecraft.getWindow();
+        MouseHandler mouse = minecraft.mouseHandler;
 
-        Camera camera = renderer.getCamera();
-        float tickDelta = camera.getLastTickDelta();
-        Entity cameraEntity = client.cameraEntity;
+        Camera camera = renderer.mainCamera();
+        float tickDelta = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        Entity cameraEntity = minecraft.getCameraEntity();
 
-        if (Mod.enabled && cameraEntity != null && client.player != null) {
+        if (Mod.enabled && cameraEntity != null && minecraft.player != null) {
 
             boolean isController = false;
             if (ModCompat.isModLoaded("midnightcontrols")) {
@@ -233,8 +231,8 @@ public class MouseMixin implements MouseAccessor {
             }
             if (isController) {
                 if (timeGone > 40) {
-                    InputUtil.setCursorParameters(client.getWindow().getHandle(), InputUtil.GLFW_CURSOR_DISABLED,
-                            x, y
+                    InputConstants.grabOrReleaseMouse(minecraft.getWindow(), InputConstants.CURSOR_DISABLED,
+                            xpos, ypos
                     );
                     Mod.noMouse = true;
                 }
@@ -243,19 +241,19 @@ public class MouseMixin implements MouseAccessor {
                 } else {
                     if (timeGone > 40) {
                         timeGone = 0;
-                        InputUtil.setCursorParameters(client.getWindow().getHandle(), InputUtil.GLFW_CURSOR_NORMAL,
-                                x, y
+                        InputConstants.grabOrReleaseMouse(minecraft.getWindow(), InputConstants.CURSOR_NORMAL,
+                                xpos, ypos
                         );
                     }
                 }
             }
-            if (client.options.pickItemKey.isPressed() || ClientInit.moveCameraBinding.isPressed() || Mod.rotateToggle) {
+            if (minecraft.options.keyPickItem.isDown() || ClientInit.moveCameraBinding.isDown() || Mod.rotateToggle) {
                 if (lastX == null || lastY == null) {
-                    InputUtil.setCursorParameters(client.getWindow().getHandle(), InputUtil.GLFW_CURSOR_DISABLED,
-                            x, y
+                    InputConstants.grabOrReleaseMouse(minecraft.getWindow(), InputConstants.CURSOR_DISABLED,
+                            xpos, ypos
                     );
-                    lastX = x;
-                    lastY = y;
+                    lastX = xpos;
+                    lastY = ypos;
                 }
                 float yaw1 = (float) (Mod.yaw + i / 8.0D);
                 float zoom = (float) (j / 8.0D) / 45F;
@@ -266,80 +264,81 @@ public class MouseMixin implements MouseAccessor {
                     Mod.zoom = Math.clamp(Mod.zoom, 1F, 10F);
                 } else {
                     Mod.pitch = Mod.pitch + zoom * 45F;
-                    Mod.pitch = MathHelper.clamp(Mod.pitch, 15F, 90F);
+                    Mod.pitch = Mth.clamp(Mod.pitch, 15F, 90F);
                 }
 
             } else {
                 if (lastX != null && lastY != null) {
-                    InputUtil.setCursorParameters(
-                            client.getWindow().getHandle(),
+                    InputConstants.grabOrReleaseMouse(
+                            minecraft.getWindow(),
                             GLFW.GLFW_CURSOR_NORMAL,
-                            lastX != null ? lastX : x,
-                            lastY != null ? lastY : y
+                            lastX != null ? lastX : xpos,
+                            lastY != null ? lastY : ypos
                     );
-                    x = lastX;
-                    y = lastY;
+                    xpos = lastX;
+                    ypos = lastY;
                     lastX = null;
                     lastY = null;
                 }
                 if (Mod.horizontalTarget != null) {
-                    Mod.horizontalTarget = new BlockHitResult(Mod.horizontalTarget.getPos().add(0, ((-j) / 40), 0), Mod.horizontalTarget.getSide(), BlockPos.ofFloored(Mod.horizontalTarget.getPos().add(0, ((-j) / 40), 0)), true);
+                    Mod.horizontalTarget = new BlockHitResult(Mod.horizontalTarget.getLocation().add(0, ((-j) / 40), 0), Mod.horizontalTarget.getDirection(), BlockPos.containing(Mod.horizontalTarget.getLocation().add(0, ((-j) / 40), 0)), true);
                 }
 
                 // --- Screen-to-world ray computation ---
-                int fbWidth = window.getFramebufferWidth();
-                int fbHeight = window.getFramebufferHeight();
+                int fbWidth = window.getWidth();
+                int fbHeight = window.getHeight();
                 double aspect = (double) fbWidth / fbHeight;
-                double fov2 = Math.toRadians(((GameRendererAccessor) renderer).callGetFov(camera, tickDelta, true)) / 2.0;
+                double fov2 = Math.toRadians(camera.getFov()) / 2.0;
                 double tanFov2 = Math.tan(fov2);
 
                 // Normalize mouse position to [-1, 1] NDC
-                double ndcX = (mouse.getX() / fbWidth) * 2.0 - 1.0;
-                double ndcY = -((mouse.getY() / fbHeight) * 2.0 - 1.0);
+                double ndcX = (mouse.xpos() / fbWidth) * 2.0 - 1.0;
+                double ndcY = -((mouse.ypos() / fbHeight) * 2.0 - 1.0);
 
                 // Apply aspect ratio and FOV to get view-space offsets
                 double offsetX = ndcX * aspect * tanFov2;
                 double offsetY = ndcY * tanFov2;
 
                 // Build camera-space basis vectors
-                Vector3d forward = camera.getRotation().transform(new Vector3d(0.0, 0.0, -1.0));
-                Vector3d right = camera.getRotation().transform(new Vector3d(1.0, 0.0, 0.0));
-                Vector3d up = camera.getRotation().transform(new Vector3d(0.0, 1.0, 0.0));
+                Vector3d forward = camera.rotation().transform(new Vector3d(0.0, 0.0, -1.0));
+                Vector3d right = camera.rotation().transform(new Vector3d(1.0, 0.0, 0.0));
+                Vector3d up = camera.rotation().transform(new Vector3d(0.0, 1.0, 0.0));
 
                 // Construct ray direction
-                Vec3d rayDir;
+                Vec3 rayDir;
                 if (Config.GSON.instance().ortho) {
-                    rayDir = new Vec3d(forward.x, forward.y, forward.z);
+                    rayDir = new Vec3(forward.x, forward.y, forward.z);
                 } else {
                     Vector3d dir = new Vector3d(forward).add(new Vector3d(right).mul(offsetX)).add(new Vector3d(up).mul(offsetY)).normalize();
-                    rayDir = new Vec3d(dir.x, dir.y, dir.z);
+                    rayDir = new Vec3(dir.x, dir.y, dir.z);
                 }
 
                 // Compute ray origin (offset in ortho mode, camera pos in perspective)
-                Vec3d rayOrigin = getRayOrigin(camera, ndcX * aspect, ndcY);
+                Vec3 rayOrigin = getRayOrigin(camera, ndcX * aspect, ndcY);
 
                 // End point of the ray
-                Vec3d end = rayOrigin.add(rayDir.multiply(renderer.getFarPlaneDistance()));
+                double depthFar = Minecraft.getInstance().options.getEffectiveRenderDistance() * 16;
+                Vec3 end = rayOrigin.add(rayDir.scale(depthFar));
 
                 // Bounding box for entity search along the ray
-                Box box = Box.of(rayOrigin, 2, 2, 2)
-                        .stretch(rayDir.multiply(renderer.getFarPlaneDistance() * 2))
-                        .expand(1.0, 1.0, 1.0);
+                AABB box = AABB.ofSize(rayOrigin, 2, 2, 2)
+                        .expandTowards(rayDir.scale(depthFar * 2))
+                        .inflate(1.0, 1.0, 1.0);
 
                 // Elytra flight: adjust endpoint to hit ground level
-                if (cameraEntity instanceof PlayerEntity player && player.isFallFlying()) {
+                if (cameraEntity instanceof Player player && player.isFallFlying()) {
                     if (((CameraAccessor) camera).getPosBeforeModulation() != null) {
                         HitResult hitResult0 = raycast(rayOrigin, end, new RaycastContextCull(
                                 rayOrigin, end,
                                 CustomShapeTypes.AIR_AT_LEVEL,
-                                RaycastContext.ShapeType.OUTLINE,
-                                RaycastContext.FluidHandling.NONE,
+                                ClipContext.Block.OUTLINE,
+                                ClipContext.Fluid.NONE,
                                 cameraEntity
                         ), ELYTRA_HIT_FACTORY, MISS_FACTORY);
                         if (hitResult0 instanceof BlockHitResult result) {
-                            Mod.flyingYAddition = -2 * Math.log(result.getPos().distanceTo(player.getEyePos()) / 8F);
+                            Mod.flyingYAddition = -2 * Math.log(result.getLocation().distanceTo(player.getEyePosition()) / 8F);
                         }
-                        end = hitResult0.getPos().add(0, Mod.flyingYAddition, 0);
+                        end = hitResult0.getLocation().add(0, Mod.flyingYAddition, 0);
                     }
                 }
 
@@ -347,62 +346,62 @@ public class MouseMixin implements MouseAccessor {
                 HitResult hitResult0 = raycast(rayOrigin, end, new RaycastContextCull(
                         rayOrigin, end,
                         CustomShapeTypes.CULLED,
-                        RaycastContext.ShapeType.OUTLINE,
-                        RaycastContext.FluidHandling.NONE,
+                        ClipContext.Block.OUTLINE,
+                        ClipContext.Fluid.NONE,
                         cameraEntity
                 ), BLOCK_HIT_FACTORY, MISS_FACTORY);
 
                 // Scan back toward camera, then forward again to find the nearest visible surface
-                BlockHitResult scanUp = client.player.getWorld().raycast(
-                        new RaycastContext(
-                                hitResult0.getPos(), rayOrigin, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, client.player)
+                BlockHitResult scanUp = minecraft.player.level().clip(
+                        new ClipContext(
+                                hitResult0.getLocation(), rayOrigin, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, minecraft.player)
                 );
-                BlockHitResult scanDown = client.player.getWorld().raycast(
-                        new RaycastContext(
-                                scanUp.getPos(), scanUp.getPos().add(hitResult0.getPos().subtract(scanUp.getPos()).normalize().multiply(renderer.getFarPlaneDistance() * 2)), RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, client.player)
+                BlockHitResult scanDown = minecraft.player.level().clip(
+                        new ClipContext(
+                                scanUp.getLocation(), scanUp.getLocation().add(hitResult0.getLocation().subtract(scanUp.getLocation()).normalize().scale(depthFar * 2)), ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, minecraft.player)
                 );
 
                 if (Mod.crosshairTarget == null) {
-                    Mod.crosshairTarget = client.crosshairTarget;
+                    Mod.crosshairTarget = minecraft.hitResult;
                 }
 
                 // Entity targeting: first try scanDown->camera ray, then camera->end ray
                 HitResult hitResult = raycastExpanded(
                         cameraEntity,
-                        scanDown.getPos(),
+                        scanDown.getLocation(),
                         rayOrigin,
                         box,
-                        entity -> !entity.isSpectator() && entity.canHit(),
-                        renderer.getFarPlaneDistance() * 2,
+                        entity -> !entity.isSpectator() && entity.isPickable(),
+                        depthFar * 2,
                         0.5F);
                 HitResult hitResult2 = raycastExpanded(
                         cameraEntity,
                         rayOrigin,
                         end,
                         box,
-                        entity -> !entity.isSpectator() && entity.canHit(),
-                        renderer.getFarPlaneDistance() * 2,
+                        entity -> !entity.isSpectator() && entity.isPickable(),
+                        depthFar * 2,
                         0.5F);
 
                 if (!(hitResult instanceof EntityHitResult result && result.getType().equals(HitResult.Type.ENTITY))) {
                     if (!(hitResult2 instanceof EntityHitResult result2 && result2.getType().equals(HitResult.Type.ENTITY))) {
                         hitResult = scanDown;
-                        if (cameraEntity instanceof PlayerEntity player && hitResult.getPos().distanceTo(cameraEntity.getEyePos()) > player.getBlockInteractionRange() && cameraEntity.getWorld().getBlockEntity(BlockPos.ofFloored(hitResult.getPos())) == null
-                                && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof WallMountedBlock)
-                                && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof DoorBlock)
-                                && !(cameraEntity.getWorld().getBlockState(BlockPos.ofFloored(hitResult.getPos())).getBlock() instanceof TrapdoorBlock)) {
-                            hitResult = new BlockHitResult(new Vec3d(scanDown.getPos().getX(), cameraEntity.getEyeY(), scanDown.getPos().getZ()), scanDown.getSide(), BlockPos.ofFloored(scanDown.getPos().getX(), cameraEntity.getEyeY(), scanDown.getPos().getZ()), false);
+                        if (cameraEntity instanceof Player player && hitResult.getLocation().distanceTo(cameraEntity.getEyePosition()) > player.blockInteractionRange() && cameraEntity.level().getBlockEntity(BlockPos.containing(hitResult.getLocation())) == null
+                                && !(cameraEntity.level().getBlockState(BlockPos.containing(hitResult.getLocation())).getBlock() instanceof FaceAttachedHorizontalDirectionalBlock)
+                                && !(cameraEntity.level().getBlockState(BlockPos.containing(hitResult.getLocation())).getBlock() instanceof DoorBlock)
+                                && !(cameraEntity.level().getBlockState(BlockPos.containing(hitResult.getLocation())).getBlock() instanceof TrapDoorBlock)) {
+                            hitResult = new BlockHitResult(new Vec3(scanDown.getLocation().x(), cameraEntity.getEyeY(), scanDown.getLocation().z()), scanDown.getDirection(), BlockPos.containing(scanDown.getLocation().x(), cameraEntity.getEyeY(), scanDown.getLocation().z()), false);
                         }
                     } else {
                         hitResult = hitResult2;
                     }
                 }
 
-                if (ClientInit.verticalBinding.wasPressed()) {
+                if (ClientInit.verticalBinding.consumeClick()) {
                     Mod.verticalMode = !Mod.verticalMode;
                     Mod.horizontalTarget = Mod.verticalMode ? scanDown : null;
                     if (Mod.verticalMode) {
-                        client.player.sendMessage(Text.translatable("Vertical look mode activated (Default Keybind: RIGHT ALT)"), true);
+                        minecraft.player.sendSystemMessage(Component.translatable("Vertical look mode activated (Default Keybind: RIGHT ALT)"));
                     }
                 }
                 Mod.prevCrosshairTarget = Mod.crosshairTarget != null ? Mod.crosshairTarget : Mod.horizontalTarget != null ? Mod.horizontalTarget : hitResult;
@@ -412,20 +411,20 @@ public class MouseMixin implements MouseAccessor {
         }
     }
 
-    private static <T, C> T raycast(Vec3d start, Vec3d end, C context, BiFunction<C, BlockPos, T> blockHitFactory, Function<C, T> missFactory) {
+    private static <T, C> T raycast(Vec3 start, Vec3 end, C context, BiFunction<C, BlockPos, T> blockHitFactory, Function<C, T> missFactory) {
         if (start.equals(end)) {
             return missFactory.apply(context);
         } else {
-            double d = MathHelper.lerp(-1.0E-7, end.x, start.x);
-            double e = MathHelper.lerp(-1.0E-7, end.y, start.y);
-            double f = MathHelper.lerp(-1.0E-7, end.z, start.z);
-            double g = MathHelper.lerp(-1.0E-7, start.x, end.x);
-            double h = MathHelper.lerp(-1.0E-7, start.y, end.y);
-            double i = MathHelper.lerp(-1.0E-7, start.z, end.z);
-            int j = MathHelper.floor(g);
-            int k = MathHelper.floor(h);
-            int l = MathHelper.floor(i);
-            BlockPos.Mutable mutable = new BlockPos.Mutable(j, k, l);
+            double d = Mth.lerp(-1.0E-7, end.x, start.x);
+            double e = Mth.lerp(-1.0E-7, end.y, start.y);
+            double f = Mth.lerp(-1.0E-7, end.z, start.z);
+            double g = Mth.lerp(-1.0E-7, start.x, end.x);
+            double h = Mth.lerp(-1.0E-7, start.y, end.y);
+            double i = Mth.lerp(-1.0E-7, start.z, end.z);
+            int j = Mth.floor(g);
+            int k = Mth.floor(h);
+            int l = Mth.floor(i);
+            BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos(j, k, l);
             T object = blockHitFactory.apply(context, mutable);
             if (object != null) {
                 return object;
@@ -433,15 +432,15 @@ public class MouseMixin implements MouseAccessor {
                 double m = d - g;
                 double n = e - h;
                 double o = f - i;
-                int p = MathHelper.sign(m);
-                int q = MathHelper.sign(n);
-                int r = MathHelper.sign(o);
+                int p = Mth.sign(m);
+                int q = Mth.sign(n);
+                int r = Mth.sign(o);
                 double s = p == 0 ? Double.MAX_VALUE : (double)p / m;
                 double t = q == 0 ? Double.MAX_VALUE : (double)q / n;
                 double u = r == 0 ? Double.MAX_VALUE : (double)r / o;
-                double v = s * (p > 0 ? 1.0 - MathHelper.fractionalPart(g) : MathHelper.fractionalPart(g));
-                double w = t * (q > 0 ? 1.0 - MathHelper.fractionalPart(h) : MathHelper.fractionalPart(h));
-                double x = u * (r > 0 ? 1.0 - MathHelper.fractionalPart(i) : MathHelper.fractionalPart(i));
+                double v = s * (p > 0 ? 1.0 - Mth.frac(g) : Mth.frac(g));
+                double w = t * (q > 0 ? 1.0 - Mth.frac(h) : Mth.frac(h));
+                double x = u * (r > 0 ? 1.0 - Mth.frac(i) : Mth.frac(i));
 
                 Object object2;
                 do {
@@ -473,27 +472,27 @@ public class MouseMixin implements MouseAccessor {
         }
     }
     @Nullable
-     private static EntityHitResult raycastExpanded(Entity entity, Vec3d min, Vec3d max, Box box, Predicate<Entity> predicate, double maxDistance, float margin) {
-        World world = entity.getWorld();
+     private static EntityHitResult raycastExpanded(Entity entity, Vec3 min, Vec3 max, AABB box, Predicate<Entity> predicate, double maxDistance, float margin) {
+        Level world = entity.level();
         double d = maxDistance;
         Entity entity2 = null;
-        Vec3d vec3d = null;
-        Iterator var12 = world.getOtherEntities(entity, box, predicate).iterator();
+        Vec3 vec3d = null;
+        Iterator var12 = world.getEntities(entity, box, predicate).iterator();
 
         while(true) {
             while(var12.hasNext()) {
                 Entity entity3 = (Entity)var12.next();
-                Box box2 = entity3.getBoundingBox().expand((double)entity3.getTargetingMargin()+margin);
-                Optional<Vec3d> optional = box2.raycast(min, max);
+                AABB box2 = entity3.getBoundingBox().inflate((double)entity3.getPickRadius()+margin);
+                Optional<Vec3> optional = box2.clip(min, max);
                 if (box2.contains(min)) {
                     if (d >= 0.0) {
                         entity2 = entity3;
-                        vec3d = (Vec3d)optional.orElse(min);
+                        vec3d = (Vec3)optional.orElse(min);
                         d = 0.0;
                     }
                 } else if (optional.isPresent()) {
-                    Vec3d vec3d2 = (Vec3d)optional.get();
-                    double e = min.squaredDistanceTo(vec3d2);
+                    Vec3 vec3d2 = (Vec3)optional.get();
+                    double e = min.distanceToSqr(vec3d2);
                     if (e < d || d == 0.0) {
                         if (entity3.getRootVehicle() == entity.getRootVehicle()) {
                             if (d == 0.0) {
@@ -509,7 +508,7 @@ public class MouseMixin implements MouseAccessor {
                 }
             }
 
-            if (entity2 == null || (entity instanceof LivingEntity living && !living.canSee(entity2)) || entity2.isInvisible() || (entity instanceof PlayerEntity player && entity2.isInvisibleTo(player))) {
+            if (entity2 == null || (entity instanceof LivingEntity living && !living.hasLineOfSight(entity2)) || entity2.isInvisible() || (entity instanceof Player player && entity2.isInvisibleTo(player))) {
                 return null;
             }
             if(Mod.crosshairTarget instanceof EntityHitResult result && entity2.equals(result.getEntity())){
@@ -519,14 +518,14 @@ public class MouseMixin implements MouseAccessor {
                 lockontime = 0;
             }
             lockontime = Math.min(160,lockontime);
-            return new EntityHitResult(entity2, ClientInit.lockOn.isPressed() ? vec3d : entity2.getEyePos());
+            return new EntityHitResult(entity2, ClientInit.lockOn.isDown() ? vec3d : entity2.getEyePosition());
         }
     }
     @Inject(
-            method = {"updateMouse"}, at = {
+            method = {"turnPlayer"}, at = {
             @At(
                     value = "INVOKE",
-                    target = "net/minecraft/client/network/ClientPlayerEntity.changeLookDirection(DD)V"
+                    target = "Lnet/minecraft/client/player/LocalPlayer;turn(DD)V"
             )
     }, cancellable = true
     )
@@ -538,28 +537,26 @@ public class MouseMixin implements MouseAccessor {
 
 
 
-    @Redirect(method = "onMouseScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;scrollInHotbar(D)V"))
-
-
-    private void scrollInHotbarXIV(PlayerInventory instance, double scrollAmount) {
-
-            if (Mod.enabled && Config.GSON.instance().scrollWheelZoom ) {
-
-
-                Mod.zoom = (Math.clamp(Mod.zoom - (float) scrollAmount * 0.2f,2F/Math.clamp(Config.GSON.instance().zoomFactor,1F,1.5F),10.0F));
-
-            } else {
-
-                instance.scrollInHotbar(scrollAmount);
-
-
-            }
-
-
+    // 26.2: Inventory#scrollInHotbar was removed (onScroll now changes the slot inline via
+    // setSelectedSlot). Intercept the whole scroll at HEAD so scroll-wheel zoom can consume it.
+    @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
+    private void scrollInHotbarXIV(long window, double xOffset, double yOffset, CallbackInfo ci) {
+        // Only hijack scroll for zoom while in-world. When a screen is open, cancelling
+        // onScroll at HEAD would also swallow the vanilla dispatch to Screen#mouseScrolled, so
+        // let the default behavior run (menu scrolling, recipe book, etc.).
+        // 26.2: the active Screen lives in the private Gui#screen field (see GuiScreenAccessor).
+        if (((GuiScreenAccessor) minecraft.gui).getScreen() != null) {
+            return;
         }
+        if (Mod.enabled && Config.GSON.instance().scrollWheelZoom && minecraft.player != null) {
+            double scrollAmount = yOffset;
+            Mod.zoom = (Math.clamp(Mod.zoom - (float) scrollAmount * 0.2f, 2F / Math.clamp(Config.GSON.instance().zoomFactor, 1F, 1.5F), 10.0F));
+            ci.cancel();
+        }
+    }
 
     @Override
     public void setRightClick(boolean bool) {
-        rightButtonClicked = bool;
+        isRightPressed = bool;
     }
 }

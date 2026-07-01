@@ -1,82 +1,105 @@
 package com.cleannrooster.dungeons_iso.ui;
 
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
-import io.wispforest.owo.ui.base.BaseOwoScreen;
-import io.wispforest.owo.ui.component.Components;
-import io.wispforest.owo.ui.container.Containers;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.*;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.TypeFilter;
-import net.minecraft.util.hit.EntityHitResult;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.level.entity.EntityTypeTest;
+import net.minecraft.world.phys.EntityHitResult;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class LootUI extends BaseOwoScreen<FlowLayout> {
-    @Override
-    protected @NotNull OwoUIAdapter createAdapter() {
-        return OwoUIAdapter.create(this, Containers::verticalFlow);
+public class LootUI extends Screen {
+
+    private static final int BTN_W = 140;
+    private static final int BTN_H = 18;
+    private static final int COL_SIZE = 8;
+
+    public LootUI() {
+        super(Component.translatable("dungeons_iso.loot.title"));
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
     @Override
-    protected void build(FlowLayout rootComponent) {
-        rootComponent
-                .surface(Surface.VANILLA_TRANSLUCENT)
-                .horizontalAlignment(HorizontalAlignment.CENTER)
-                .verticalAlignment(VerticalAlignment.CENTER);
-        var child = Containers.verticalFlow(Sizing.content(),Sizing.content()).alignment(HorizontalAlignment.CENTER,VerticalAlignment.CENTER);
-        var components = new ArrayList<ParentComponent>();
-        components.add((
-                Containers.horizontalFlow(Sizing.content(),Sizing.content()).child(Components.label(Text.translatable("Nearby Items")))
-                        .surface(Surface.panelWithInset(2))
-                        .alignment(HorizontalAlignment.CENTER,VerticalAlignment.CENTER)
-                        .padding(Insets.of(10))));
-        if(MinecraftClient.getInstance().player != null) {
-            List<ItemEntity> itemEntityList = MinecraftClient.getInstance().player.getWorld().getEntitiesByType(TypeFilter.instanceOf(ItemEntity.class),MinecraftClient.getInstance().player.getBoundingBox().expand(16),(entity) ->{
-                return MinecraftClient.getInstance().player.canSee(entity);
-            });
-            int ii = 0;
-            var vertChildList = Containers.horizontalFlow(Sizing.content(),Sizing.content()).alignment(HorizontalAlignment.CENTER,VerticalAlignment.CENTER);
-            var horizontalList = new ArrayList<ParentComponent>();
-            var verticalList = new ArrayList<Component>();
-            for(ItemEntity entity : itemEntityList) {
-                if(ii < 8) {
+    protected void init() {
+        if (Minecraft.getInstance().player == null) return;
 
-                    verticalList.add(
-                            Containers.horizontalFlow(Sizing.content(),Sizing.content())  .child(Components.button(entity.getName(), button -> {
-                                ((MinecraftClientAccessor)MinecraftClient.getInstance()).setLocation(new EntityHitResult(entity,entity.getPos()));
-                                ((MinecraftClientAccessor)MinecraftClient.getInstance()).setOriginalLocation(MinecraftClient.getInstance().player.getPos());
+        List<ItemEntity> itemEntities = Minecraft.getInstance().player.level().getEntities(
+                EntityTypeTest.forClass(ItemEntity.class),
+                Minecraft.getInstance().player.getBoundingBox().inflate(16),
+                entity -> Minecraft.getInstance().player.hasLineOfSight(entity)
+        );
 
-                            })).alignment(HorizontalAlignment.CENTER,VerticalAlignment.CENTER));
+        // Cap to first 64 items and lay out in columns of COL_SIZE rows
+        List<ItemEntity> items = itemEntities.size() > 64 ? itemEntities.subList(0, 64) : itemEntities;
 
+        int cols = (items.size() + COL_SIZE - 1) / COL_SIZE;
+        int panelW = Math.max(BTN_W + 20, cols * (BTN_W + 4) + 20);
+        int panelH = Math.min(COL_SIZE, items.size()) * (BTN_H + 4) + 30;
+        int panelX = (this.width - panelW) / 2;
+        int panelY = (this.height - panelH) / 2;
 
-                    ii++;
-                }
-                else{
-                    ii=0;
-                    horizontalList.add(Containers.verticalFlow(Sizing.content(),Sizing.content()).children(verticalList).surface(Surface.panelWithInset(2))
-                            .alignment(HorizontalAlignment.CENTER,VerticalAlignment.CENTER)
-                            .padding(Insets.of(10))); ;
-                    verticalList = new ArrayList<Component>();
-                }
+        for (int i = 0; i < items.size(); i++) {
+            int col = i / COL_SIZE;
+            int row = i % COL_SIZE;
+            ItemEntity entity = items.get(i);
+            int bx = panelX + 10 + col * (BTN_W + 4);
+            int by = panelY + 26 + row * (BTN_H + 4);
 
-
-            }
-            horizontalList.add(Containers.verticalFlow(Sizing.content(),Sizing.content()).children(verticalList).surface(Surface.panelWithInset(2)).padding(Insets.of(10)).alignment(HorizontalAlignment.CENTER,VerticalAlignment.CENTER)); ;
-            ((FlowLayout)vertChildList).children(horizontalList);
-            components.add(vertChildList);
-
+            this.addRenderableWidget(Button.builder(entity.getName(), btn -> {
+                MinecraftClientAccessor mc = (MinecraftClientAccessor) Minecraft.getInstance();
+                mc.setLocation(new EntityHitResult(entity, entity.position()));
+                mc.setOriginalLocation(Minecraft.getInstance().player.position());
+            }).bounds(bx, by, BTN_W, BTN_H).build());
         }
-        ((FlowLayout)child).children(components);
-        rootComponent.child((child));
+    }
+    @Override
+    public void extractBackground(final GuiGraphicsExtractor graphics, final int mouseX, final int mouseY, final float a) {
+        if (this.isInGameUi()) {
+            this.extractTransparentBackground(graphics);
+        } else {
+            if (this.minecraft.level == null) {
+                this.extractPanorama(graphics, a);
+            }
+
+            //this.extractBlurredBackground(graphics);
+            this.extractMenuBackground(graphics);
+        }
+
+        this.minecraft.gui.hud.extractDeferredSubtitles();
+    }
+    @Override
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        this.extractBackground(graphics, mouseX, mouseY, delta);
+
+        // Recalculate panel dims for rendering (mirrors init)
+        int items = 0;
+        if (Minecraft.getInstance().player != null) {
+            items = Math.min(64, (int) Minecraft.getInstance().player.level()
+                    .getEntities(EntityTypeTest.forClass(ItemEntity.class),
+                            Minecraft.getInstance().player.getBoundingBox().inflate(16),
+                            e -> Minecraft.getInstance().player.hasLineOfSight(e))
+                    .stream().count());
+        }
+        int cols = (items + COL_SIZE - 1) / COL_SIZE;
+        int panelW = Math.max(BTN_W + 20, cols * (BTN_W + 4) + 20);
+        int panelH = Math.min(COL_SIZE, items) * (BTN_H + 4) + 30;
+        int panelX = (this.width - panelW) / 2;
+        int panelY = (this.height - panelH) / 2;
+
+        graphics.fill(panelX, panelY, panelX + panelW, panelY + panelH, 0xC0101010);
+        graphics.outline(panelX, panelY, panelW, panelH, 0xFF555555);
+        graphics.centeredText(this.font, Component.translatable("dungeons_iso.loot.nearby"),
+                this.width / 2, panelY + 8, 0xFFFFFFFF);
+
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
     }
 }

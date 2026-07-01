@@ -1,56 +1,44 @@
 package com.cleannrooster.dungeons_iso.mixin;
 
 import com.cleannrooster.dungeons_iso.config.Config;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.Mouse;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.option.Perspective;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.client.render.WorldRenderer;
-import net.minecraft.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import com.cleannrooster.dungeons_iso.ClientInit;
 import com.cleannrooster.dungeons_iso.mod.Mod;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.Hud;
+import net.minecraft.world.entity.LivingEntity;
 
 import static com.cleannrooster.dungeons_iso.compat.SodiumCompat.fogOfWar;
-import static net.minecraft.entity.effect.StatusEffects.DARKNESS;
+import static net.minecraft.world.effect.MobEffects.DARKNESS;
 
-@Mixin(InGameHud.class)
+// 26.2: the HUD render path moved from Gui#render to Hud's render-state extraction methods.
+@Mixin(Hud.class)
 public class InGameHudMixin {
     @Shadow
     @Final
-    private MinecraftClient client;
+    private Minecraft minecraft;
+
     @Inject(
-            method = "render", at = @At("HEAD"), cancellable = true
+            method = "extractCameraOverlays", at = @At("HEAD"), cancellable = true
     )
-    public void renderDarkness(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        if(Mod.enabled && ((client.getCameraEntity() instanceof LivingEntity living && living.hasStatusEffect(DARKNESS)) || Config.GSON.instance().fogOfWar) && fogOfWar != null) {
-            fogOfWar.render(context,tickCounter.getTickDelta(false));
+    public void renderDarkness(GuiGraphicsExtractor context, DeltaTracker tickCounter, CallbackInfo ci) {
+        if(Mod.enabled && ((minecraft.getCameraEntity() instanceof LivingEntity living && living.hasEffect(DARKNESS)) || Config.GSON.instance().fogOfWar) && fogOfWar != null) {
+            fogOfWar.render(context,tickCounter.getGameTimeDeltaPartialTick(false));
         }
     }
 
     @Inject(
-            method = "renderCrosshair", at = @At("HEAD"), cancellable = true
+            method = "extractCrosshair", at = @At("HEAD"), cancellable = true
     )
-    private void crosshairPreXIV(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+    private void crosshairPreXIV(GuiGraphicsExtractor context, DeltaTracker tickCounter, CallbackInfo ci) {
         if (Mod.enabled) {
             ci.cancel();
-
-        }
-    }
-
-    @Inject(
-            method = "renderCrosshair", at = @At("RETURN")
-    )
-    private void crosshairPostXIV(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        if (Mod.enabled) {
         }
     }
 }

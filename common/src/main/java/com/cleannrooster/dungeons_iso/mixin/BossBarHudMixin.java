@@ -4,12 +4,6 @@ import com.cleannrooster.dungeons_iso.api.ClientBossBarAccessor;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.client.gui.hud.BossBarHud;
-import net.minecraft.client.gui.hud.ClientBossBar;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.WorldRenderer;
-import net.minecraft.client.render.chunk.ChunkBuilder;
-import net.minecraft.entity.boss.WitherEntity;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,14 +13,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.client.gui.components.BossHealthOverlay;
+import net.minecraft.client.gui.components.LerpingBossEvent;
 
-@Mixin(BossBarHud.class)
+@Mixin(BossHealthOverlay.class)
 public abstract class BossBarHudMixin implements ClientBossBarAccessor {
     @Shadow
-     Map<UUID, ClientBossBar> bossBars ;
+     Map<UUID, LerpingBossEvent> events ;
     @Override
-    public Map<UUID, ClientBossBar> getBossBars() {
+    public Map<UUID, LerpingBossEvent> getBossBars() {
 
-        return bossBars;
+        return events;
     }
 }

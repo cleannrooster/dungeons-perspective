@@ -2,14 +2,13 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.cleannrooster.dungeons_iso.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "plugin": "com.cleannrooster.dungeons_iso.MixinPlugin",
   "client": [
-    "compat.combat_roll.RollManagerMixin",
     "CameraMixin",
-    "GameRendererAccessor",
     "GameRendererMixin",
     "InGameHudMixin",
+    "GuiScreenAccessor",
     "KeyboardInputMixin",
     "KeyboardMixin",
     "MinecraftClientMixin",
@@ -26,7 +25,9 @@
     "compat.sodium.AbstractRenderContextMixin",
     "compat.sodium.AbstractRenderContextMixin2",
     "compat.sodium.RenderSectionManagerMixin",
-    "KeyBindingMixin"
+    "KeyBindingMixin",
+    "LevelRendererMixin",
+    "SectionOcclusionGraphMixin"
 
   ],
   "server": [
