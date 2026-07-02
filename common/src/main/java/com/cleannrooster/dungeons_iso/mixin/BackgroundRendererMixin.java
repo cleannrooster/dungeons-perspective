@@ -1,5 +1,6 @@
 package com.cleannrooster.dungeons_iso.mixin;
 
+import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
@@ -24,7 +25,7 @@ public class BackgroundRendererMixin {
 
     @Inject(method = "setupFog", at = @At("RETURN"))
     private void setupFogXIV(Camera camera, int renderDistance, DeltaTracker deltaTracker, float skyDarkness, ClientLevel level, CallbackInfoReturnable<FogData> cir) {
-        if (Mod.enabled) {
+        if (Mod.enabled && Config.GSON.instance().distanceFog) {
             FogData data = cir.getReturnValue();
             if (data == null) {
                 return;

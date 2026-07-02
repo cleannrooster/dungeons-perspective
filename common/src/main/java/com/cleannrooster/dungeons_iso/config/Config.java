@@ -23,6 +23,10 @@ public class Config {
     @SerialEntry
     public boolean fogOfWar =  false;
     @SerialEntry
+    public boolean distanceFog =  true;
+    @SerialEntry
+    public boolean renderDistanceCap =  true;
+    @SerialEntry
     public float cullAngle = 6.0F;
     @SerialEntry
     public float coneHalfAngle = 45.0F;
