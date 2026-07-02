@@ -32,6 +32,12 @@ public class MixinPlugin  implements IMixinConfigPlugin {
             for (int i = 0; i < parts.length; i++) {
                 if (parts[i].equals("compat") && i + 1 < parts.length) {
                     String modId = parts[i + 1];
+                    // Sodium is a required dependency for the culling pipeline, so always apply its
+                    // mixins. (Gating it via mod detection breaks on NeoForge, where the mod list
+                    // isn't populated yet at mixin-application time.)
+                    if (modId.equals("sodium")) {
+                        return true;
+                    }
                     return ModCompat.isModLoaded(modId);
                 }
             }

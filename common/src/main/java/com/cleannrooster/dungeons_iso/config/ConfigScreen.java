@@ -42,6 +42,19 @@ public class ConfigScreen {
                                                 .build())
                                         .option(Option
                                                 .<Boolean>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.disableChunkCulling.name"))
+                                                .description(OptionDescription.of(Component.translatable(
+                                                        "dungeons_iso.config.disableChunkCulling.description")))
+                                                .binding(
+                                                        defaults.disableChunkCulling,
+                                                        () -> config.disableChunkCulling,
+                                                        // Read live each frame by CameraMixin — no apply step needed.
+                                                        (value) -> config.disableChunkCulling = value
+                                                )
+                                                .controller(BooleanControllerBuilder::create)
+                                                .build())
+                                        .option(Option
+                                                .<Boolean>createBuilder()
                                                 .name(Component.translatable("dungeons_iso.config.onStartup.name"))
                                                 .description(OptionDescription.of(Component.translatable(
                                                         "dungeons_iso.config.onStartup.description")))

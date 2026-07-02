@@ -6,6 +6,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -153,6 +154,10 @@ public class ClientInit {
         Config.GSON.load();
         com.cleannrooster.dungeons_iso.config.FirstTimeState.load();
     }
+
+    // Chunk culling is handled robustly in CameraMixin, which intercepts the per-frame read of
+    // Minecraft#smartCull and forces it off while the perspective is active or the config asks for
+    // it — no field bookkeeping / enter-exit hooks needed.
 
     private static void drawCuboidShapeOutline(PoseStack matrices, VertexConsumer vertexConsumer, VoxelShape shape, double offsetX, double offsetY, double offsetZ, float red, float green, float blue, float alpha) {
         PoseStack.Pose entry = matrices.last();

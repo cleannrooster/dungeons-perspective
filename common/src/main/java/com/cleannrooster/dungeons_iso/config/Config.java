@@ -75,4 +75,8 @@ public class Config {
     @SerialEntry
     public float soundListenerBias = 0.66F;
 
+    /** When true, disables Minecraft's occlusion-based chunk culling (Minecraft#smartCull) on init. */
+    @SerialEntry
+    public boolean disableChunkCulling = true;
+
 }

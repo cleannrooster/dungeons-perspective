@@ -12,6 +12,8 @@ import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import org.objectweb.asm.Opcodes;
 import com.cleannrooster.dungeons_iso.ClientInit;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import net.minecraft.client.Camera;
@@ -77,6 +79,24 @@ public abstract class CameraMixin implements CameraAccessor {
         if(Mod.enabled && !Config.GSON.instance().XIV) {
             ci.setReturnValue( (float)  45);
         }
+    }
+
+    /**
+     * Robustly disables Minecraft's occlusion chunk culling while the perspective is active, by
+     * intercepting the single per-frame read of {@link Minecraft#smartCull} where it is copied into
+     * the camera render state. The field itself is never modified, so there's nothing to save or
+     * restore and no way to leave it in a bad state (F4, F5, or any other exit path all behave).
+     * Also honors the global "disable chunk culling" config option.
+     */
+    @ModifyExpressionValue(
+            method = "extractRenderState",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;smartCull:Z", opcode = Opcodes.GETFIELD)
+    )
+    private boolean dungeons_iso$forceSmartCullOff(boolean original) {
+        if (Mod.enabled || Config.GSON.instance().disableChunkCulling) {
+            return Mod.shouldRebuild();
+        }
+        return original;
     }
 
     @Shadow

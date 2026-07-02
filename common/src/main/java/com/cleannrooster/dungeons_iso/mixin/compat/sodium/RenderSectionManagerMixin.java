@@ -45,13 +45,7 @@ public abstract class RenderSectionManagerMixin {
         return flot;
 
     }
- @Inject(at = @At("HEAD"), method = "shouldUseOcclusionCulling", cancellable = true,remap = false)
 
-    private void shouldUseOcclusionCullingXIV(Camera camera, boolean spectator,CallbackInfoReturnable<Boolean> cir) {
-        if(Mod.enabled&& Minecraft.getInstance().player != null && Mod.shouldRebuild()){
-            cir.setReturnValue(false);
-        }
-    }
 
 
 }
