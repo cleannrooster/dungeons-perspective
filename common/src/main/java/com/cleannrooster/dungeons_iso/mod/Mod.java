@@ -42,6 +42,8 @@ public class Mod {
     public static int cooldownIs;
     public static int cooldownWas;
     public static Vector2f unModMovement = new Vector2f();
+    public static float joystickRawFwd;
+    public static float joystickRawSide;
     public static int useTimer;
     public static boolean noMouse;
     public static float zoomMetric;
@@ -104,6 +106,9 @@ public class Mod {
     public static HitResult crosshairTarget;
     public static Entity pickedTarget;
     public static Entity targeted;
+    public static BlockPos targetedInteractable;
+    public static BlockPos pendingInteractable;
+    public static int pendingInteractableTicks;
 
     public static HitResult prevCrosshairTarget;
     public static Entity lockOnTarget;

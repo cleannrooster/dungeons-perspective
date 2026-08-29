@@ -27,6 +27,27 @@ public class ModCompat {
         return false;
     }
 
+    public static boolean isClassPresent(String className) {
+        try {
+            Class.forName(className, false, ModCompat.class.getClassLoader());
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    public static java.nio.file.Path getConfigDir() {
+        try {
+            return net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir();
+        } catch (Throwable ignored) {}
+        try {
+            Class<?> fmlPaths = Class.forName("net.neoforged.fml.loading.FMLPaths");
+            Object configDir = fmlPaths.getField("CONFIGDIR").get(null);
+            return (java.nio.file.Path) fmlPaths.getMethod("get").invoke(configDir);
+        } catch (Throwable ignored) {}
+        return java.nio.file.Path.of("config").toAbsolutePath();
+    }
+
     public static boolean isDevelopmentEnvironment() {
         // Fabric
         try {

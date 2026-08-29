@@ -48,7 +48,7 @@ public abstract class AbstractHorseEntityMixin {
         AbstractHorse entity = (AbstractHorse)  (Object) this;
         if (Mod.enabled && controllingPlayer instanceof LocalPlayer player) {
 
-            if ((Config.GSON.instance().turnToMouse && player.input.getMoveVector().length() > 0.1) || ((MinecraftClientAccessor)Minecraft.getInstance()).getMouseCooldown() >= 0 && player.getVehicle() != null && player.input.getMoveVector().length() > 0.1) {
+            if ((Config.GSON.instance().isTurnToMouse() && player.input.getMoveVector().length() > 0.1) || ((MinecraftClientAccessor)Minecraft.getInstance()).getMouseCooldown() >= 0 && player.getVehicle() != null && player.input.getMoveVector().length() > 0.1) {
                 float f = entity.xxa ;
                 float g = entity.zza;
                 vec3dCallbackInfo.setReturnValue( new Vec3(f, 0,g).normalize());
@@ -64,7 +64,7 @@ public abstract class AbstractHorseEntityMixin {
         AbstractHorse entity = (AbstractHorse)  (Object) this;
         if (Mod.enabled && controllingPassenger instanceof LocalPlayer player) {
 
-            if ((Config.GSON.instance().turnToMouse && player.input.getMoveVector().length() > 0.1) || ((MinecraftClientAccessor)Minecraft.getInstance()).getMouseCooldown() >= 0 && player.getVehicle() != null && player.input.getMoveVector().length() > 0.1) {
+            if ((Config.GSON.instance().isTurnToMouse() && player.input.getMoveVector().length() > 0.1) || ((MinecraftClientAccessor)Minecraft.getInstance()).getMouseCooldown() >= 0 && player.getVehicle() != null && player.input.getMoveVector().length() > 0.1) {
                 Vec3 vec3d = player.getDeltaMovement();
                 double d = vec3d.x;
                 double e = vec3d.y;

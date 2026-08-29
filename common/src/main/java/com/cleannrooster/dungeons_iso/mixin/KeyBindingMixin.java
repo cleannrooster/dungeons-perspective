@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
         @Inject(method = "isDown", at = @At("RETURN"), cancellable = true)
     
         public void isPressedMouse(CallbackInfoReturnable<Boolean> cir) {
-            if (((KeyMapping) (Object) this).same(ClientInit.clickToMove) && Mod.enabled && Config.GSON.instance().clickToMove) {
+            if (((KeyMapping) (Object) this).same(ClientInit.clickToMove) && Mod.enabled && Config.GSON.instance().isClickToMove()) {
                 if(((GuiScreenAccessor) Minecraft.getInstance().gui).getScreen() == null && Minecraft.getInstance().mouseHandler.isRightPressed()){
                     cir.setReturnValue(true);
     
@@ -34,7 +34,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
     
         public void isPressedXIV(CallbackInfoReturnable<Boolean> cir) {
     
-            if (((KeyMapping) (Object) this).same(Minecraft.getInstance().options.keyUse) && Mod.enabled && Config.GSON.instance().clickToMove) {
+            if (((KeyMapping) (Object) this).same(Minecraft.getInstance().options.keyUse) && Mod.enabled && Config.GSON.instance().isClickToMove()) {
     
                 if (ClientInit.interact.isDown()) {
     
@@ -47,7 +47,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
                         cir.setReturnValue(false);
     
                     }
-                } else if (((KeyMapping) (Object) this).same(Minecraft.getInstance().options.keyUse) && Mod.enabled && Config.GSON.instance().clickToMove && Minecraft.getInstance().player != null && Minecraft.getInstance().player.getMainHandItem().getItem() instanceof ProjectileWeaponItem) {
+                } else if (((KeyMapping) (Object) this).same(Minecraft.getInstance().options.keyUse) && Mod.enabled && Config.GSON.instance().isClickToMove() && Minecraft.getInstance().player != null && Minecraft.getInstance().player.getMainHandItem().getItem() instanceof ProjectileWeaponItem) {
                     if (Minecraft.getInstance().options.keyAttack.isDown()) {
                         cir.setReturnValue(true);
                     } else {
@@ -69,7 +69,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
     
         public void wasPressedXIV(CallbackInfoReturnable<Boolean> cir) {
     
-             if (((KeyMapping) (Object) this).same(Minecraft.getInstance().options.keyUse) && Mod.enabled && Config.GSON.instance().clickToMove) {
+             if (((KeyMapping) (Object) this).same(Minecraft.getInstance().options.keyUse) && Mod.enabled && Config.GSON.instance().isClickToMove()) {
     
                 if (ClientInit.interact.consumeClick() ){
                     cir.setReturnValue(true);
@@ -85,7 +85,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
                     }
                 }
                 else
-                if (((KeyMapping) (Object) this).same(Minecraft.getInstance().options.keyUse) && Mod.enabled && Config.GSON.instance().clickToMove && Minecraft.getInstance().player != null && Minecraft.getInstance().player.getMainHandItem().getItem() instanceof ProjectileWeaponItem) {
+                if (((KeyMapping) (Object) this).same(Minecraft.getInstance().options.keyUse) && Mod.enabled && Config.GSON.instance().isClickToMove() && Minecraft.getInstance().player != null && Minecraft.getInstance().player.getMainHandItem().getItem() instanceof ProjectileWeaponItem) {
                     if (Minecraft.getInstance().options.keyAttack.consumeClick()) {
                         cir.setReturnValue(true);
                     } else {

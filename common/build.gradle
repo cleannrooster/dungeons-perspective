@@ -17,10 +17,4 @@ dependencies {
     // ModMenu (optional - compile only)
     compileOnly "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
 
-    // Sodium (optional compat - compile only)
-    compileOnly "maven.modrinth:sodium:${rootProject.sodium_version}-${platform}"
-
-    // MixinSquared
-    compileOnly "com.github.bawnorton.mixinsquared:mixinsquared-common:${rootProject.mixinsquared_version}"
-    annotationProcessor "com.github.bawnorton.mixinsquared:mixinsquared-common:${rootProject.mixinsquared_version}"
 }

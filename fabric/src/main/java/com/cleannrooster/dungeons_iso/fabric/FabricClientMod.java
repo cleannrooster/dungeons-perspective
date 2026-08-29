@@ -21,6 +21,7 @@ public class FabricClientMod implements ClientModInitializer {
             KeyMappingHelper.registerKeyMapping(binding);
         }
         ClientInit.init();
+        FabricTerrainCullingModels.register();
 
         // Register /dperspective client command to open the config screen
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) ->

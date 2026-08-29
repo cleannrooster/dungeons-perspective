@@ -3,6 +3,7 @@ package com.cleannrooster.dungeons_iso.config;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
 import dev.isxander.yacl3.impl.controller.FloatSliderControllerBuilderImpl;
+import dev.isxander.yacl3.impl.controller.IntegerSliderControllerBuilderImpl;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -18,7 +19,7 @@ public class ConfigScreen {
     /** Build and return the YACL config screen, optionally with a parent screen. */
     public static Screen create(Screen parent) {
         return YetAnotherConfigLib.create(
-                Config.GSON,
+                (dev.isxander.yacl3.config.v2.api.ConfigClassHandler<Config>) Config.GSON.handler(),
                 (defaults, config, builder) -> builder
                         .title(Component.translatable("dungeons_iso.config.title"))
                         .category(ConfigCategory
@@ -28,6 +29,15 @@ public class ConfigScreen {
                                 // General
                                 .group(OptionGroup.createBuilder()
                                         .name(Component.translatable("dungeons_iso.config.group.general"))
+                                        .option(Option
+                                                .<Boolean>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.controllerMode.name"))
+                                                .description(OptionDescription.of(Component.translatable(
+                                                        "dungeons_iso.config.controllerMode.description")))
+                                                .binding(defaults.controllerMode, () -> config.controllerMode,
+                                                        value -> config.controllerMode = value)
+                                                .controller(BooleanControllerBuilder::create)
+                                                .build())
                                         .option(Option
                                                 .<Boolean>createBuilder()
                                                 .name(Component.translatable("dungeons_iso.config.force.name"))
@@ -121,6 +131,15 @@ public class ConfigScreen {
                                                         () -> config.cameraRelative,
                                                         (value) -> config.cameraRelative = value
                                                 )
+                                                .controller(BooleanControllerBuilder::create)
+                                                .build())
+                                        .option(Option
+                                                .<Boolean>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.joystickMovement.name"))
+                                                .description(OptionDescription.of(Component.translatable(
+                                                        "dungeons_iso.config.joystickMovement.description")))
+                                                .binding(defaults.joystickMovement, () -> config.joystickMovement,
+                                                        value -> config.joystickMovement = value)
                                                 .controller(BooleanControllerBuilder::create)
                                                 .build())
                                         .option(Option
@@ -284,6 +303,33 @@ public class ConfigScreen {
                                                 )
                                                 .controller(BooleanControllerBuilder::create)
                                                 .build())
+                                        .option(Option
+                                                .<Boolean>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.contextualTargeting.name"))
+                                                .description(OptionDescription.of(Component.translatable(
+                                                        "dungeons_iso.config.contextualTargeting.description")))
+                                                .binding(defaults.contextualTargeting, () -> config.contextualTargeting,
+                                                        value -> config.contextualTargeting = value)
+                                                .controller(BooleanControllerBuilder::create)
+                                                .build())
+                                        .option(Option
+                                                .<Boolean>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.movementTargeting.name"))
+                                                .description(OptionDescription.of(Component.translatable(
+                                                        "dungeons_iso.config.movementTargeting.description")))
+                                                .binding(defaults.movementTargeting, () -> config.movementTargeting,
+                                                        value -> config.movementTargeting = value)
+                                                .controller(BooleanControllerBuilder::create)
+                                                .build())
+                                        .option(Option
+                                                .<Boolean>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.contextualInteract.name"))
+                                                .description(OptionDescription.of(Component.translatable(
+                                                        "dungeons_iso.config.contextualInteract.description")))
+                                                .binding(defaults.contextualInteract, () -> config.contextualInteract,
+                                                        value -> config.contextualInteract = value)
+                                                .controller(BooleanControllerBuilder::create)
+                                                .build())
                                         .build())
 
                                 // Rendering
@@ -385,6 +431,206 @@ public class ConfigScreen {
                                                 )
                                                 .controller(BooleanControllerBuilder::create)
                                                 .build())
+                                        .build())
+
+                                .group(OptionGroup.createBuilder()
+                                        .name(Component.translatable("dungeons_iso.config.group.roomculling"))
+                                        .option(Option.<Boolean>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.roomCulling.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.roomCulling.description")))
+                                                .binding(defaults.roomCulling, () -> config.roomCulling, value -> config.roomCulling = value)
+                                                .controller(BooleanControllerBuilder::create).build())
+                                        .option(Option.<Boolean>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.disableOcclusionCulling.name"))
+                                                .description(OptionDescription.of(Component.translatable(
+                                                        "dungeons_iso.config.disableOcclusionCulling.description")))
+                                                .binding(defaults.disableOcclusionCulling, () -> config.disableOcclusionCulling,
+                                                        value -> config.disableOcclusionCulling = value)
+                                                .controller(BooleanControllerBuilder::create)
+                                                .build())
+                                        .option(Option.<Boolean>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.cullDebugLog.name"))
+                                                .description(OptionDescription.of(Component.translatable(
+                                                        "dungeons_iso.config.cullDebugLog.description")))
+                                                .binding(defaults.cullDebugLog, () -> config.cullDebugLog,
+                                                        value -> config.cullDebugLog = value)
+                                                .controller(BooleanControllerBuilder::create)
+                                                .build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.roomRadius.name"))
+                                                .description(OptionDescription.of(Component.translatable(
+                                                        "dungeons_iso.config.roomRadius.description")))
+                                                .binding(defaults.roomRadius, () -> config.roomRadius,
+                                                        value -> config.roomRadius = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o)
+                                                        .range(16, 96).step(1))
+                                                .build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.roomWallThickness.name"))
+                                                .description(OptionDescription.of(Component.translatable(
+                                                        "dungeons_iso.config.roomWallThickness.description")))
+                                                .binding(defaults.roomWallThickness, () -> config.roomWallThickness,
+                                                        value -> config.roomWallThickness = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o)
+                                                        .range(0, 8).step(1))
+                                                .build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.roomCeilingTolerance.name"))
+                                                .description(OptionDescription.of(Component.translatable(
+                                                        "dungeons_iso.config.roomCeilingTolerance.description")))
+                                                .binding(defaults.roomCeilingTolerance, () -> config.roomCeilingTolerance,
+                                                        value -> config.roomCeilingTolerance = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o)
+                                                        .range(0, 16).step(1))
+                                                .build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.roomCoverHeight.name"))
+                                                .description(OptionDescription.of(Component.translatable(
+                                                        "dungeons_iso.config.roomCoverHeight.description")))
+                                                .binding(defaults.roomCoverHeight, () -> config.roomCoverHeight,
+                                                        value -> config.roomCoverHeight = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o)
+                                                        .range(1, 128).step(1))
+                                                .build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.roomMaxVolume.name"))
+                                                .description(OptionDescription.of(Component.translatable(
+                                                        "dungeons_iso.config.roomMaxVolume.description")))
+                                                .binding(defaults.roomMaxVolume, () -> config.roomMaxVolume,
+                                                        value -> config.roomMaxVolume = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o)
+                                                        .range(10000, 500000).step(10000))
+                                                .build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.roomSectionsPerTick.name"))
+                                                .description(OptionDescription.of(Component.translatable(
+                                                        "dungeons_iso.config.roomSectionsPerTick.description")))
+                                                .binding(defaults.roomSectionsPerTick, () -> config.roomSectionsPerTick,
+                                                        value -> config.roomSectionsPerTick = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o)
+                                                        .range(1, 32).step(1))
+                                                .build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.roomNodesPerSlice.name"))
+                                                .description(OptionDescription.of(Component.translatable(
+                                                        "dungeons_iso.config.roomNodesPerSlice.description")))
+                                                .binding(defaults.roomNodesPerSlice, () -> config.roomNodesPerSlice,
+                                                        value -> config.roomNodesPerSlice = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o)
+                                                        .range(256, 20000).step(256))
+                                                .build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.roomRescanCooldown.name"))
+                                                .description(OptionDescription.of(Component.translatable(
+                                                        "dungeons_iso.config.roomRescanCooldown.description")))
+                                                .binding(defaults.roomRescanCooldown, () -> config.roomRescanCooldown,
+                                                        value -> config.roomRescanCooldown = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o)
+                                                        .range(1, 40).step(1))
+                                                .build())
+                                        .build())
+
+                                .group(OptionGroup.createBuilder()
+                                        .name(Component.translatable("dungeons_iso.config.group.shapeculling"))
+                                        .option(Option.<Boolean>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.shapeCulling.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.shapeCulling.description")))
+                                                .binding(defaults.shapeCulling, () -> config.shapeCulling, value -> config.shapeCulling = value)
+                                                .controller(BooleanControllerBuilder::create).build())
+                                        .option(Option.<Boolean>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.unifiedSilhouette.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.unifiedSilhouette.description")))
+                                                .binding(defaults.unifiedSilhouette, () -> config.unifiedSilhouette, value -> config.unifiedSilhouette = value)
+                                                .controller(BooleanControllerBuilder::create).build())
+                                        .option(Option.<Boolean>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.terrainSilhouetteCulling.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.terrainSilhouetteCulling.description")))
+                                                .binding(defaults.terrainSilhouetteCulling, () -> config.terrainSilhouetteCulling, value -> config.terrainSilhouetteCulling = value)
+                                                .controller(BooleanControllerBuilder::create).build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.terrainSilhouetteDilation.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.terrainSilhouetteDilation.description")))
+                                                .binding(defaults.terrainSilhouetteDilation, () -> config.terrainSilhouetteDilation, value -> config.terrainSilhouetteDilation = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o).range(0, 12).step(1)).build())
+                                        .option(Option.<Boolean>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.ghostCulledBlocks.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.ghostCulledBlocks.description")))
+                                                .binding(defaults.ghostCulledBlocks, () -> config.ghostCulledBlocks,
+                                                        value -> config.ghostCulledBlocks = value)
+                                                .controller(BooleanControllerBuilder::create).build())
+                                        .option(Option.<Float>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.ghostClearScreen.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.ghostClearScreen.description")))
+                                                .binding(defaults.ghostClearScreen, () -> config.ghostClearScreen,
+                                                        value -> config.ghostClearScreen = value)
+                                                .controller(o -> new FloatSliderControllerBuilderImpl(o).range(0.0F, 2.0F).step(0.01F)).build())
+                                        .option(Option.<Float>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.ghostOpaqueScreen.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.ghostOpaqueScreen.description")))
+                                                .binding(defaults.ghostOpaqueScreen, () -> config.ghostOpaqueScreen,
+                                                        value -> config.ghostOpaqueScreen = value)
+                                                .controller(o -> new FloatSliderControllerBuilderImpl(o).range(0.0F, 2.0F).step(0.01F)).build())
+                                        .option(Option.<Float>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.ghostMaxAlpha.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.ghostMaxAlpha.description")))
+                                                .binding(defaults.ghostMaxAlpha, () -> config.ghostMaxAlpha,
+                                                        value -> config.ghostMaxAlpha = value)
+                                                .controller(o -> new FloatSliderControllerBuilderImpl(o).range(0.0F, 1.0F).step(0.05F)).build())
+                                        .option(Option.<Float>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.terrainOccludeThreshold.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.terrainOccludeThreshold.description")))
+                                                .binding(defaults.terrainOccludeThreshold, () -> config.terrainOccludeThreshold, value -> config.terrainOccludeThreshold = value)
+                                                .controller(o -> new FloatSliderControllerBuilderImpl(o).range(0.0F, 1.0F).step(0.01F)).build())
+                                        .option(Option.<Float>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.sightlineSuppressThreshold.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.sightlineSuppressThreshold.description")))
+                                                .binding(defaults.sightlineSuppressThreshold, () -> config.sightlineSuppressThreshold, value -> config.sightlineSuppressThreshold = value)
+                                                .controller(o -> new FloatSliderControllerBuilderImpl(o).range(0.5F, 1.0F).step(0.01F)).build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.terrainShapeCap.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.terrainShapeCap.description")))
+                                                .binding(defaults.terrainShapeCap, () -> config.terrainShapeCap, value -> config.terrainShapeCap = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o).range(256, 16384).step(256)).build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.treeShapeCap.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.treeShapeCap.description")))
+                                                .binding(defaults.treeShapeCap, () -> config.treeShapeCap, value -> config.treeShapeCap = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o).range(256, 16384).step(256)).build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.shapeMaxSpan.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.shapeMaxSpan.description")))
+                                                .binding(defaults.shapeMaxSpan, () -> config.shapeMaxSpan, value -> config.shapeMaxSpan = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o).range(4, 96).step(1)).build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.shapeMaxHeight.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.shapeMaxHeight.description")))
+                                                .binding(defaults.shapeMaxHeight, () -> config.shapeMaxHeight, value -> config.shapeMaxHeight = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o).range(4, 160).step(1)).build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.treeLeafSpread.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.treeLeafSpread.description")))
+                                                .binding(defaults.treeLeafSpread, () -> config.treeLeafSpread, value -> config.treeLeafSpread = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o).range(1, 16).step(1)).build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.sightlineMaxShapes.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.sightlineMaxShapes.description")))
+                                                .binding(defaults.sightlineMaxShapes, () -> config.sightlineMaxShapes, value -> config.sightlineMaxShapes = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o).range(1, 64).step(1)).build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.sightlineMaxCulledBlocks.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.sightlineMaxCulledBlocks.description")))
+                                                .binding(defaults.sightlineMaxCulledBlocks, () -> config.sightlineMaxCulledBlocks, value -> config.sightlineMaxCulledBlocks = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o).range(1024, 65536).step(1024)).build())
+                                        .option(Option.<Integer>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.sightlineRescanCooldown.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.sightlineRescanCooldown.description")))
+                                                .binding(defaults.sightlineRescanCooldown, () -> config.sightlineRescanCooldown, value -> config.sightlineRescanCooldown = value)
+                                                .controller(o -> new IntegerSliderControllerBuilderImpl(o).range(1, 20).step(1)).build())
+                                        .option(Option.<Float>createBuilder()
+                                                .name(Component.translatable("dungeons_iso.config.sightlineCameraStep.name"))
+                                                .description(OptionDescription.of(Component.translatable("dungeons_iso.config.sightlineCameraStep.description")))
+                                                .binding(defaults.sightlineCameraStep, () -> config.sightlineCameraStep, value -> config.sightlineCameraStep = value)
+                                                .controller(o -> new FloatSliderControllerBuilderImpl(o).range(0.1F, 4.0F).step(0.05F)).build())
                                         .build())
 
                                 .build())

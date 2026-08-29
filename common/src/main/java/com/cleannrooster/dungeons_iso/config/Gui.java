@@ -7,6 +7,9 @@ public class Gui implements ModMenuApi {
 
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
+        if (!Config.GSON.hasScreen()) {
+            return parent -> null;
+        }
         return ConfigScreen::create;
     }
 }

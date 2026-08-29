@@ -57,7 +57,7 @@ public class GameOptionsMixin {
         }, (value) -> {
             return ((double)value - 70.0) / 40.0;
         }), (Integer)(int)Config.GSON.instance().fov, (value) -> {
-            Minecraft.getInstance().levelRenderer.resetLevelRenderData();
+            com.cleannrooster.dungeons_iso.util.Util.refreshLevelRenderer();
         });
 
         fov30.set(Math.clamp((int) Config.GSON.instance().fov,(int)45,90));
@@ -109,7 +109,7 @@ public class GameOptionsMixin {
             cancellable = true
     )
     public void getAutoJumpCleann(CallbackInfoReturnable<OptionInstance<Boolean>> option) {
-        if(Mod.enabled && Config.GSON.instance().clickToMove && Config.GSON.instance().forceAutoJump) {
+        if(Mod.enabled && Config.GSON.instance().isClickToMove() && Config.GSON.instance().forceAutoJump) {
 
             option.setReturnValue(autoJumpXIV);
         }

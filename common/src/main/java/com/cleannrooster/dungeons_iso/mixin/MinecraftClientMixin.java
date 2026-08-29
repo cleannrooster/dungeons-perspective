@@ -2,14 +2,17 @@ package com.cleannrooster.dungeons_iso.mixin;
 
 import com.cleannrooster.dungeons_iso.ModCompat;
 import com.cleannrooster.dungeons_iso.api.*;
+import com.cleannrooster.dungeons_iso.api.cullers.room.CullDebug;
 import com.cleannrooster.dungeons_iso.compat.DragonCompat;
 import com.cleannrooster.dungeons_iso.compat.MidnightControlsCompat;
 import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.config.Config;
+import com.cleannrooster.dungeons_iso.util.ContextualInteractionTargeting;
+import com.cleannrooster.dungeons_iso.util.ContextualTargeting;
+import com.cleannrooster.dungeons_iso.util.InteractionTargeting;
 import com.cleannrooster.dungeons_iso.ui.LootUI;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
@@ -137,6 +140,12 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
     @Inject(method = "tick", at = @At("HEAD"))
     public void tickXIVHEAD(CallbackInfo ci) {
         Minecraft client = (Minecraft) (Object) this;
+        if (client.level != null) {
+            CullDebug.tickLog();
+            if (ClientInit.cullDebugBinding != null && ClientInit.cullDebugBinding.consumeClick()) {
+                CullDebug.report();
+            }
+        }
         boolean spell = false;
         if (ModCompat.isModLoaded("spell_engine")) {
 
@@ -185,7 +194,62 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
             if(ClientInit.rotateToggle.consumeClick()){
                 rotateToggle = !rotateToggle;
             }
-            if(  ClientInit.clickToMove.isDown() && Config.GSON.instance().clickToMove) {
+            if (Config.GSON.instance().isContextualInteract()) {
+                Vec3 direction;
+                ContextualTargeting.TargetingInputMode mode;
+                if (Config.GSON.instance().isMovementTargeting()) {
+                    mode = ContextualTargeting.TargetingInputMode.MOVEMENT;
+                    var move = client.player.input.getMoveVector();
+                    direction = movementInputToVelocity(new Vec3(move.x, 0, move.y), 1.0F, Mod.yaw);
+                } else {
+                    mode = ContextualTargeting.TargetingInputMode.POINTER;
+                    direction = Mod.crosshairTarget == null ? Vec3.ZERO
+                            : Mod.crosshairTarget.getLocation().subtract(client.player.position()).multiply(1, 0, 1);
+                }
+                if (direction.lengthSqr() > 1.0E-6) direction = direction.normalize();
+                Mod.targetedInteractable = ContextualInteractionTargeting.updateTarget(
+                        client.player, direction, Mod.targetedInteractable, mode);
+                if (!this.options.keyAttack.isDown() && !this.options.keyUse.isDown()) {
+                    Mod.targeted = ContextualTargeting.updateTarget(client.player, direction, Mod.targeted,
+                            ContextualTargeting.TargetingMode.INTERACT, mode);
+                }
+                while (ClientInit.interact.consumeClick()) {
+                    boolean usedEntity = false;
+                    if (Mod.targeted instanceof LivingEntity entity
+                            && ContextualTargeting.isInteractableTarget(client.player, entity,
+                                    client.player.entityInteractionRange() + 1.0D)) {
+                        for (InteractionHand hand : InteractionHand.values()) {
+                            EntityHitResult entityHit = new EntityHitResult(entity, entity.getEyePosition());
+                            var result = client.gameMode.interact(client.player, entity, entityHit, hand);
+                            if (result.consumesAction()) {
+                                client.player.swing(hand);
+                                rightClickDelay = 4;
+                                usedEntity = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (usedEntity) continue;
+                    if (Mod.targetedInteractable != null
+                            && InteractionTargeting.isInteractableInRange(client.player, Mod.targetedInteractable)) {
+                        BlockHitResult target = ContextualInteractionTargeting.resolveHit(
+                                client.player, Mod.targetedInteractable);
+                        if (target != null) {
+                            for (InteractionHand hand : InteractionHand.values()) {
+                                var result = client.gameMode.useItemOn(client.player, hand, target);
+                                if (result.consumesAction()) {
+                                    client.player.swing(hand);
+                                    rightClickDelay = 4;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                Mod.targetedInteractable = null;
+            }
+            if(  ClientInit.clickToMove.isDown() && Config.GSON.instance().isClickToMove()) {
 
                 if (  (Mod.crosshairTarget instanceof BlockHitResult hit &&  isInteractable(hit))){
                     InteractionHand[] var1 = InteractionHand.values();
@@ -240,7 +304,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
 
             boolean bool = false;
-            if(!player.isFallFlying() && this.location != null && Config.GSON.instance().clickToMove){
+            if(!player.isFallFlying() && this.location != null && Config.GSON.instance().isClickToMove()){
                 Vec3 vec3d2 = new Vec3((double)this.player.xxa, (double)this.player.yya, (double)this.player.zza);
 
 
@@ -287,12 +351,46 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
             ){
                 bool2 = true;
             }
+            if (Config.GSON.instance().isContextualTargeting()) {
+                ContextualTargeting.TargetingMode combatMode = bool
+                        ? ContextualTargeting.TargetingMode.RANGED
+                        : (this.options.keyAttack.isDown() || mouseCooldown > 0
+                                ? ContextualTargeting.TargetingMode.MELEE
+                                : ContextualTargeting.TargetingMode.NONE);
+                ContextualTargeting.TargetingInputMode inputMode = Config.GSON.instance().isMovementTargeting()
+                        ? ContextualTargeting.TargetingInputMode.MOVEMENT
+                        : ContextualTargeting.TargetingInputMode.POINTER;
+                Vec3 direction;
+                if (inputMode == ContextualTargeting.TargetingInputMode.MOVEMENT) {
+                    var move = client.player.input.getMoveVector();
+                    direction = movementInputToVelocity(new Vec3(move.x, 0, move.y), 1.0F, Mod.yaw);
+                } else {
+                    direction = Mod.crosshairTarget == null ? Vec3.ZERO
+                            : Mod.crosshairTarget.getLocation().subtract(client.player.position()).multiply(1, 0, 1);
+                }
+                if (direction.lengthSqr() > 1.0E-6) direction = direction.normalize();
+                if (ContextualTargeting.isValidLockOn(client.player, Mod.lockOnTarget)) {
+                    Mod.targeted = Mod.lockOnTarget;
+                } else {
+                    Mod.lockOnTarget = null;
+                    ContextualTargeting.TargetingMode acquisitionMode = combatMode;
+                    if (acquisitionMode == ContextualTargeting.TargetingMode.NONE
+                            && Config.GSON.instance().isContextualInteract()) {
+                        // Retain an interactable villager/trader while idle instead of immediately
+                        // clearing the entity selected earlier in this tick.
+                        acquisitionMode = ContextualTargeting.TargetingMode.INTERACT;
+                    }
+                    Mod.targeted = ContextualTargeting.updateTarget(
+                            client.player, direction, Mod.targeted, acquisitionMode, inputMode);
+                }
+                if (Mod.targeted != null) pickCooldown = 20;
+            }
             if(Mod.targeted != null && !targeted.isInvisibleTo(client.player) && client.player.hasLineOfSight(targeted)) {
                 EntityHitResult result = new EntityHitResult(targeted,targeted.getEyePosition());
                 lookAt(client.player, EntityAnchorArgument.Anchor.EYES, result.getLocation(),true);
 
             }else
-                if (((!Config.GSON.instance().turnToMouse && !player.isFallFlying()) && (
+                if (((!Config.GSON.instance().isTurnToMouse() && !player.isFallFlying()) && (
                          !(bool ) && !using && mouseCooldown <= 0 && !(player.getMainHandItem().getItem() instanceof CrossbowItem item )&& ( client.player.input.getMoveVector().length() > 0.1)))) {
                     if(Mod.targeted != null){
                         EntityHitResult result = new EntityHitResult(targeted,targeted.getEyePosition());
@@ -651,7 +749,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
                 InputConstants.grabOrReleaseMouse(client.getWindow(), GLFW.GLFW_CURSOR_NORMAL, client.mouseHandler.xpos(), client.mouseHandler.ypos());
             }
-            Minecraft.getInstance().levelRenderer.resetLevelRenderData();
+            Util.refreshLevelRenderer();
         }
 
         if (ClientInit.zoomInBinding.consumeClick()) {
@@ -810,7 +908,7 @@ public abstract class MinecraftClientMixin implements MinecraftClientAccessor {
 
             }*/
 /*
-            if (  (  (!Config.GSON.instance().turnToMouse &&     !player.isFallFlying()) && (
+            if (  (  (!Config.GSON.instance().isTurnToMouse() &&     !player.isFallFlying()) && (
                        (!(bool ) && !using && mouseCooldown <= 0  && !(player.getMainHandStack().getItem() instanceof CrossbowItem item ) &&  client.player.input.getMovementInput().length() > 0.1)))) {
                 if(Mod.targeted != null){
                     EntityHitResult result = new EntityHitResult(targeted,targeted.getEyePos());

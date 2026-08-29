@@ -24,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
+import com.cleannrooster.dungeons_iso.util.JoystickInput;
 
 @Mixin(KeyboardInput.class)
 public abstract class KeyboardInputMixin extends ClientInput  {
@@ -45,13 +46,24 @@ public abstract class KeyboardInputMixin extends ClientInput  {
             }
             Minecraft client = Minecraft.getInstance();
             assert client.player != null;
+            Vector2f joystick = (Config.GSON.instance().isJoystickMovement()
+                    && ((GuiScreenAccessor) client.gui).getScreen() == null)
+                    ? JoystickInput.readLeftStick() : null;
+            if (joystick != null) {
+                Mod.joystickRawFwd = joystick.x;
+                Mod.joystickRawSide = joystick.y;
+                this.moveVector = new Vec2(joystick.y, joystick.x);
+            } else {
+                Mod.joystickRawFwd = 0F;
+                Mod.joystickRawSide = 0F;
+            }
             Vector2f movement = new Vector2f(this.moveVector.y, this.moveVector.x);
 
             float tickDelta = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
             boolean bool = ((MinecraftClientAccessor)client).getLocation() instanceof EntityHitResult result && result.getEntity() instanceof ItemEntity;
             float yaw = client.gameRenderer.mainCamera().yRot() - client.player.getViewYRot(tickDelta);
-            if((Config.GSON.instance().clickToMove || bool) &&  ((MinecraftClientAccessor)client).getOriginalLocation() != null  && ((MinecraftClientAccessor)client).getLocation() != null &&((MinecraftClientAccessor)client).getLocation().getLocation() instanceof Vec3 vec3d
+            if((Config.GSON.instance().isClickToMove() || bool) &&  ((MinecraftClientAccessor)client).getOriginalLocation() != null  && ((MinecraftClientAccessor)client).getLocation() != null &&((MinecraftClientAccessor)client).getLocation().getLocation() instanceof Vec3 vec3d
                     && client.player.distanceToSqr(((MinecraftClientAccessor)client).getOriginalLocation()) < (((MinecraftClientAccessor)client).getOriginalLocation()).distanceToSqr(((MinecraftClientAccessor)client).getLocation().getLocation())-1) {
                    if(((MinecraftClientAccessor)client).getLocation() instanceof EntityHitResult && ((MinecraftClientAccessor)client).getLocation().getLocation().subtract(0,((MinecraftClientAccessor)client).getLocation().getLocation().y()-(client.player.position()).y(),0)
                            .distanceToSqr(client.player.position()) < (bool ? client.player.getBbWidth()/2 :(client.player.entityInteractionRange() * client.player.entityInteractionRange()/4))){
@@ -101,7 +113,8 @@ public abstract class KeyboardInputMixin extends ClientInput  {
             this.moveVector = new Vec2(movement.y, movement.x);
 
         }
-        if(this.keyPresses.backward() || this.keyPresses.forward() || this.keyPresses.left() || this.keyPresses.right()){
+        if(this.keyPresses.backward() || this.keyPresses.forward() || this.keyPresses.left() || this.keyPresses.right()
+                || Mod.joystickRawFwd != 0F || Mod.joystickRawSide != 0F){
             Mod.useTimer = 0;
         }
         else{

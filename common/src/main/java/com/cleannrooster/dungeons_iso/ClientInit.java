@@ -34,6 +34,7 @@ public class ClientInit {
     public static KeyMapping rotateClockwise;
     public static KeyMapping interact;
     public static KeyMapping contextToggleBinding;
+    public static KeyMapping cullDebugBinding;
 
     /**
      * Creates all KeyBinding objects.
@@ -41,6 +42,8 @@ public class ClientInit {
      * Does NOT call any platform-specific registration API — see getAllKeyBindings().
      */
     public static void registerKeyBindings() {
+        cullDebugBinding = new KeyMapping("dungeons_iso.binds.cullDebug",
+                InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), CATEGORY);
         toggleBinding = new KeyMapping(
                 "dungeons_iso.binds.toggle",
                 InputConstants.Type.KEYSYM,
@@ -142,7 +145,7 @@ public class ClientInit {
                 toggleBinding, isoBinding, moveCameraBinding, lockOn, verticalBinding,
                 clickToMove, zoomInBinding, zoomOutBinding, rotateToggle, rotateClockwise,
                 interact, rotateCounterClockwise, contextToggleBinding, cycleTargetBinding,
-                openLootMenu
+                openLootMenu, cullDebugBinding
         };
     }
 
@@ -153,6 +156,9 @@ public class ClientInit {
         instance = new ClientInit();
         Config.GSON.load();
         com.cleannrooster.dungeons_iso.config.FirstTimeState.load();
+        // Initialise every class reachable from chunk-build workers on the client thread. This
+        // avoids first-load races in both vanilla's and Sodium 0.9's asynchronous mesh builders.
+        com.cleannrooster.dungeons_iso.api.cullers.room.TerrainCulling.warmUp();
     }
 
     // Chunk culling is handled robustly in CameraMixin, which intercepts the per-frame read of

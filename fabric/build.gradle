@@ -51,9 +51,6 @@ dependencies {
     // Sodium (for compat)
     implementation "maven.modrinth:sodium:${rootProject.sodium_version}-${platform}"
 
-    // MixinSquared
-    annotationProcessor "com.github.bawnorton.mixinsquared:mixinsquared-common:${rootProject.mixinsquared_version}"
-    include(implementation("com.github.bawnorton.mixinsquared:mixinsquared-fabric:${rootProject.mixinsquared_version}"))
 }
 
 processResources {

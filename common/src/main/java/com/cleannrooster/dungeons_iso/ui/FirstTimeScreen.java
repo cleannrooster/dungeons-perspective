@@ -118,7 +118,7 @@ public class FirstTimeScreen extends Screen {
             client.mouseHandler.grabMouse();
             InputConstants.grabOrReleaseMouse(client.getWindow(), GLFW.GLFW_CURSOR_NORMAL,
                     client.mouseHandler.xpos(), client.mouseHandler.ypos());
-            client.levelRenderer.resetLevelRenderData();
+            com.cleannrooster.dungeons_iso.util.Util.refreshLevelRenderer();
         }
     }
 }

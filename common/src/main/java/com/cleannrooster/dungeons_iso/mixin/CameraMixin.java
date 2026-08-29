@@ -94,7 +94,7 @@ public abstract class CameraMixin implements CameraAccessor {
     )
     private boolean dungeons_iso$forceSmartCullOff(boolean original) {
         if (Mod.enabled || Config.GSON.instance().disableChunkCulling) {
-            return Mod.shouldRebuild();
+            return false;
         }
         return original;
     }

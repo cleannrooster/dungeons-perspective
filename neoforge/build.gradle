@@ -50,9 +50,6 @@ dependencies {
     // Sodium - neoforge (optional compat)
     compileOnly "maven.modrinth:sodium:${rootProject.sodium_version}-neoforge"
 
-    // MixinSquared - neoforge
-    annotationProcessor "com.github.bawnorton.mixinsquared:mixinsquared-common:${rootProject.mixinsquared_version}"
-    include(implementation("com.github.bawnorton.mixinsquared:mixinsquared-neoforge:${rootProject.mixinsquared_version}"))
 }
 
 processResources {

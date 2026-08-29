@@ -6,15 +6,23 @@ import com.cleannrooster.dungeons_iso.api.cullers.BlockDetector;
 import com.cleannrooster.dungeons_iso.api.cullers.FloodCuller;
 import com.cleannrooster.dungeons_iso.api.cullers.GenericCuller3;
 import com.cleannrooster.dungeons_iso.api.cullers.GenericBlockCuller2;
+import com.cleannrooster.dungeons_iso.api.cullers.room.RoomScanner;
+import com.cleannrooster.dungeons_iso.api.cullers.room.GhostRenderer;
+import com.cleannrooster.dungeons_iso.api.cullers.room.SectionRebuildQueue;
+import com.cleannrooster.dungeons_iso.api.cullers.room.SightlineScanner;
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
-import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.Level;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import org.joml.Vector3d;
 
 import java.util.ArrayList;
@@ -32,12 +40,14 @@ public class SodiumCompat {
 
     public static LinkedHashMap<BlockPos,BlockCuller.TransparentBlock> transparentBlocks;
     public static FloodCuller floodCuller = new FloodCuller();
-    public static List<BlockPos> stream = List.of();
-    // Last player block position that triggered a Sodium chunk rebuild.
-    // Rebuilds are skipped while the player stays on the same block.
-    private static BlockPos lastRebuildPos = BlockPos.ZERO;
     public static FogOfWar fogOfWar;
     public static HashMap<List<Integer>, HitResult> map = new HashMap<>();
+    private static BlockPos lastScanPos;
+    private static int lastScanTick = Integer.MIN_VALUE;
+    private static ResourceKey<Level> lastDimension;
+    private static BlockPos lastSightlinePos;
+    private static Vec3 lastCameraPos;
+    private static int lastSightlineTick = Integer.MIN_VALUE;
     static{
         blockCullers.addAll(List.of( new GenericCuller3(),floodCuller) );
         transparentBlocks = new LinkedHashMap<>();
@@ -62,25 +72,8 @@ public class SodiumCompat {
             fogOfWar.points = null;
         }
 
+        tickTerrainScanners();
 
-        if(Minecraft.getInstance().getCameraEntity()!= null) {
-            stream = floodCuller.getCulledBlocks(Minecraft.getInstance().player.blockPosition().above(), Minecraft.getInstance().gameRenderer.mainCamera(), Minecraft.getInstance().getCameraEntity());
-        }
-
-        // Only schedule a Sodium chunk rebuild when the player moves to a new block position.
-        // Box.expand() returns a new Box (immutable) — assign the result.
-        BlockPos currentPos = Minecraft.getInstance().player.blockPosition();
-        if (!currentPos.equals(lastRebuildPos)) {
-            lastRebuildPos = currentPos;
-            double dub = 1.25 * Mod.getZoom() * Mod.zoomMetric;
-            AABB box = new AABB(Minecraft.getInstance().player.getEyePosition(),
-                    Minecraft.getInstance().gameRenderer.mainCamera().position())
-                    .inflate(1, 0, 1)
-                    .inflate(dub, dub, dub);
-            SodiumWorldRenderer.instance().scheduleRebuildForBlockArea(
-                    (int) box.minX, (int) box.minY, (int) box.minZ,
-                    (int) box.maxX, (int) box.maxY, (int) box.maxZ, true);
-        }
 
         for(BlockCuller culler :blockCullers) {
             if(Minecraft.getInstance().player.tickCount % culler.frequency() == 0) {
@@ -88,6 +81,100 @@ public class SodiumCompat {
             }
 
 
+        }
+    }
+
+    private static boolean cooledDown(int age, int last, int cooldown) {
+        if (last == Integer.MIN_VALUE) {
+            return true;
+        }
+        int since = age - last;
+        return since < 0 || since >= cooldown;
+    }
+
+    /** Drives both asynchronous scanners and the shared, renderer-neutral rebuild queue. */
+    private static void tickTerrainScanners() {
+        Minecraft client = Minecraft.getInstance();
+        ClientLevel world = client.level;
+        Entity cameraEntity = client.getCameraEntity();
+        if (world == null || cameraEntity == null || client.player == null) {
+            return;
+        }
+
+        ResourceKey<Level> dimension = world.dimension();
+        if (!dimension.equals(lastDimension)) {
+            lastDimension = dimension;
+            lastScanPos = null;
+            lastSightlinePos = null;
+            lastCameraPos = null;
+            SectionRebuildQueue.INSTANCE.clear();
+            RoomScanner.INSTANCE.reset();
+            SightlineScanner.INSTANCE.reset();
+            GhostRenderer.invalidate();
+            return;
+        }
+
+        BlockPos playerPos = cameraEntity.blockPosition();
+        boolean roomActive = Mod.enabled && Mod.shouldRebuild() && Config.GSON.instance().roomCulling;
+        LongOpenHashSet toggled = RoomScanner.INSTANCE.setActive(roomActive);
+        if (toggled != null) {
+            SectionRebuildQueue.INSTANCE.submit(toggled, playerPos);
+        }
+
+        if (Config.GSON.instance().roomCulling) {
+            int cooldown = Math.max(1, Config.GSON.instance().roomRescanCooldown);
+            boolean moved = lastScanPos == null || !lastScanPos.equals(playerPos);
+            if (moved && cooledDown(client.player.tickCount, lastScanTick, cooldown)) {
+                lastScanTick = client.player.tickCount;
+                lastScanPos = playerPos.immutable();
+                RoomScanner.INSTANCE.requestScan(world, playerPos);
+            }
+            LongOpenHashSet dirty = RoomScanner.INSTANCE.pollCompleted();
+            if (dirty != null) {
+                SectionRebuildQueue.INSTANCE.submit(dirty, playerPos);
+            }
+        }
+
+        tickSightlineScanner(world, cameraEntity, playerPos);
+        SectionRebuildQueue.INSTANCE.drain();
+    }
+
+    private static void tickSightlineScanner(ClientLevel world, Entity cameraEntity,
+                                              BlockPos playerPos) {
+        boolean active = Mod.enabled && Mod.shouldRebuild() && Config.GSON.instance().shapeCulling;
+        LongOpenHashSet toggled = SightlineScanner.INSTANCE.setActive(active);
+        if (toggled != null) {
+            SectionRebuildQueue.INSTANCE.submit(toggled, playerPos);
+        }
+        if (!active) {
+            return;
+        }
+
+        Vec3 camera = Mod.preMod;
+        if (camera == null || camera.equals(Vec3.ZERO)) {
+            return;
+        }
+        double distance = camera.distanceTo(cameraEntity.position());
+        if (distance < 1.0 || distance > 128.0) {
+            return;
+        }
+
+        int cooldown = Math.max(1, Config.GSON.instance().sightlineRescanCooldown);
+        double step = Math.max(0.05F, Config.GSON.instance().sightlineCameraStep);
+        int age = Minecraft.getInstance().player.tickCount;
+        boolean cameraMoved = lastCameraPos == null
+                || lastCameraPos.distanceToSqr(camera) > step * step;
+        boolean playerMoved = lastSightlinePos == null || !lastSightlinePos.equals(playerPos);
+        if ((cameraMoved || playerMoved) && cooledDown(age, lastSightlineTick, cooldown)) {
+            lastSightlineTick = age;
+            lastCameraPos = camera;
+            lastSightlinePos = playerPos.immutable();
+            SightlineScanner.INSTANCE.requestScan(world, camera, cameraEntity.getBoundingBox());
+        }
+
+        LongOpenHashSet dirty = SightlineScanner.INSTANCE.pollCompleted();
+        if (dirty != null) {
+            SectionRebuildQueue.INSTANCE.submit(dirty, playerPos);
         }
     }
 }

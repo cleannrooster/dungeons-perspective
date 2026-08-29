@@ -5,6 +5,7 @@ import com.cleannrooster.dungeons_iso.config.ConfigScreen;
 import com.mojang.brigadier.Command;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraft.commands.Commands;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -46,6 +47,10 @@ class NeoForgeClientGameEvents {
         event.getDispatcher().register(
             Commands.literal("dperspective")
                 .executes(ctx -> {
+                    if (!com.cleannrooster.dungeons_iso.config.Config.GSON.hasScreen()) {
+                        ctx.getSource().sendFailure(Component.translatable("dungeons_iso.config.requires_yacl"));
+                        return 0;
+                    }
                     Minecraft.getInstance().execute(() ->
                         Minecraft.getInstance().setScreenAndShow(ConfigScreen.create(null))
                     );
