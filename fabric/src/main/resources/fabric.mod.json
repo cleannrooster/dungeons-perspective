@@ -22,19 +22,21 @@
     ],
     "modmenu": [
       "com.cleannrooster.dungeons_iso.config.Gui"
-    ],
-    "mixinsquared-adjuster": [
-      "com.cleannrooster.dungeons_iso.mixin.CleannMixinAdjuster"
     ]
   },
   "mixins": [
-    "dungeons_iso.mixins.json",
-    "dungeons_iso.fabric.mixins.json"
+    "dungeons_iso.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.14.14",
     "minecraft": ">=1.20.1",
-    "fabric-api": "*",
-    "yet_another_config_lib_v3": ">=3.5.0"
+    "fabric-api": "*"
+  },
+  "recommends": {
+    "yet_another_config_lib_v3": ">=3.5.0",
+    "owo": "*"
+  },
+  "suggests": {
+    "sodium": "*"
   }
 }

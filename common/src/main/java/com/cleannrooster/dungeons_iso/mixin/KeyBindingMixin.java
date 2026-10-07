@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
         @Inject(method = "isPressed", at = @At("RETURN"), cancellable = true)
     
         public void isPressedMouse(CallbackInfoReturnable<Boolean> cir) {
-            if (((KeyBinding) (Object) this).equals(ClientInit.clickToMove) && Mod.enabled && Config.GSON.instance().clickToMove) {
+            if (((KeyBinding) (Object) this).equals(ClientInit.clickToMove) && Mod.enabled && Config.GSON.instance().isClickToMove()) {
                 if(MinecraftClient.getInstance().currentScreen == null && MinecraftClient.getInstance().mouse.wasRightButtonClicked()){
                     cir.setReturnValue(true);
     
@@ -34,7 +34,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
     
         public void isPressedXIV(CallbackInfoReturnable<Boolean> cir) {
     
-            if (((KeyBinding) (Object) this).equals(MinecraftClient.getInstance().options.useKey) && Mod.enabled && Config.GSON.instance().clickToMove) {
+            if (((KeyBinding) (Object) this).equals(MinecraftClient.getInstance().options.useKey) && Mod.enabled && Config.GSON.instance().isClickToMove()) {
     
                 if (ClientInit.interact.isPressed()) {
     
@@ -47,7 +47,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
                         cir.setReturnValue(false);
     
                     }
-                } else if (((KeyBinding) (Object) this).equals(MinecraftClient.getInstance().options.useKey) && Mod.enabled && Config.GSON.instance().clickToMove && MinecraftClient.getInstance().player != null && MinecraftClient.getInstance().player.getMainHandStack().getItem() instanceof RangedWeaponItem) {
+                } else if (((KeyBinding) (Object) this).equals(MinecraftClient.getInstance().options.useKey) && Mod.enabled && Config.GSON.instance().isClickToMove() && MinecraftClient.getInstance().player != null && MinecraftClient.getInstance().player.getMainHandStack().getItem() instanceof RangedWeaponItem) {
                     if (MinecraftClient.getInstance().options.attackKey.isPressed()) {
                         cir.setReturnValue(true);
                     } else {
@@ -69,7 +69,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
     
         public void wasPressedXIV(CallbackInfoReturnable<Boolean> cir) {
     
-             if (((KeyBinding) (Object) this).equals(MinecraftClient.getInstance().options.useKey) && Mod.enabled && Config.GSON.instance().clickToMove) {
+             if (((KeyBinding) (Object) this).equals(MinecraftClient.getInstance().options.useKey) && Mod.enabled && Config.GSON.instance().isClickToMove()) {
     
                 if (ClientInit.interact.wasPressed() ){
                     cir.setReturnValue(true);
@@ -85,7 +85,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
                     }
                 }
                 else
-                if (((KeyBinding) (Object) this).equals(MinecraftClient.getInstance().options.useKey) && Mod.enabled && Config.GSON.instance().clickToMove && MinecraftClient.getInstance().player != null && MinecraftClient.getInstance().player.getMainHandStack().getItem() instanceof RangedWeaponItem) {
+                if (((KeyBinding) (Object) this).equals(MinecraftClient.getInstance().options.useKey) && Mod.enabled && Config.GSON.instance().isClickToMove() && MinecraftClient.getInstance().player != null && MinecraftClient.getInstance().player.getMainHandStack().getItem() instanceof RangedWeaponItem) {
                     if (MinecraftClient.getInstance().options.attackKey.wasPressed()) {
                         cir.setReturnValue(true);
                     } else {

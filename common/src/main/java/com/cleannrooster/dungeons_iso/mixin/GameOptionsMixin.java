@@ -110,7 +110,7 @@ public class GameOptionsMixin {
             cancellable = true
     )
     public void getAutoJumpCleann(CallbackInfoReturnable<SimpleOption<Boolean>> option) {
-        if(Mod.enabled && Config.GSON.instance().clickToMove && Config.GSON.instance().forceAutoJump) {
+        if(Mod.enabled && Config.GSON.instance().isClickToMove() && Config.GSON.instance().forceAutoJump) {
 
             option.setReturnValue(autoJumpXIV);
         }

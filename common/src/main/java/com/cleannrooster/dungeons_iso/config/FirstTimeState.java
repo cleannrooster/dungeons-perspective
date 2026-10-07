@@ -2,7 +2,7 @@ package com.cleannrooster.dungeons_iso.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import dev.isxander.yacl3.platform.YACLPlatform;
+import com.cleannrooster.dungeons_iso.ModCompat;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,7 +18,7 @@ import java.nio.file.Path;
  */
 public class FirstTimeState {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Path PATH = YACLPlatform.getConfigDir().getParent().resolve("dungeons_iso_firsttime.json");
+    private static final Path PATH = ModCompat.getConfigDir().getParent().resolve("dungeons_iso_firsttime.json");
 
     private static FirstTimeState instance;
 

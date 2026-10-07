@@ -1,7 +1,6 @@
 package com.cleannrooster.dungeons_iso.mixin;
 
 import com.cleannrooster.dungeons_iso.mod.Mod;
-import net.caffeinemc.mods.sodium.client.render.SodiumWorldRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
 import net.minecraft.entity.LivingEntity;

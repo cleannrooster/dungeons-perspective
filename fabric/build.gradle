@@ -56,14 +56,12 @@ dependencies {
     modImplementation "dev.emi:trinkets:${rootProject.trinkets_version}"
 
     // ModMenu
-    modImplementation "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+    modImplementation "maven.modrinth:mOgUt4GM:v6Xx3fbU"
 
-    // Sodium (for compat)
+    // Sodium compatibility is retained but disabled while testing the vanilla/Indigo culling
+    // path. Compile against it without automatically adding it to development runs.
     modImplementation "maven.modrinth:sodium:${rootProject.sodium_version}-${platform}"
 
-    // MixinSquared
-    include(modImplementation("com.github.bawnorton.mixinsquared:mixinsquared-${platform}:0.2.0"))
-    annotationProcessor "com.github.bawnorton.mixinsquared:mixinsquared-${platform}:0.2.0"
     implementation include("maven.modrinth:tiny-config:${project.tiny_config_version}-fabric")
 
     // TinyConfig (bundled)

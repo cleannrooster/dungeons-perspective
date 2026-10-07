@@ -28,6 +28,7 @@ public class ClientInit {
     public static KeyBinding rotateClockwise;
     public static KeyBinding interact;
     public static KeyBinding contextToggleBinding;
+    public static KeyBinding cullDebugBinding;
 
     /**
      * Creates all KeyBinding objects.
@@ -35,6 +36,14 @@ public class ClientInit {
      * Does NOT call any platform-specific registration API — see getAllKeyBindings().
      */
     public static void registerKeyBindings() {
+        // Unbound by default: a support tool, not a feature, and claiming a key in a modpack
+        // invites a clash. Still listed in the controls screen for anyone who wants it.
+        cullDebugBinding = new KeyBinding(
+                "dungeons_iso.binds.cullDebug",
+                InputUtil.Type.KEYSYM,
+                InputUtil.UNKNOWN_KEY.getCode(),
+                "dungeons_iso.binds.category"
+        );
         toggleBinding = new KeyBinding(
                 "dungeons_iso.binds.toggle",
                 InputUtil.Type.KEYSYM,
@@ -136,7 +145,7 @@ public class ClientInit {
                 toggleBinding, isoBinding, moveCameraBinding, lockOn, verticalBinding,
                 clickToMove, zoomInBinding, zoomOutBinding, rotateToggle, rotateClockwise,
                 interact, rotateCounterClockwise, contextToggleBinding, cycleTargetBinding,
-                openLootMenu
+                openLootMenu, cullDebugBinding
         };
     }
 
@@ -147,9 +156,13 @@ public class ClientInit {
         instance = new ClientInit();
         Config.GSON.load();
         com.cleannrooster.dungeons_iso.config.FirstTimeState.load();
+        // Must happen on the client thread, before any world loads. Chunk meshing runs on a worker
+        // pool, and a worker must never be the first thread to load these classes — see
+        // TerrainCulling.warmUp().
+        com.cleannrooster.dungeons_iso.api.cullers.room.TerrainCulling.warmUp();
     }
 
-    private static void drawCuboidShapeOutline(MatrixStack matrices, VertexConsumer vertexConsumer, VoxelShape shape, double offsetX, double offsetY, double offsetZ, float red, float green, float blue, float alpha) {
+    public static void drawCuboidShapeOutline(MatrixStack matrices, VertexConsumer vertexConsumer, VoxelShape shape, double offsetX, double offsetY, double offsetZ, float red, float green, float blue, float alpha) {
         MatrixStack.Entry entry = matrices.peek();
         shape.forEachEdge((minX, minY, minZ, maxX, maxY, maxZ) -> {
             float k = (float)(maxX - minX);

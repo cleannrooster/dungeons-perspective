@@ -27,6 +27,40 @@ public class ModCompat {
         return false;
     }
 
+    /**
+     * True when the class is on the classpath. Preferred over {@link #isModLoaded} whenever the
+     * question is "can I call this code", because it is answerable at any point in startup —
+     * NeoForge's {@code ModList} does not exist yet while the earliest mixins are running.
+     */
+    public static boolean isClassPresent(String className) {
+        try {
+            Class.forName(className, false, ModCompat.class.getClassLoader());
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * The loader's config directory. Used by the no-YACL config backend, which cannot ask
+     * {@code YACLPlatform} for it.
+     */
+    public static java.nio.file.Path getConfigDir() {
+        // Fabric
+        try {
+            return net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir();
+        } catch (Throwable ignored) {}
+        // NeoForge
+        try {
+            Class<?> fmlPaths = Class.forName("net.neoforged.fml.loading.FMLPaths");
+            Object configDir = fmlPaths.getField("CONFIGDIR").get(null);
+            return (java.nio.file.Path) fmlPaths.getMethod("get").invoke(configDir);
+        } catch (Throwable ignored) {}
+        // Absolute, because callers take getParent() of this to find the game root and
+        // Path.of("config").getParent() is null.
+        return java.nio.file.Path.of("config").toAbsolutePath();
+    }
+
     public static boolean isDevelopmentEnvironment() {
         // Fabric
         try {

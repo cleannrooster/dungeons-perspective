@@ -1,7 +1,7 @@
 package com.cleannrooster.dungeons_iso.network;
 
 import com.google.gson.*;
-import dev.isxander.yacl3.platform.YACLPlatform;
+import com.cleannrooster.dungeons_iso.ModCompat;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
@@ -33,7 +33,7 @@ public record Capabilities(boolean targetFromCamera, boolean unlimitedReach) imp
 
     public static Capabilities load() {
         try {
-            FileReader reader = new FileReader(YACLPlatform
+            FileReader reader = new FileReader(ModCompat
                     .getConfigDir()
                     .resolve("dungeons_iso.capabilities.json")
                     .toFile());
@@ -60,7 +60,7 @@ public record Capabilities(boolean targetFromCamera, boolean unlimitedReach) imp
     }
 
     public void save() throws IOException {
-        FileWriter writer = new FileWriter(YACLPlatform
+        FileWriter writer = new FileWriter(ModCompat
                 .getConfigDir()
                 .resolve("dungeons_iso.capabilities.json")
                 .toFile());

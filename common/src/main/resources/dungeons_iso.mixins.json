@@ -16,17 +16,13 @@
     "MouseMixin",
     "client.PlayerEntityMixin",
     "GameOptionsMixin",
-    "AbstractSoundInstanceMixin",
     "SoundSystemMixin",
     "AbstractHorseEntityMixin",
     "LightmapTextureManagerMixin",
     "BackgroundRendererMixin",
-    "BossBarHudMixin",
-    "compat.sodium.MixinBlockRenderer",
-    "compat.sodium.AbstractRenderContextMixin",
-    "compat.sodium.AbstractRenderContextMixin2",
-    "compat.sodium.RenderSectionManagerMixin",
-    "KeyBindingMixin"
+    "ChunkRendererRegionMixin",
+    "KeyBindingMixin",
+    "WorldRendererMixin"
 
   ],
   "server": [

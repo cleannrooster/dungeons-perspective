@@ -18,7 +18,6 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
-import net.spell_engine.client.SpellEngineClient;
 import org.joml.Matrix2f;
 import org.joml.Vector2f;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,6 +26,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
+import com.cleannrooster.dungeons_iso.util.JoystickInput;
 
 @Mixin(KeyboardInput.class)
 public abstract class KeyboardInputMixin extends Input {
@@ -43,13 +43,46 @@ public abstract class KeyboardInputMixin extends Input {
             }
             MinecraftClient client = MinecraftClient.getInstance();
             assert client.player != null;
+
+            // Native left-stick movement: when a controller is connected and the stick is past
+            // the deadzone it overrides the keyboard for this tick, feeding the same
+            // movementForward/movementSideways the camera-relative rotation below already handles.
+            // GLFW reads the stick straight from hardware, so — unlike keyboard input — it is NOT
+            // suppressed while a screen (inventory, chat, pause menu, ...) is open; gate on
+            // currentScreen == null so those menus still stop movement as they normally would.
+            Vector2f joystick = (Config.GSON.instance().isJoystickMovement() && client.currentScreen == null)
+                    ? JoystickInput.readLeftStick() : null;
+            if (joystick != null) {
+                Mod.joystickRawFwd = joystick.x;
+                Mod.joystickRawSide = joystick.y;
+                this.pressingForward = joystick.x > 0.2F;
+                this.pressingBack    = joystick.x < -0.2F;
+                this.pressingLeft    = joystick.y > 0.2F;
+                this.pressingRight   = joystick.y < -0.2F;
+                this.movementForward  = joystick.x;
+                this.movementSideways = joystick.y;
+                if (slowDown) {
+                    this.movementForward  *= slowDownFactor;
+                    this.movementSideways *= slowDownFactor;
+                }
+            } else {
+                Mod.joystickRawFwd = 0F;
+                Mod.joystickRawSide = 0F;
+            }
+
             Vector2f movement = new Vector2f(this.movementForward, this.movementSideways);
 
             float tickDelta = client.gameRenderer.getCamera().getLastTickDelta();
 
             boolean bool = ((MinecraftClientAccessor)client).getLocation() instanceof EntityHitResult result && result.getEntity() instanceof ItemEntity;
-            float yaw = client.gameRenderer.getCamera().getYaw() - client.player.getYaw(tickDelta);
-            if((Config.GSON.instance().clickToMove || bool) &&  ((MinecraftClientAccessor)client).getOriginalLocation() != null  && ((MinecraftClientAccessor)client).getLocation() != null &&((MinecraftClientAccessor)client).getLocation().getPos() instanceof Vec3d vec3d
+            // Cancel the tick-aligned player yaw (the same value vanilla's updateVelocity rotates the
+            // movement by), NOT the render-interpolated getYaw(tickDelta). While aiming/using and
+            // strafing, lookAt() changes the player yaw every tick; using the interpolated yaw here
+            // leaves a tickDelta-dependent residual, so the strafe direction (and thus the camera,
+            // cursor and cursor-facing) wobbles in a feedback loop. Using the tick yaw cancels
+            // vanilla's rotation exactly, keeping movement precisely camera-relative.
+            float yaw = client.gameRenderer.getCamera().getYaw() - client.player.getYaw();
+            if((Config.GSON.instance().isClickToMove() || bool) &&  ((MinecraftClientAccessor)client).getOriginalLocation() != null  && ((MinecraftClientAccessor)client).getLocation() != null &&((MinecraftClientAccessor)client).getLocation().getPos() instanceof Vec3d vec3d
                     && client.player.squaredDistanceTo(((MinecraftClientAccessor)client).getOriginalLocation()) < (((MinecraftClientAccessor)client).getOriginalLocation()).squaredDistanceTo(((MinecraftClientAccessor)client).getLocation().getPos())-1) {
                    if(((MinecraftClientAccessor)client).getLocation() instanceof EntityHitResult && ((MinecraftClientAccessor)client).getLocation().getPos().subtract(0,((MinecraftClientAccessor)client).getLocation().getPos().getY()-(client.player.getPos()).getY(),0)
                            .squaredDistanceTo(client.player.getPos()) < (bool ? client.player.getWidth()/2 :(client.player.getEntityInteractionRange() * client.player.getEntityInteractionRange()/4))){
@@ -107,7 +140,8 @@ public abstract class KeyboardInputMixin extends Input {
             this.movementSideways = movement.y;
 
         }
-        if(this.pressingBack || this.pressingForward || this.pressingLeft || this.pressingRight){
+        if(this.pressingBack || this.pressingForward || this.pressingLeft || this.pressingRight
+                || Mod.joystickRawFwd != 0 || Mod.joystickRawSide != 0){
             Mod.useTimer = 0;
         }
         else{

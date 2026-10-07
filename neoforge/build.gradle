@@ -57,9 +57,6 @@ dependencies {
     // Sodium - neoforge (optional compat, conditional via MixinPlugin)
     modCompileOnly "maven.modrinth:sodium:${rootProject.sodium_version}-neoforge"
 
-    // MixinSquared - forge
-    modImplementation "com.github.bawnorton.mixinsquared:mixinsquared-forge:0.2.0"
-    annotationProcessor "com.github.bawnorton.mixinsquared:mixinsquared-forge:0.2.0"
     implementation include("maven.modrinth:tiny-config:${project.tiny_config_version}-neoforge")
 
     // TinyConfig (bundled - pure Java)

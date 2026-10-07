@@ -35,6 +35,11 @@ public class Mod {
     public static Vector2f unModMovement = new Vector2f();
     public static int useTimer;
     public static boolean noMouse;
+    // Left-stick deflection from the last input tick, in key-input convention (x = forward,
+    // y = sideways/left), pre-rotation. 0 when no controller / inside deadzone. Used by the
+    // facing logic so the character faces the stick direction under joystick movement.
+    public static float joystickRawFwd;
+    public static float joystickRawSide;
     public static float zoomMetric;
     public static float factor;
     public static float factorScale = 0.5F;
@@ -108,6 +113,12 @@ public class Mod {
 
     public static HitResult mouseTarget;
 
+    // Contextual interactable-block targeting. Independent from crosshairTarget / targeted /
+    // lockOnTarget: combat targets and block-interaction targets must not overwrite each other.
+    public static BlockPos targetedInteractable;
+    public static BlockPos pendingInteractable;
+    public static int pendingInteractableTicks;
+
     public static BlockHitResult horizontalTarget;
 
     public static long dragonTimeSince;
@@ -130,14 +141,26 @@ public class Mod {
                 || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof FurnaceBlock
                 || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof BarrelBlock
                 || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof BellBlock
+                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof BedBlock
+
                 || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof BeehiveBlock
                 || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof BlastFurnaceBlock
                 || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof CakeBlock
                 || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof HopperBlock
-                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof BlockWithEntity
-                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof BlockEntityProvider
                 || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof BeaconBlock
                 || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof LoomBlock
+                // Menu/utility workstations with no block entity (siblings of crafting table / loom).
+                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof StonecutterBlock
+                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof CartographyTableBlock
+                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof SmithingTableBlock
+                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof GrindstoneBlock
+                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof ComposterBlock
+                // Remote toggle.
+                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof LeverBlock
+                // Empty-hand harvest / eat.
+                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof SweetBerryBushBlock
+                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof CaveVines
+                || MinecraftClient.getInstance().world.getBlockState(pos).getBlock() instanceof CandleCakeBlock
 
         ) && MinecraftClient.getInstance().player.getPos().distanceTo(pos.toCenterPos())<
                 MinecraftClient.getInstance().player.getBlockInteractionRange()));
@@ -156,10 +179,20 @@ public class Mod {
                 || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof BlastFurnaceBlock
                 || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof CakeBlock
                 || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof HopperBlock
-                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof BlockWithEntity
-                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof BlockEntityProvider
                 || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof BeaconBlock
                 || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof LoomBlock
+                // Menu/utility workstations with no block entity (siblings of crafting table / loom).
+                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof StonecutterBlock
+                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof CartographyTableBlock
+                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof SmithingTableBlock
+                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof GrindstoneBlock
+                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof ComposterBlock
+                // Remote toggle.
+                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof LeverBlock
+                // Empty-hand harvest / eat.
+                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof SweetBerryBushBlock
+                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof CaveVines
+                || MinecraftClient.getInstance().world.getBlockState(result).getBlock() instanceof CandleCakeBlock
 
         ) && MinecraftClient.getInstance().player.getPos().distanceTo(result.toCenterPos())<
                 MinecraftClient.getInstance().player.getBlockInteractionRange());

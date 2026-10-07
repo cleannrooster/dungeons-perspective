@@ -1,6 +1,10 @@
 package com.cleannrooster.dungeons_iso.mixin.compat.sodium;
 
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
+import com.cleannrooster.dungeons_iso.api.cullers.room.RoomScanner;
+import com.cleannrooster.dungeons_iso.api.cullers.room.RoomSnapshot;
+import com.cleannrooster.dungeons_iso.api.cullers.room.SightlineScanner;
+import com.cleannrooster.dungeons_iso.api.cullers.room.TerrainCulling;
 import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
@@ -61,98 +65,42 @@ private  Vector3f posOffset ;
             Entity cameraEntity = client.cameraEntity;
             if (cameraEntity == null || client.gameRenderer == null || cameraEntity.getWorld() == null) return;
 
-            // FloodCuller first — O(1) hash lookup, cheapest check
-            if (SodiumCompat.floodCuller.isAboveFlood(pos)) {
-                ci.cancel();
+            // Tier 1 — the room snapshot. A single hash lookup, and the authority wherever it has
+            // an opinion: it culls the roof of the room the player is in (and the walls and pillars
+            // that roof rests on), and explicitly protects the storey above. NO_OPINION means
+            // either no roof over this column (outdoors, or under a hole) or no scan yet, in which
+            // case shape culling below decides.
+            switch (RoomScanner.INSTANCE.test(pos.getX(), pos.getY(), pos.getZ())) {
+                case RoomSnapshot.CULL -> {
+                    if (!TerrainCulling.isProtected(state.getBlock())) {
+                        ci.cancel();
+                    }
+                    return;
+                }
+                case RoomSnapshot.KEEP -> {
+                    return;
+                }
+                default -> {
+                    // fall through to shape culling
+                }
+            }
+
+            // Tier 2 — shape culling. The cylinder that used to live here is gone entirely.
+            // It answered "is this block near the camera-to-player axis", which is proximity
+            // rather than visibility and per block rather than per shape, so it bored a tube
+            // through whatever it met. The sightline scanner instead casts rays to the player,
+            // segments what they hit into connected shapes, and removes shapes whole, nearest
+            // first. There is deliberately no fallback: before a scan lands, or when the budget
+            // runs out, the result is fewer complete shapes removed rather than a cylinder.
+            if (!SightlineScanner.INSTANCE.shouldCull(pos.getX(), pos.getY(), pos.getZ())) {
                 return;
             }
 
-            // GenericCuller3 cylinder test — inlined to avoid redundant allocations
-            if (!((MinecraftClientAccessor) client).shouldRebuild()) return;
-
-            Camera camera = client.gameRenderer.getCamera();
-
-            // Block center using raw coords — avoids toCenterPos() Vec3d allocation
-            double bx = pos.getX() + 0.5;
-            double by = pos.getY() + 0.5;
-            double bz = pos.getZ() + 0.5;
-
-            double ex = cameraEntity.getX();
-            double ey = cameraEntity.getY();
-            double ez = cameraEntity.getZ();
-
-            // Only cull blocks above player and closer than camera
-            if (by <= ey + 1) return;
-
-            double preX = Mod.preMod.x;
-            double preY = Mod.preMod.y;
-            double preZ = Mod.preMod.z;
-
-            // Distance check: block must be closer to entity than camera is
-            double bdx = bx - ex;
-            double bdy = by - ey;
-            double bdz = bz - ez;
-            double blockDistSq = bdx * bdx + bdy * bdy + bdz * bdz;
-
-            double cdx = preX - ex;
-            double cdy = preY - ey;
-            double cdz = preZ - ez;
-            double camDistSq = cdx * cdx + cdy * cdy + cdz * cdz;
-
-            if (blockDistSq >= camDistSq) return;
-
-            // Skip ignored block types (doors, spawners, etc.)
-            Block block = state.getBlock();
-            if (block instanceof VaultBlock || block instanceof SpawnerBlock || block instanceof TrialSpawnerBlock
-                    || block instanceof WallMountedBlock || block instanceof LadderBlock || block instanceof DoorBlock) {
+            if (TerrainCulling.isProtected(state.getBlock())) {
                 return;
             }
 
-            // Close to camera — always cull
-            double pdx = preX - bx;
-            double pdy = preY - by;
-            double pdz = preZ - bz;
-            if (pdx * pdx + pdy * pdy + pdz * pdz < 25) { // < 5^2
-                ci.cancel();
-                return;
-            }
-
-            // Cylinder axis: entity toward camera
-            // axisLenSq is camDistSq (same vector)
-            if (camDistSq == 0) return;
-
-            double animFactor = 0.1 * Math.min(10, Math.min(
-                    cameraEntity.getWorld().getTime() - Mod.startTime + 2,
-                    10 - Mod.endTime));
-            double radius = animFactor * Config.GSON.instance().cullAngle;
-
-            // Perpendicular distance squared from block center to axis (cross product method)
-            // toPoint = blockCenter - entityPos = (bdx, bdy, bdz)
-            // axis = cameraPos - entityPos = (cdx, cdy, cdz)
-            double cx = bdy * cdz - bdz * cdy;
-            double cy = bdz * cdx - bdx * cdz;
-            double cz = bdx * cdy - bdy * cdx;
-            double perpDistSq = (cx * cx + cy * cy + cz * cz) / camDistSq;
-
-            // Near player: cone with vertex at player, expanding to full radius at 5 blocks along axis
-            // projDist = dot(toPoint, axis) / |axis| = how far along the axis the block is
-            double dot = bdx * cdx + bdy * cdy + bdz * cdz;
-            double axisLen = Math.sqrt(camDistSq);
-            double projDist = dot / axisLen;
-
-            // Cone near player: half-angle from config, transitions to cylinder where cone meets full radius
-            float configHalfAngle = Config.GSON.instance().coneHalfAngle;
-            if (configHalfAngle != cachedConeHalfAngle) {
-                cachedConeHalfAngle = configHalfAngle;
-                cachedTanHalfAngle  = Math.tan(Math.toRadians(configHalfAngle));
-            }
-            double tanHalfAngle = cachedTanHalfAngle;
-            double coneRadius = projDist * tanHalfAngle;
-            double effectiveRadius = Math.min(coneRadius, radius);
-
-            if (perpDistSq <= effectiveRadius * effectiveRadius) {
-                ci.cancel();
-            }
+            ci.cancel();
         } catch (Exception ignored) {
         }
     }

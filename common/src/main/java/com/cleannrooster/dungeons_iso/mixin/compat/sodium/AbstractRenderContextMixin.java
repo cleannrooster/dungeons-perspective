@@ -4,6 +4,9 @@ import com.cleannrooster.dungeons_iso.api.BlockCuller;
 import com.cleannrooster.dungeons_iso.api.BlockCullerUser;
 import com.cleannrooster.dungeons_iso.api.MinecraftClientAccessor;
 import com.cleannrooster.dungeons_iso.api.cullers.FloodCuller;
+import com.cleannrooster.dungeons_iso.api.cullers.room.RoomScanner;
+import com.cleannrooster.dungeons_iso.api.cullers.room.RoomSnapshot;
+import com.cleannrooster.dungeons_iso.api.cullers.room.SightlineScanner;
 import com.cleannrooster.dungeons_iso.compat.SodiumCompat;
 import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
@@ -37,7 +40,6 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
-import net.spell_power.SpellPowerMod;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -66,24 +68,33 @@ private  MutableQuadViewImpl editorQuad;
     protected LightPipelineProvider lighters;
 @Shadow
     protected  QuadLightData quadLightData ;
-/*    @Inject(at = @At("HEAD"), method = "shadeQuad", cancellable = true,remap = false)
-    protected void shadeQuadXIV(MutableQuadViewImpl quad, LightMode lightMode, boolean emissive, ShadeMode shadeMode, CallbackInfo info) {
-        if(Mod.enabled && Config.GSON.instance().fogOfWar && SodiumCompat.fogOfWar != null) {
-            for(HitResult result :
-                    SodiumCompat.fogOfWar.realPoints){
-                if(result.getPos().distanceTo(pos.toCenterPos()) < 4){
-                    info.cancel();
-                    break;
-                }
-            }
-            return;
-
-        }
-
-    }*/
     @Inject(at = @At("RETURN"), method = "isFaceCulled", cancellable = true)
     protected final void isFaceCulledDungeons(@Nullable Direction direction, CallbackInfoReturnable<Boolean> ci) {
         try {
+            // Sodium decides face occlusion geometrically: a face is culled when the neighbouring
+            // block's shape covers it. That test has no idea we cancelled the neighbour's
+            // rendering, so every face that was hidden behind a removed block stays hidden after
+            // the block is gone — you look down into a room and see through the tops of the walls.
+            // Wherever the occluding neighbour is one the room or shape culler removes, the face
+            // has to come back.
+            int nx = 0, ny = 0, nz = 0;
+            boolean neighbourRemoved = false;
+            if (direction != null && Mod.enabled) {
+                nx = pos.getX() + direction.getOffsetX();
+                ny = pos.getY() + direction.getOffsetY();
+                nz = pos.getZ() + direction.getOffsetZ();
+                neighbourRemoved = RoomScanner.INSTANCE.test(nx, ny, nz) == RoomSnapshot.CULL
+                        || SightlineScanner.INSTANCE.shouldCull(nx, ny, nz);
+            }
+
+            if (neighbourRemoved) {
+                // Back-face culling still gets the final say, matching how the branches below
+                // resolve it, so enabling backCull does not start punching holes here instead.
+                ci.setReturnValue(Config.GSON.instance().backCull
+                        && direction.pointsTo(MinecraftClient.getInstance().gameRenderer.getCamera().getYaw()));
+                return;
+            }
+
             VoxelShape selfShape = direction != null ? state.getCullingFace(MinecraftClient.getInstance().world, pos, direction) : null;
 
             if (MinecraftClient.getInstance() != null && MinecraftClient.getInstance().player != null && Mod.enabled && !(state.getBlock() instanceof TranslucentBlock) && Mod.shouldRebuild()) {
@@ -134,20 +145,4 @@ private  MutableQuadViewImpl editorQuad;
         }
     }
 
-  /*  @Inject(at = @At("TAIL"), method = "shadeQuad", cancellable = true,remap = false)
-
-    protected void shadeQuadRooster(MutableQuadViewImpl quad, LightMode lightMode, boolean emissive, ShadeMode shadeMode, CallbackInfo info) {
-        BlockHitResult result  = MinecraftClient.getInstance().cameraEntity.getWorld().raycast(new RaycastContext(MinecraftClient.getInstance().cameraEntity.getEyePos(), pos.toCenterPos().add(pos.toCenterPos().getX() > MinecraftClient.getInstance().cameraEntity.getX() ? -0.6: 0.6,pos.toCenterPos().getY() > MinecraftClient.getInstance().cameraEntity.getEyeY() ? -0.6: 0.6,pos.toCenterPos().getZ() > MinecraftClient.getInstance().cameraEntity.getZ() ? -0.6: 0.6), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, MinecraftClient.getInstance().cameraEntity));
-
-        BlockState block  = MinecraftClient.getInstance().cameraEntity.getWorld().getBlockState(result.getBlockPos());
-        if((MinecraftClient.getInstance().cameraEntity.getPos().distanceTo(pos.toCenterPos())) < 16 &&  (block != null && !result.getType().equals(HitResult.Type.MISS) && block != state )) {
-
-            float[] brightnesses = this.quadLightData.br;
-
-            for(int i = 0; i < 4; ++i) {
-                quad.color(i, ColorARGB.mulRGB(quad.color(i), (float) (Math.max(0,(0.5+0.5*MinecraftClient.getInstance().cameraEntity.getPos().distanceTo(pos.toCenterPos())/16))*brightnesses[i])));
-            }
-        }
-
-    }*/
 }

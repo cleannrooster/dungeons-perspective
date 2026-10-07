@@ -1,10 +1,5 @@
 package com.cleannrooster.dungeons_iso;
 
-import com.bawnorton.mixinsquared.adjuster.MixinAnnotationAdjusterRegistrar;
-import com.bawnorton.mixinsquared.canceller.MixinCancellerRegistrar;
-import com.cleannrooster.dungeons_iso.mixin.CleannMixinAdjuster;
-import com.cleannrooster.dungeons_iso.mixin.CleannMixinCanceller;
-import com.cleannrooster.dungeons_iso.ModCompat;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -13,10 +8,14 @@ import java.util.List;
 import java.util.Set;
 
 public class MixinPlugin  implements IMixinConfigPlugin {
+    /**
+     * Temporary test switch. Keep the Sodium compatibility sources and mixin declarations in
+     * place, but do not apply them while validating the vanilla/Indigo culling path.
+     */
+    private static final boolean ENABLE_SODIUM_COMPAT = false;
+
     @Override
     public void onLoad(String mixinPackage) {
-        MixinCancellerRegistrar.register(new CleannMixinCanceller());
-        MixinAnnotationAdjusterRegistrar.register(new CleannMixinAdjuster());
     }
 
     @Override
@@ -26,6 +25,11 @@ public class MixinPlugin  implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+
+        if (!ENABLE_SODIUM_COMPAT && (mixinClassName.contains(".compat.sodium.")
+                || mixinClassName.endsWith(".FabricBlockAccessMixin"))) {
+            return false;
+        }
 
         if (mixinClassName.contains(".compat.")) {
             String[] parts = mixinClassName.split("\\.");

@@ -44,6 +44,12 @@ class NeoForgeClientGameEvents {
         event.getDispatcher().register(
             CommandManager.literal("dperspective")
                 .executes(ctx -> {
+                    // ConfigScreen cannot load without YACL, so the guard stays outside it.
+                    if (!com.cleannrooster.dungeons_iso.config.Config.GSON.hasScreen()) {
+                        ctx.getSource().sendError(net.minecraft.text.Text.translatable(
+                                "dungeons_iso.config.requires_yacl"));
+                        return 0;
+                    }
                     MinecraftClient.getInstance().execute(() ->
                         MinecraftClient.getInstance().setScreen(ConfigScreen.create(null))
                     );

@@ -46,11 +46,4 @@ public class InGameHudMixin {
         }
     }
 
-    @Inject(
-            method = "renderCrosshair", at = @At("RETURN")
-    )
-    private void crosshairPostXIV(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        if (Mod.enabled) {
-        }
-    }
 }

@@ -1,5 +1,6 @@
 package com.cleannrooster.dungeons_iso.mixin.compat.sodium;
 
+import com.cleannrooster.dungeons_iso.config.Config;
 import com.cleannrooster.dungeons_iso.mod.Mod;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -33,7 +34,7 @@ public abstract class RenderSectionManagerMixin {
     @ModifyReturnValue(at = @At("RETURN"), method = "getEffectiveRenderDistance",remap = false)
 
     private float getEffectiveRenderDistanceXIV(float flot) {
-        if(Mod.enabled) {
+        if(Mod.enabled && Config.GSON.instance().renderDistanceCap) {
             flot =(Mod.getZoom()*Mod.zoomMetric+(4)*16 )* 1.15F;
         }
         return flot;
@@ -42,7 +43,7 @@ public abstract class RenderSectionManagerMixin {
     @ModifyReturnValue(at = @At("RETURN"), method = "getRenderDistance",remap = false)
 
     private float getRenderDistanceXIV(float flot) {
-        if(Mod.enabled) {
+        if(Mod.enabled && Config.GSON.instance().renderDistanceCap) {
             flot =(Mod.getZoom()*Mod.zoomMetric+(4)*16) * 1.15F;
 
         }
@@ -52,7 +53,19 @@ public abstract class RenderSectionManagerMixin {
  @Inject(at = @At("HEAD"), method = "shouldUseOcclusionCulling", cancellable = true,remap = false)
 
     private void shouldUseOcclusionCullingXIV(Camera camera, boolean spectator,CallbackInfoReturnable<Boolean> cir) {
-        if(Mod.enabled&& MinecraftClient.getInstance().player != null && Mod.shouldRebuild()){
+        // Turning occlusion culling off makes Sodium draw every section in the frustum with no
+        // visibility graph at all. That is the single most expensive thing this mod can do, and it
+        // was on for the whole time culling was active.
+        //
+        // It existed because the cylinder culler removed blocks without knowing which sections it
+        // had changed, so Sodium's visibility data went stale and could hide sections that had
+        // become visible through a hole. Both scanners now report their affected sections exactly
+        // and rebuild them, which regenerates that data — removing blocks makes a section more
+        // transparent in the graph, not less, so traversal reaches through the opening on its own.
+        //
+        // Left as an option in case a setup still needs it, but off by default now.
+        if (Mod.enabled && Config.GSON.instance().disableOcclusionCulling
+                && MinecraftClient.getInstance().player != null && Mod.shouldRebuild()) {
             cir.setReturnValue(false);
         }
     }
